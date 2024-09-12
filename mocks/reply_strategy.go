@@ -27,7 +27,7 @@ type constantReply struct {
 func unhandledRequestError(r *http.Request) []error {
 	requestContent, err := httputil.DumpRequest(r, true)
 	if err != nil {
-		return []error{fmt.Errorf("Gonkey internal error during request dump: %s\n", err)}
+		return []error{fmt.Errorf("Gonkex internal error during request dump: %s\n", err)}
 	}
 	return []error{fmt.Errorf("unhandled request to mock:\n%s", requestContent)}
 }
@@ -72,11 +72,11 @@ func NewDropRequestReply() ReplyStrategy {
 func (s *dropRequestReply) HandleRequest(w http.ResponseWriter, r *http.Request) []error {
 	hj, ok := w.(http.Hijacker)
 	if !ok {
-		return []error{fmt.Errorf("Gonkey internal error during drop request: webserver doesn't support hijacking\n")}
+		return []error{fmt.Errorf("Gonkex internal error during drop request: webserver doesn't support hijacking\n")}
 	}
 	conn, _, err := hj.Hijack()
 	if err != nil {
-		return []error{fmt.Errorf("Gonkey internal error during connection hijacking: %s\n", err)}
+		return []error{fmt.Errorf("Gonkex internal error during connection hijacking: %s\n", err)}
 	}
 	conn.Close()
 	return nil

@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/lamoda/gonkey/models"
+	"github.com/lansfy/gonkex/models"
 )
 
 func TestConsoleHandler_HandleTest_Summary(t *testing.T) {

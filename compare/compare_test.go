@@ -508,7 +508,7 @@ var complexJson1 = `
     "info": {
         "title": "LEOS.Delivery API",
         "contact": {
-            "url": "https://confluence.lamoda.ru/display/DELY/"
+            "url": "https://confluence.lansfy.ru/display/DELY/"
         },
         "version": "1.0.0"
     },
@@ -2362,7 +2362,7 @@ var complexJson1 = `
             "properties": {
                 "code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "name": {
                     "type": "string",
@@ -2402,7 +2402,7 @@ var complexJson1 = `
                 },
                 "checkout_name": {
                     "type": "string",
-                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lamoda"
+                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lansfy"
                 },
                 "delivery_date_min": {
                     "type": "string",
@@ -2569,7 +2569,7 @@ var complexJson1 = `
             "properties": {
                 "method_code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "pickups": {
                     "type": "array",
@@ -2730,7 +2730,7 @@ var complexJson1 = `
                 },
                 "code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "name": {
                     "type": "string",
@@ -2742,7 +2742,7 @@ var complexJson1 = `
                 },
                 "checkout_name": {
                     "type": "string",
-                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lamoda"
+                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lansfy"
                 },
                 "days": {
                     "type": "array",
@@ -3056,11 +3056,11 @@ var complexJson1 = `
             "properties": {
                 "code": {
                     "type": "string",
-                    "example": "lamoda"
+                    "example": "lansfy"
                 },
                 "name": {
                     "type": "string",
-                    "example": "Lamoda Express"
+                    "example": "Lansfy Express"
                 },
                 "is_deleted": {
                     "type": "boolean",
@@ -3116,7 +3116,7 @@ var complexJson1 = `
             "properties": {
                 "code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "name": {
                     "type": "string",
@@ -3170,7 +3170,7 @@ var complexJson1 = `
                 },
                 "checkout_name": {
                     "type": "string",
-                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lamoda"
+                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lansfy"
                 },
                 "communication_description": {
                     "type": "string",
@@ -3697,7 +3697,7 @@ var complexJson1 = `
             "properties": {
                 "pallet_method_code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "is_available": {
                     "type": "boolean",
@@ -3729,7 +3729,7 @@ var complexJson1 = `
             "properties": {
                 "code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "name": {
                     "type": "string",
@@ -3768,7 +3768,7 @@ var complexJson1 = `
                 },
                 "checkout_name": {
                     "type": "string",
-                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lamoda"
+                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lansfy"
                 },
                 "max_postpones": {
                     "description": "available in get-all-methods only",
@@ -3906,7 +3906,7 @@ var complexJson1 = `
                 },
                 "code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "name": {
                     "type": "string",
@@ -3945,7 +3945,7 @@ var complexJson1 = `
                 },
                 "checkout_name": {
                     "type": "string",
-                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lamoda"
+                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lansfy"
                 },
                 "max_postpones": {
                     "description": "available in get-all-methods only",
@@ -4005,7 +4005,7 @@ var complexJson1 = `
                 },
                 "method_code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "method_name": {
                     "type": "string",
@@ -4040,7 +4040,7 @@ var complexJson1 = `
                 },
                 "checkout_name": {
                     "type": "string",
-                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lamoda"
+                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lansfy"
                 },
                 "communication_description": {
                     "type": "string",
@@ -4140,7 +4140,7 @@ var complexJson1 = `
                 },
                 "method_code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "method_name": {
                     "type": "string",
@@ -4668,7 +4668,7 @@ var complexJson1 = `
             "properties": {
                 "method_code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "is_update": {
                     "type": "boolean",
@@ -5421,7 +5421,7 @@ var complexJson2 = `
     "info": {
         "title": "LEOS.Delivery API",
         "contact": {
-            "url": "https://confluence.lamoda.ru/display/DELY/"
+            "url": "https://confluence.lansfy.ru/display/DELY/"
         },
         "version": "1.0.0"
     },
@@ -7275,7 +7275,7 @@ var complexJson2 = `
             "properties": {
                 "code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "name": {
                     "type": "string",
@@ -7315,7 +7315,7 @@ var complexJson2 = `
                 },
                 "checkout_name": {
                     "type": "string",
-                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lamoda"
+                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lansfy"
                 },
                 "delivery_date_min": {
                     "type": "string",
@@ -7482,7 +7482,7 @@ var complexJson2 = `
             "properties": {
                 "method_code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "pickups": {
                     "type": "array",
@@ -7643,7 +7643,7 @@ var complexJson2 = `
                 },
                 "code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "name": {
                     "type": "string",
@@ -7655,7 +7655,7 @@ var complexJson2 = `
                 },
                 "checkout_name": {
                     "type": "string",
-                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lamoda"
+                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lansfy"
                 },
                 "days": {
                     "type": "array",
@@ -7969,11 +7969,11 @@ var complexJson2 = `
             "properties": {
                 "code": {
                     "type": "string",
-                    "example": "lamoda"
+                    "example": "lansfy"
                 },
                 "name": {
                     "type": "string",
-                    "example": "Lamoda Express"
+                    "example": "Lansfy Express"
                 },
                 "is_deleted": {
                     "type": "boolean",
@@ -8029,7 +8029,7 @@ var complexJson2 = `
             "properties": {
                 "code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "name": {
                     "type": "string",
@@ -8083,7 +8083,7 @@ var complexJson2 = `
                 },
                 "checkout_name": {
                     "type": "string",
-                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lamoda"
+                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lansfy"
                 },
                 "communication_description": {
                     "type": "string",
@@ -8610,7 +8610,7 @@ var complexJson2 = `
             "properties": {
                 "pallet_method_code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "is_available": {
                     "type": "boolean",
@@ -8642,7 +8642,7 @@ var complexJson2 = `
             "properties": {
                 "code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "name": {
                     "type": "string",
@@ -8681,7 +8681,7 @@ var complexJson2 = `
                 },
                 "checkout_name": {
                     "type": "string",
-                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lamoda"
+                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lansfy"
                 },
                 "max_postpones": {
                     "description": "available in get-all-methods only",
@@ -8819,7 +8819,7 @@ var complexJson2 = `
                 },
                 "code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "name": {
                     "type": "string",
@@ -8858,7 +8858,7 @@ var complexJson2 = `
                 },
                 "checkout_name": {
                     "type": "string",
-                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lamoda"
+                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lansfy"
                 },
                 "max_postpones": {
                     "description": "available in get-all-methods only",
@@ -8918,7 +8918,7 @@ var complexJson2 = `
                 },
                 "method_code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "method_name": {
                     "type": "string",
@@ -8953,7 +8953,7 @@ var complexJson2 = `
                 },
                 "checkout_name": {
                     "type": "string",
-                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lamoda"
+                    "example": "\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430 \u0432 \u043f\u0443\u043d\u043a\u0442 \u0432\u044b\u0434\u0430\u0447\u0438 \u0437\u0430\u043a\u0430\u0437\u043e\u0432 Lansfy"
                 },
                 "communication_description": {
                     "type": "string",
@@ -9053,7 +9053,7 @@ var complexJson2 = `
                 },
                 "method_code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "method_name": {
                     "type": "string",
@@ -9581,7 +9581,7 @@ var complexJson2 = `
             "properties": {
                 "method_code": {
                     "type": "string",
-                    "example": "lamoda_showroom_novokuznetskaya"
+                    "example": "lansfy_showroom_novokuznetskaya"
                 },
                 "is_update": {
                     "type": "boolean",

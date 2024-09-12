@@ -2,7 +2,7 @@
 \.idea/
 \.vscode/
 \pkg/
-gonkey
+gonkex
 _vendor*
 Gopkg.lock
 tmpfile*

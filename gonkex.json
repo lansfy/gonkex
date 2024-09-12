@@ -1,17 +1,17 @@
 {
-  "$id": "https://raw.githubusercontent.com/lamoda/gonkey/master/gonkey.json",
+  "$id": "https://raw.githubusercontent.com/lansfy/gonkex/master/gonkex.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Gonkey test automation tool",
-  "description": "Gonkey described here https://github.com/lamoda/gonkey",
+  "title": "Gonkex test automation tool",
+  "description": "Gonkex described here https://github.com/lansfy/gonkex",
   "anyOf": [
-    { "$ref": "#/$defs/gonkeyTest" },
+    { "$ref": "#/$defs/gonkexTest" },
     {
       "type": "array",
-      "items": { "$ref": "#/$defs/gonkeyTest" }
+      "items": { "$ref": "#/$defs/gonkexTest" }
     }
   ],
   "$defs": {
-    "gonkeyTest": {
+    "gonkexTest": {
       "type": "object",
       "properties": {
         "name":{
@@ -323,7 +323,7 @@
             "properties": {
               "uris": {
                 "description": "a map of resources, each resource can be configured as a separate mock-service using any available request constraints and response strategies",
-                "$ref": "#/$defs/gonkeyTest/properties/mocks"
+                "$ref": "#/$defs/gonkexTest/properties/mocks"
               },
               "basePath ":{
                 "type": "string",
@@ -341,7 +341,7 @@
             "properties": {
               "methods": {
                 "description": "a map of methods (GET, POST, etc), each method can be configured as a separate mock-service using any available request constraints and response strategies",
-                "$ref": "#/$defs/gonkeyTest/properties/mocks"
+                "$ref": "#/$defs/gonkexTest/properties/mocks"
               }
             },
             "required": ["methods"]

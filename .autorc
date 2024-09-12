@@ -3,8 +3,8 @@
     "git-tag",
     "released"
   ],
-  "owner": "lamoda",
-  "repo": "gonkey",
+  "owner": "lansfy",
+  "repo": "gonkex",
   "name": "autorelease",
-  "email": "autorelease@lamoda.noreply"
+  "email": "autorelease@lansfy.noreply"
 }

@@ -1,8 +1,6 @@
-# Gonkey: testing automation tool
+# Gonkex: testing automation tool
 
-[View Russian version of this file here](README-ru.md)
-
-Gonkey will test your services using their API. It can bomb the service with prepared requests and check the responses. Test scenarios are described in YAML-files.
+Gonkex will test your services using their API. It can bomb the service with prepared requests and check the responses. Test scenarios are described in YAML-files.
 
 Capabilities:
 
@@ -11,13 +9,13 @@ Capabilities:
 - seeds the DB with fixtures data (supports PostgreSQL, MySQL)
 - provides mocks for external services
 - can be used as a library and ran together with unit-tests
-- stores the results as an [Allure](http://allure.qatools.ru/) report
-- there is a [JSON-schema](#json-schema) to add autocomletion and validation for gonkey YAML files
+- stores the results as an [Allure](https://allurereport.org/) report
+- there is a [JSON-schema](#json-schema) to add autocomletion and validation for gonkex YAML files
 
 ## Table of contents
 
 - [Using the CLI](#using-the-cli)
-- [Using gonkey as a library](#using-gonkey-as-a-library)
+- [Using gonkex as a library](#using-gonkex-as-a-library)
 - [Test scenario example](#test-scenario-example)
 - [Test status](#test-status)
 - [HTTP-request](#http-request)
@@ -37,7 +35,7 @@ Capabilities:
   - [Record linking](#record-linking)
   - [Expressions](#expressions)
 - [Mocks](#mocks)
-  - [Running mocks while using gonkey as a library](#running-mocks-while-using-gonkey-as-a-library)
+  - [Running mocks while using gonkex as a library](#running-mocks-while-using-gonkex-as-a-library)
   - [Mocks definition in the test file](#mocks-definition-in-the-test-file)
     - [Request constraints (requestConstraints)](#request-constraints-requestconstraints)
     - [Response strategies (strategy)](#response-strategies-strategy)
@@ -57,9 +55,9 @@ Capabilities:
 
 ## Using the CLI
 
-To test a service located on a remote host, use gonkey as a console util.
+To test a service located on a remote host, use gonkex as a console util.
 
-`./gonkey -host <...> -tests <...> [-spec <...>] [-db_dsn <...> -fixtures <...>] [-allure] [-v]`
+`./gonkex -host <...> -tests <...> [-spec <...>] [-db_dsn <...> -fixtures <...>] [-allure] [-v]`
 
 - `-spec <...>` path to a file or URL with the swagger-specs for the service
 - `-host <...>` service host:port
@@ -73,18 +71,18 @@ To test a service located on a remote host, use gonkey as a console util.
 
 You can't use mocks in this mode.
 
-## Using gonkey as a library
+## Using gonkex as a library
 
-To integrate functional and native Go tests and run them together, use gonkey as a library.
+To integrate functional and native Go tests and run them together, use gonkex as a library.
 
 Create a test file, for example `func_test.go`.
 
-Import gonkey as a dependency to your project in this file.
+Import gonkex as a dependency to your project in this file.
 
 ```go
 import (
-    "github.com/lamoda/gonkey/runner"
-    "github.com/lamoda/gonkey/mocks"
+    "github.com/lansfy/gonkex/runner"
+    "github.com/lansfy/gonkex/mocks"
 )
 ```
 
@@ -96,9 +94,9 @@ package test
 import (
   "testing"
 
-  "github.com/lamoda/gonkey/fixtures"
-  "github.com/lamoda/gonkey/mocks"
-  "github.com/lamoda/gonkey/runner"
+  "github.com/lansfy/gonkex/fixtures"
+  "github.com/lansfy/gonkex/mocks"
+  "github.com/lansfy/gonkex/runner"
 )
 
 func TestFuncCases(t *testing.T) {
@@ -126,7 +124,7 @@ func TestFuncCases(t *testing.T) {
 }
 ```
 
-Starts from version 1.18.3, externally written fixture loader may be used for loading test data, if gonkey used as a library.
+Starts from version 1.18.3, externally written fixture loader may be used for loading test data, if gonkex used as a library.
 To start using the custom loader, you need to import the custom module, that contains implementation of fixtures.Loader interface.
 
 The tests can be now ran with `go test`, for example: `go test ./...`.
@@ -317,7 +315,7 @@ Example:
   dbQuery: >
     SELECT id, name FROM testing_tools WHERE id={{ $sqlQueryParam }}
   dbResponse:
-    - '{"id": {{ $sqlResultParam }}, "name": "gonkey"}'
+    - '{"id": {{ $sqlResultParam }}, "name": "gonkex"}'
 ```
 
 You can assign values to variables in the following ways (priorities are from top to bottom):
@@ -388,7 +386,7 @@ Example:
     200:
       golang_id: query_result.0.0
   response:
-    200: '{"result_id": "1", "query_result": [[ {{ $golang_id }} , "golang"], [2, "gonkey"]]}'
+    200: '{"result_id": "1", "query_result": [[ {{ $golang_id }} , "golang"], [2, "gonkex"]]}'
   dbQuery: >
     SELECT id, name FROM testing_tools WHERE id={{ $golang_id }}
   dbResponse:
@@ -397,7 +395,7 @@ Example:
 
 #### From environment variables or from env-file
 
-Gonkey automatically checks if variable exists in the environment variables (case-sensitive) and loads a value from there, if it exists.
+Gonkex automatically checks if variable exists in the environment variables (case-sensitive) and loads a value from there, if it exists.
 
 If an env-file is specified, variables described in it will be added or will replace the corresponding environment variables.
 
@@ -457,7 +455,7 @@ Example:
 
 ## Fixtures
 
-To seed the DB before the test, gonkey uses fixture files.
+To seed the DB before the test, gonkex uses fixture files.
 
 - You can use schema in PostreSQL: schema.table_name
 
@@ -641,9 +639,9 @@ In order to imitate responses from external services, use mocks.
 
 A mock is a web server that is running on-the-fly, and is populated with certain logic before the execution of each test. The logic defines what the server responses to a certain request. It's defined in the test file.
 
-### Running mocks while using gonkey as a library
+### Running mocks while using gonkex as a library
 
-Before running tests, all planned mocks are started. It means that gonkey spins up the given number of servers and each one of them gets a random port assigned.
+Before running tests, all planned mocks are started. It means that gonkex spins up the given number of servers and each one of them gets a random port assigned.
 
 ```go
 // create empty server mocks
@@ -689,7 +687,7 @@ runner.RunWithTesting(t, &runner.RunWithTestingParams{
 })
 ```
 
-Additionally, the library registers special environment variables `GONKEY_MOCK_<MOCK_NAME>`, which contain the address and port of the corresponding mock server. You can use these environment variables when writing tests.
+Additionally, the library registers special environment variables `GONKEX_MOCK_<MOCK_NAME>`, which contain the address and port of the corresponding mock server. You can use these environment variables when writing tests.
 
 ### Mocks definition in the test file
 
@@ -1361,7 +1359,7 @@ Example:
   cases:
     - requestArgs:
         customer_id: 1
-        customer_email: "customer_1_recalculate@lamoda.ru"
+        customer_email: "customer_1_recalculate@example.com"
       responseArgs:
         200:
           rrr: 1
@@ -1519,7 +1517,7 @@ Example:
 
 ## JSON-schema
 
-Use [file with schema](https://raw.githubusercontent.com/lamoda/gonkey/master/gonkey.json) to add syntax highlight to your favourite IDE and write Gonkey tests more easily.
+Use [file with schema](https://raw.githubusercontent.com/lansfy/gonkex/master/gonkex.json) to add syntax highlight to your favourite IDE and write Gonkex tests more easily.
 
 It adds in-line documentation and auto-completion to any IDE that supports it.
 
@@ -1531,7 +1529,7 @@ Example in VSCode IDE:
 
 ### Setup in Jetbrains IDE
 
-Download [file with schema](https://raw.githubusercontent.com/lamoda/gonkey/master/gonkey.json).
+Download [file with schema](https://raw.githubusercontent.com/lansfy/gonkex/master/gonkex.json).
 Open preferences File->Preferences
 In Languages & Frameworks > Schemas and DTDs > JSON Schema Mappings
 
@@ -1581,8 +1579,8 @@ Add file match to apply the JSON on YAML files.
 
 ```
 "yaml.schemas": {
-  "C:\\Users\\Leo\\gonkey.json": ["*.gonkey.yaml"]          
+  "C:\\Users\\Leo\\gonkex.json": ["*.gonkex.yaml"]          
 }
 ```
 
-In the example above the JSON schema stored in C:\Users\Leo\gonkey.json will be applied on all the files that ends with .gonkey.yaml
+In the example above the JSON schema stored in C:\Users\Leo\gonkex.json will be applied on all the files that ends with .gonkex.yaml

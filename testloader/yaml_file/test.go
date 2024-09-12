@@ -3,7 +3,7 @@ package yaml_file
 import (
 	"strings"
 
-	"github.com/lamoda/gonkey/models"
+	"github.com/lansfy/gonkex/models"
 )
 
 type dbCheck struct {

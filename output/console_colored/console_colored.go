@@ -5,7 +5,7 @@ import (
 	"text/template"
 
 	"github.com/fatih/color"
-	"github.com/lamoda/gonkey/models"
+	"github.com/lansfy/gonkex/models"
 )
 
 const dotsPerLine = 80

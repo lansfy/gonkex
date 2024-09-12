@@ -35,7 +35,7 @@ func (d *Definition) Execute(w http.ResponseWriter, r *http.Request) []error {
 	if len(d.requestConstraints) > 0 {
 		requestDump, err := httputil.DumpRequest(r, true)
 		if err != nil {
-			fmt.Printf("Gonkey internal error: %s\n", err)
+			fmt.Printf("Gonkex internal error: %s\n", err)
 		}
 
 		for _, c := range d.requestConstraints {

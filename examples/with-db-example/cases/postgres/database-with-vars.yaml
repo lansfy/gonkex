@@ -13,18 +13,18 @@
   variables_to_set:
     200:
       golang_id: query_result.0.0
-      gonkey_id: query_result.1.0
+      gonkex_id: query_result.1.0
   response:
-    200: '{"result_id": "{{ $info_id }}", "query_result": [[ {{ $golang_id }}, "golang"], [2, "gonkey"]]}'
+    200: '{"result_id": "{{ $info_id }}", "query_result": [[ {{ $golang_id }}, "golang"], [2, "gonkex"]]}'
   dbQuery: >
     SELECT id, name FROM testing WHERE id={{ $golang_id }}
   dbResponse:
     - '{"id": {{ $golang_id }}, "name": "golang"}'
   dbChecks:
     - dbQuery: >
-        SELECT id, name FROM testing WHERE id={{ $gonkey_id }}
+        SELECT id, name FROM testing WHERE id={{ $gonkex_id }}
       dbResponse:
-        - '{"id": {{ $gonkey_id }}, "name": "gonkey"}'
-    - dbQuery: SELECT id, name FROM testing WHERE id={{ $gonkey_id }}
+        - '{"id": {{ $gonkex_id }}, "name": "gonkex"}'
+    - dbQuery: SELECT id, name FROM testing WHERE id={{ $gonkex_id }}
       dbResponse:
-        - '{"id": {{ $gonkey_id }}, "name": "$matchRegexp(gonkey)"}'
+        - '{"id": {{ $gonkex_id }}, "name": "$matchRegexp(gonkex)"}'

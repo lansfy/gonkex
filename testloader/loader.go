@@ -1,7 +1,7 @@
 package testloader
 
 import (
-	"github.com/lamoda/gonkey/models"
+	"github.com/lansfy/gonkex/models"
 )
 
 type LoaderInterface interface {

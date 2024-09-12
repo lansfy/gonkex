@@ -1,7 +1,7 @@
 export GO111MODULE=on
 
-REPO=lamoda
-NAME=gonkey
+REPO=lansfy
+NAME=gonkex
 VERSION=$(shell git describe --tags 2> /dev/null || git rev-parse --short HEAD)
 
 DOCKER_TAG ?= latest
@@ -14,7 +14,7 @@ build: @build
 	docker build --force-rm --pull -t $(REPO)/$(NAME):$(DOCKER_TAG) .
 
 @build:
-	go build -a -o gonkey
+	go build -a -o gonkex
 
 @push:
 	docker push $(REPO)/$(NAME):$(DOCKER_TAG)

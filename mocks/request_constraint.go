@@ -12,8 +12,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/lamoda/gonkey/compare"
-	"github.com/lamoda/gonkey/xmlparsing"
+	"github.com/lansfy/gonkex/compare"
+	"github.com/lansfy/gonkex/xmlparsing"
 	"github.com/tidwall/gjson"
 )
 

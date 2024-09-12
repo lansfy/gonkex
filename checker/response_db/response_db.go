@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/lamoda/gonkey/checker"
-	"github.com/lamoda/gonkey/compare"
-	"github.com/lamoda/gonkey/models"
-	"github.com/lamoda/gonkey/storage"
+	"github.com/lansfy/gonkex/checker"
+	"github.com/lansfy/gonkex/compare"
+	"github.com/lansfy/gonkex/models"
+	"github.com/lansfy/gonkex/storage"
 
 	"github.com/fatih/color"
 	"github.com/kylelemons/godebug/pretty"

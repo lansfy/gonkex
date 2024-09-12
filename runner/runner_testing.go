@@ -11,18 +11,18 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"github.com/lamoda/gonkey/checker"
-	"github.com/lamoda/gonkey/checker/response_body"
-	"github.com/lamoda/gonkey/checker/response_db"
-	"github.com/lamoda/gonkey/checker/response_header"
-	"github.com/lamoda/gonkey/fixtures"
-	"github.com/lamoda/gonkey/mocks"
-	"github.com/lamoda/gonkey/models"
-	"github.com/lamoda/gonkey/output"
-	testingOutput "github.com/lamoda/gonkey/output/testing"
-	"github.com/lamoda/gonkey/storage"
-	"github.com/lamoda/gonkey/testloader/yaml_file"
-	"github.com/lamoda/gonkey/variables"
+	"github.com/lansfy/gonkex/checker"
+	"github.com/lansfy/gonkex/checker/response_body"
+	"github.com/lansfy/gonkex/checker/response_db"
+	"github.com/lansfy/gonkex/checker/response_header"
+	"github.com/lansfy/gonkex/fixtures"
+	"github.com/lansfy/gonkex/mocks"
+	"github.com/lansfy/gonkex/models"
+	"github.com/lansfy/gonkex/output"
+	testingOutput "github.com/lansfy/gonkex/output/testing"
+	"github.com/lansfy/gonkex/storage"
+	"github.com/lansfy/gonkex/testloader/yaml_file"
+	"github.com/lansfy/gonkex/variables"
 )
 
 var DefaultOutput = testingOutput.NewOutput()
@@ -42,13 +42,13 @@ type RunWithTestingOpts struct {
 func registerMocksEnvironment(m *mocks.Mocks) {
 	names := m.GetNames()
 	for _, n := range names {
-		varName := fmt.Sprintf("GONKEY_MOCK_%s", strings.ToUpper(n))
+		varName := fmt.Sprintf("GONKEX_MOCK_%s", strings.ToUpper(n))
 		os.Setenv(varName, m.Service(n).ServerAddr())
 	}
 }
 
 // RunWithTesting is a helper function the wraps the common Run and provides simple way
-// to configure Gonkey by filling the params structure.
+// to configure Gonkex by filling the params structure.
 func RunWithTesting(t *testing.T, server *httptest.Server, opts *RunWithTestingOpts) {
 	var mocksLoader *mocks.Loader
 	if opts.Mocks != nil {
@@ -93,7 +93,7 @@ func initRunner(
 	proxyURL *url.URL,
 ) *Runner {
 	yamlLoader := yaml_file.NewLoader(opts.TestsDir)
-	yamlLoader.SetFileFilter(os.Getenv("GONKEY_FILE_FILTER"))
+	yamlLoader.SetFileFilter(os.Getenv("GONKEX_FILE_FILTER"))
 
 	handler := testingHandler{t}
 	runner := New(

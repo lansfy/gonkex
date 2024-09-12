@@ -8,17 +8,17 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/lamoda/gonkey/models"
+	"github.com/lansfy/gonkex/models"
 
 	"gopkg.in/yaml.v2"
 )
 
 const (
-	gonkeyVariableLeftPart  = "{{ $"
-	gonkeyProtectSubstitute = "!protect!"
+	gonkexVariableLeftPart  = "{{ $"
+	gonkexProtectSubstitute = "!protect!"
 )
 
-var gonkeyProtectTemplate = regexp.MustCompile(`{{\s*\$`)
+var gonkexProtectTemplate = regexp.MustCompile(`{{\s*\$`)
 
 func parseTestDefinitionFile(absPath string) ([]Test, error) {
 	data, err := ioutil.ReadFile(absPath)
@@ -48,7 +48,7 @@ func parseTestDefinitionFile(absPath string) ([]Test, error) {
 }
 
 func substituteArgs(tmpl string, args map[string]interface{}) (string, error) {
-	tmpl = gonkeyProtectTemplate.ReplaceAllString(tmpl, gonkeyProtectSubstitute)
+	tmpl = gonkexProtectTemplate.ReplaceAllString(tmpl, gonkexProtectSubstitute)
 
 	compiledTmpl, err := template.New("").Parse(tmpl)
 	if err != nil {
@@ -61,7 +61,7 @@ func substituteArgs(tmpl string, args map[string]interface{}) (string, error) {
 		return "", err
 	}
 
-	tmpl = strings.ReplaceAll(buf.String(), gonkeyProtectSubstitute, gonkeyVariableLeftPart)
+	tmpl = strings.ReplaceAll(buf.String(), gonkexProtectSubstitute, gonkexVariableLeftPart)
 
 	return tmpl, nil
 }

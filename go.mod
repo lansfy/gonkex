@@ -1,4 +1,4 @@
-module github.com/lamoda/gonkey
+module github.com/lansfy/gonkex
 
 go 1.18
 

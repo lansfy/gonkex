@@ -10,4 +10,4 @@ teardown:
 
 .PHONY: test-postgres
 test-postgres: setup
-	./gonkey -db_dsn "postgresql://testing_user:testing_password@localhost:5432/testing_db?sslmode=disable" -debug -host http://localhost:5000 -tests ./cases/postgres
+	./gonkex -db_dsn "postgresql://testing_user:testing_password@localhost:5432/testing_db?sslmode=disable" -debug -host http://localhost:5000 -tests ./cases/postgres

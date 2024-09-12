@@ -3,7 +3,7 @@ package variables
 import (
 	"regexp"
 
-	"github.com/lamoda/gonkey/models"
+	"github.com/lansfy/gonkex/models"
 )
 
 type Variables struct {

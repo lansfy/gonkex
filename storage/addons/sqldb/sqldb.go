@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 
-	"github.com/lamoda/gonkey/storage/addons/sqldb/mysql"
-	"github.com/lamoda/gonkey/storage/addons/sqldb/postgresql"
+	"github.com/lansfy/gonkex/storage/addons/sqldb/mysql"
+	"github.com/lansfy/gonkex/storage/addons/sqldb/postgresql"
 )
 
 type SQLType string

@@ -3,7 +3,7 @@ package fixtures
 import (
 	"fmt"
 
-	"github.com/lamoda/gonkey/storage"
+	"github.com/lansfy/gonkex/storage"
 )
 
 type Loader interface {

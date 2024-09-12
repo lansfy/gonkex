@@ -20,8 +20,8 @@ COPY . .
 RUN make build
 
 FROM alpine:3.10
-LABEL Author="Denis Sheshnev <denis.sheshnev@lamoda.ru>"
+LABEL Author="Lansfy <5764541+lansfy@users.noreply.github.com>"
 
-COPY --from=build /build/gonkey /bin/gonkey
-ENTRYPOINT ["/bin/gonkey"]
-CMD ["-spec=/gonkey/swagger.yaml", "-host=${HOST_ARG}"]
+COPY --from=build /build/gonkex /bin/gonkex
+ENTRYPOINT ["/bin/gonkex"]
+CMD ["-spec=/gonkex/swagger.yaml", "-host=${HOST_ARG}"]

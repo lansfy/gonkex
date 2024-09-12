@@ -60,7 +60,7 @@ class PostgresStorage:
         self.conn.commit()
         self.cursor.executemany(
             "INSERT INTO testing (name) VALUES (%(name)s);",
-            [{'name': 'golang'}, {'name': 'gonkey'}, {'name': 'testing'}],
+            [{'name': 'golang'}, {'name': 'gonkex'}, {'name': 'testing'}],
         )
         self.conn.commit()
 

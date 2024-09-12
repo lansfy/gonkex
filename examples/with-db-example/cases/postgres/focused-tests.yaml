@@ -17,7 +17,7 @@
     200:
       golang_id: query_result.0.0
   response:
-    200: '{"result_id": "{{ $info_id }}", "query_result": [[ {{ $golang_id }}, "golang"], [2, "gonkey"]]}'
+    200: '{"result_id": "{{ $info_id }}", "query_result": [[ {{ $golang_id }}, "golang"], [2, "gonkex"]]}'
   dbQuery: >
     SELECT id, name FROM testing WHERE id={{ $golang_id }}
   dbResponse:

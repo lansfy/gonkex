@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/lamoda/gonkey/mocks"
-	"github.com/lamoda/gonkey/runner"
+	"github.com/lansfy/gonkex/mocks"
+	"github.com/lansfy/gonkex/runner"
 )
 
 func TestProxy(t *testing.T) {

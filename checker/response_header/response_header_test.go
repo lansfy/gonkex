@@ -5,8 +5,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/lamoda/gonkey/models"
-	"github.com/lamoda/gonkey/testloader/yaml_file"
+	"github.com/lansfy/gonkex/models"
+	"github.com/lansfy/gonkex/testloader/yaml_file"
 
 	"github.com/stretchr/testify/assert"
 )

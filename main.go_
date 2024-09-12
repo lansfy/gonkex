@@ -11,14 +11,14 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"github.com/lamoda/gonkey/checker/response_body"
-	"github.com/lamoda/gonkey/checker/response_db"
-	"github.com/lamoda/gonkey/fixtures"
-	"github.com/lamoda/gonkey/output/allure_report"
-	"github.com/lamoda/gonkey/output/console_colored"
-	"github.com/lamoda/gonkey/runner"
-	"github.com/lamoda/gonkey/testloader/yaml_file"
-	"github.com/lamoda/gonkey/variables"
+	"github.com/lansfy/gonkex/checker/response_body"
+	"github.com/lansfy/gonkex/checker/response_db"
+	"github.com/lansfy/gonkex/fixtures"
+	"github.com/lansfy/gonkex/output/allure_report"
+	"github.com/lansfy/gonkex/output/console_colored"
+	"github.com/lansfy/gonkex/runner"
+	"github.com/lansfy/gonkex/testloader/yaml_file"
+	"github.com/lansfy/gonkex/variables"
 )
 
 type config struct {
@@ -60,7 +60,7 @@ func main() {
 
 	var allureOutput *allure_report.AllureReportOutput
 	if cfg.Allure {
-		allureOutput = allure_report.NewOutput("Gonkey", "./allure-results")
+		allureOutput = allure_report.NewOutput("Gonkex", "./allure-results")
 		testsRunner.AddOutput(allureOutput)
 	}
 
