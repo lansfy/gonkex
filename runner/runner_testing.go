@@ -15,7 +15,6 @@ import (
 	"github.com/lansfy/gonkex/checker/response_body"
 	"github.com/lansfy/gonkex/checker/response_db"
 	"github.com/lansfy/gonkex/checker/response_header"
-	"github.com/lansfy/gonkex/fixtures"
 	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/output"
@@ -62,8 +61,6 @@ func RunWithTesting(t *testing.T, server *httptest.Server, opts *RunWithTestingO
 		}
 	}
 
-	fixturesLoader := fixtures.NewLoader(opts.FixturesDir, opts.Storages)
-
 	var proxyURL *url.URL
 	if os.Getenv("HTTP_PROXY") != "" {
 		httpURL, err := url.Parse(os.Getenv("HTTP_PROXY"))
@@ -73,7 +70,23 @@ func RunWithTesting(t *testing.T, server *httptest.Server, opts *RunWithTestingO
 		proxyURL = httpURL
 	}
 
-	runner := initRunner(t, server, opts, mocksLoader, fixturesLoader, proxyURL)
+	yamlLoader := yaml_file.NewLoader(opts.TestsDir)
+	yamlLoader.SetFileFilter(os.Getenv("GONKEX_FILE_FILTER"))
+
+	handler := testingHandler{t}
+	runner := New(
+		&Config{
+			Host:         server.URL,
+			Mocks:        opts.Mocks,
+			FixturesDir:  opts.FixturesDir,
+			Storages:     opts.Storages,
+			MocksLoader:  mocksLoader,
+			Variables:    variables.New(),
+			HTTPProxyURL: proxyURL,
+		},
+		yamlLoader,
+		handler.HandleTest,
+	)
 
 	addOutputs(runner, opts)
 	addCheckers(runner, opts)
@@ -82,34 +95,6 @@ func RunWithTesting(t *testing.T, server *httptest.Server, opts *RunWithTestingO
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-func initRunner(
-	t *testing.T,
-	server *httptest.Server,
-	opts *RunWithTestingOpts,
-	mocksLoader *mocks.Loader,
-	fixturesLoader fixtures.Loader,
-	proxyURL *url.URL,
-) *Runner {
-	yamlLoader := yaml_file.NewLoader(opts.TestsDir)
-	yamlLoader.SetFileFilter(os.Getenv("GONKEX_FILE_FILTER"))
-
-	handler := testingHandler{t}
-	runner := New(
-		&Config{
-			Host:           server.URL,
-			Mocks:          opts.Mocks,
-			MocksLoader:    mocksLoader,
-			FixturesLoader: fixturesLoader,
-			Variables:      variables.New(),
-			HTTPProxyURL:   proxyURL,
-		},
-		yamlLoader,
-		handler.HandleTest,
-	)
-
-	return runner
 }
 
 func addOutputs(runner *Runner, opts *RunWithTestingOpts) {

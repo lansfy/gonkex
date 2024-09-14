@@ -11,21 +11,22 @@ import (
 
 	"github.com/lansfy/gonkex/checker"
 	"github.com/lansfy/gonkex/cmd_runner"
-	"github.com/lansfy/gonkex/fixtures"
 	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/output"
+	"github.com/lansfy/gonkex/storage"
 	"github.com/lansfy/gonkex/testloader"
 	"github.com/lansfy/gonkex/variables"
 )
 
 type Config struct {
-	Host           string
-	FixturesLoader fixtures.Loader
-	Mocks          *mocks.Mocks
-	MocksLoader    *mocks.Loader
-	Variables      *variables.Variables
-	HTTPProxyURL   *url.URL
+	Host         string
+	FixturesDir  string
+	Storages     []storage.StorageInterface
+	Mocks        *mocks.Mocks
+	MocksLoader  *mocks.Loader
+	Variables    *variables.Variables
+	HTTPProxyURL *url.URL
 }
 
 type (
@@ -124,10 +125,9 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	r.config.Variables.Load(v.GetCombinedVariables())
 	v = r.config.Variables.Apply(v)
 
-	if r.config.FixturesLoader != nil && v.Fixtures() != nil {
-		if err := r.config.FixturesLoader.Load(v.Fixtures()); err != nil {
-			return nil, fmt.Errorf("unable to load fixtures [%s], error:\n%s", strings.Join(v.Fixtures(), ", "), err)
-		}
+	err := loadFixtures(r.config.FixturesDir, r.config.Storages, v.Fixtures())
+	if err != nil {
+		return nil, fmt.Errorf("unable to load fixtures [%s], error:\n%s", strings.Join(v.Fixtures(), ", "), err)
 	}
 
 	// reset mocks
@@ -239,6 +239,16 @@ func (r *Runner) setVariablesFromResponse(t models.TestInterface, contentType, b
 
 	r.config.Variables.Merge(vars)
 
+	return nil
+}
+
+func loadFixtures(location string, storages []storage.StorageInterface, names []string) error {
+	for _, s := range storages {
+		err := s.LoadFixtures(location, names)
+		if err != nil {
+			return fmt.Errorf("load fixtures: %w", err)
+		}
+	}
 	return nil
 }
 
