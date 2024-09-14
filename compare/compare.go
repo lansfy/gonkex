@@ -153,7 +153,7 @@ func compareLeafs(path string, expected, actual interface{}) []error {
 		errors = append(errors, compareRegex(path, expected, actual)...)
 
 	default:
-		panic("unknown compare type")
+		errors = append(errors, fmt.Errorf("unknown compare type %q", expected))
 	}
 
 	return errors

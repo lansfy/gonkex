@@ -3,6 +3,7 @@ package sqldb
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 
 	"github.com/lansfy/gonkex/storage/addons/sqldb/mysql"
 	"github.com/lansfy/gonkex/storage/addons/sqldb/postgresql"
@@ -25,7 +26,7 @@ type StorageOpts struct {
 
 func NewStorage(dbType SQLType, db *sql.DB, opts StorageOpts) (*Storage, error) {
 	if dbType != PostgreSQL && dbType != MySQL {
-		panic("unknown db type param")
+		return nil, fmt.Errorf("unknown db type %q", dbType)
 	}
 	return &Storage{
 		dbType: dbType,
