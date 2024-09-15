@@ -5,7 +5,8 @@ import (
 )
 
 type StorageInterface interface {
-	Type() string
+	GetName() string
+	GetType() string
 	LoadFixtures(location string, names []string) error
 	ExecuteQuery(query string) ([]json.RawMessage, error)
 }

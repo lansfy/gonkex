@@ -19,22 +19,28 @@ const (
 type Storage struct {
 	dbType SQLType
 	db     *sql.DB
+	opts   *StorageOpts
 }
 
 type StorageOpts struct {
 }
 
-func NewStorage(dbType SQLType, db *sql.DB, opts StorageOpts) (*Storage, error) {
+func NewStorage(dbType SQLType, db *sql.DB, opts *StorageOpts) (*Storage, error) {
 	if dbType != PostgreSQL && dbType != MySQL {
 		return nil, fmt.Errorf("unknown db type %q", dbType)
 	}
 	return &Storage{
 		dbType: dbType,
 		db:     db,
+		opts:   opts,
 	}, nil
 }
 
-func (l *Storage) Type() string {
+func (l *Storage) GetName() string {
+	return l.GetType()
+}
+
+func (l *Storage) GetType() string {
 	return string(l.dbType)
 }
 
@@ -46,8 +52,5 @@ func (l *Storage) LoadFixtures(location string, names []string) error {
 }
 
 func (l *Storage) ExecuteQuery(query string) ([]json.RawMessage, error) {
-	if l.dbType == PostgreSQL {
-		return postgresql.ExecuteQuery(l.db, query)
-	}
-	return mysql.ExecuteQuery(l.db, query)
+	return ExecuteQuery(l.dbType, l.db, query)
 }

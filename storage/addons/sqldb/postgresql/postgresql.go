@@ -77,35 +77,6 @@ func LoadFixtures(db *sql.DB, location string, names []string) error {
 	return loadTables(&ctx, db)
 }
 
-func ExecuteQuery(db *sql.DB, query string) ([]json.RawMessage, error) {
-	dbResponse := []json.RawMessage{}
-
-	if idx := strings.IndexByte(query, ';'); idx >= 0 {
-		query = query[:idx]
-	}
-
-	rows, err := db.Query(fmt.Sprintf("SELECT row_to_json(rows) FROM (%s) rows;", query))
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var jsonString string
-		err = rows.Scan(&jsonString)
-		if err != nil {
-			return nil, err
-		}
-		dbResponse = append(dbResponse, json.RawMessage(jsonString))
-	}
-	err = rows.Err()
-	if err != nil {
-		return nil, err
-	}
-
-	return dbResponse, nil
-}
-
 func loadFile(location, name string, ctx *loadContext) error {
 	candidates := []string{
 		location + "/" + name,
