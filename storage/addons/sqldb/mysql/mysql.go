@@ -15,8 +15,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const errNoIDColumn = "Error 1054: Unknown column 'id' in 'where clause'"
-
 type row map[string]interface{}
 
 type table []row
@@ -56,10 +54,6 @@ func LoadFixtures(db *sql.DB, location string, names []string) error {
 	}
 
 	return loadTables(&ctx, db)
-}
-
-func ExecuteQuery(db *sql.DB, query string) ([]json.RawMessage, error) {
-	return nil, fmt.Errorf("not implemented")
 }
 
 func loadFile(location, name string, ctx *loadContext) error {
@@ -314,6 +308,8 @@ func fetchRow(rows *sql.Rows) (row, error) {
 
 	return res, nil
 }
+
+const errNoIDColumn = "Error 1054: Unknown column 'id' in 'where clause'"
 
 func insertedRows(tx *sql.Tx, insertRes sql.Result, t string) (*sql.Rows, error) {
 	lastID, err := insertRes.LastInsertId()
