@@ -83,11 +83,11 @@ func convertResultToJson(rows *sql.Rows) (interface{}, error) {
 
 func convertString(value, colType string) (interface{}, error) {
 	switch colType {
-	case "SMALLINT", "MEDIUMINT", "INT", "INTEGER", "BIGINT", "YEAR":
+	case "SMALLINT", "MEDIUMINT", "INT", "INTEGER", "BIGINT", "YEAR", "INT2", "INT4", "INT8":
 		return strconv.Atoi(value)
 	case "TINYINT", "BOOL", "BOOLEAN", "BIT":
 		return strconv.ParseBool(value)
-	case "FLOAT", "DOUBLE", "DECIMAL":
+	case "FLOAT", "DOUBLE", "DECIMAL", "FLOAT4", "FLOAT8", "NUMERIC":
 		return strconv.ParseFloat(value, 64)
 	case "DATETIME", "TIMESTAMP":
 		return normalizeTime(value, "2006-01-02 15:04:05", timeFormat)
@@ -127,6 +127,7 @@ func convertBytes(v []byte, colType string) (interface{}, error) {
 		return convertString(value, colType)
 	}
 
+	// value is array
 	value = value[1 : len(value)-1]
 	colType = colType[1:]
 	arr := []interface{}{}
