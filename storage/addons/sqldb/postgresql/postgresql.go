@@ -229,6 +229,10 @@ func truncateTables(tx *sql.Tx, tables ...loadedTable) error {
 		set[tableName] = struct{}{}
 	}
 
+	if len(tablesToTruncate) == 0 {
+		return nil
+	}
+
 	query := fmt.Sprintf("TRUNCATE TABLE %s CASCADE", strings.Join(tablesToTruncate, ","))
 	_, err := tx.Exec(query)
 	if err != nil {
