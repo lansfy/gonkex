@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strings"
 
 	"github.com/fatih/color"
+	"github.com/kylelemons/godebug/diff"
 )
 
 type Params struct {
@@ -161,7 +163,7 @@ func compareLeafs(path string, expected, actual interface{}) []error {
 
 func comparePure(path string, expected, actual interface{}) (errors []error) {
 	if expected != actual {
-		errors = append(errors, makeError(path, "values do not match", expected, actual))
+		errors = append(errors, makeValueCompareError(path, "values do not match", expected, actual))
 	}
 
 	return errors
@@ -212,6 +214,41 @@ func leafMatchType(expected interface{}) leafsMatchType {
 	}
 
 	return pure
+}
+
+func diffStrings(a, b string) string {
+	chunks := diff.DiffChunks(strings.Split(a, "\n"), strings.Split(b, "\n"))
+
+	buf := strings.Builder{}
+	for _, c := range chunks {
+		for _, line := range c.Added {
+			buf.WriteString(color.RedString("+%s\n", line))
+		}
+		for _, line := range c.Deleted {
+			buf.WriteString(color.RedString("-%s\n", line))
+		}
+		for _, line := range c.Equal {
+			buf.WriteString(color.GreenString(" %s\n", line))
+		}
+	}
+	return strings.TrimRight(buf.String(), "\n")
+}
+
+func makeValueCompareError(path, msg string, expected, actual interface{}) error {
+	expectedStr, ok1 := expected.(string)
+	actualStr, ok2 := actual.(string)
+	if !ok1 || !ok2 || !strings.Contains(actualStr+expectedStr, "\n") {
+		return makeError(path, msg, expected, actual)
+	}
+
+	// special case for strings
+	changes := diffStrings(actualStr, expectedStr)
+	return fmt.Errorf(
+		"at path %s %s:\n     diff (--- expected vs +++ actual):\n%s",
+		color.CyanString(path),
+		msg,
+		changes,
+	)
 }
 
 func makeError(path, msg string, expected, actual interface{}) error {
