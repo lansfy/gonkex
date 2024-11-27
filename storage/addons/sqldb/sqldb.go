@@ -4,16 +4,18 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-
-	"github.com/lansfy/gonkex/storage/addons/sqldb/mysql"
-	"github.com/lansfy/gonkex/storage/addons/sqldb/postgresql"
 )
 
 type SQLType string
 
 const (
-	PostgreSQL SQLType = "postgresql"
-	MySQL      SQLType = "mysql"
+	PostgreSQL  SQLType = "postgresql"
+	MySQL       SQLType = "mysql"
+	Sqlite      SQLType = "sqlite"
+	TimescaleDB SQLType = "timescaledb"
+	MariaDB     SQLType = "mariadb"
+	SQLServer   SQLType = "sqlserver"
+	ClickHouse  SQLType = "clickhouse"
 )
 
 type Storage struct {
@@ -26,7 +28,9 @@ type StorageOpts struct {
 }
 
 func NewStorage(dbType SQLType, db *sql.DB, opts *StorageOpts) (*Storage, error) {
-	if dbType != PostgreSQL && dbType != MySQL {
+	switch dbType {
+	case PostgreSQL, MySQL, Sqlite, TimescaleDB, MariaDB, SQLServer, ClickHouse:
+	default:
 		return nil, fmt.Errorf("unknown db type %q", dbType)
 	}
 	return &Storage{
@@ -45,10 +49,7 @@ func (l *Storage) GetType() string {
 }
 
 func (l *Storage) LoadFixtures(location string, names []string) error {
-	if l.dbType == PostgreSQL {
-		return postgresql.LoadFixtures(l.db, location, names)
-	}
-	return mysql.LoadFixtures(l.db, location, names)
+	return LoadFixtures(l.dbType, l.db, location, names)
 }
 
 func (l *Storage) ExecuteQuery(query string) ([]json.RawMessage, error) {
