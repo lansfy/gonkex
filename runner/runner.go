@@ -22,7 +22,7 @@ import (
 type Config struct {
 	Host         string
 	FixturesDir  string
-	Storages     []storage.StorageInterface
+	DB           storage.StorageInterface
 	Mocks        *mocks.Mocks
 	MocksLoader  *mocks.Loader
 	Variables    *variables.Variables
@@ -125,9 +125,11 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	r.config.Variables.Load(v.GetCombinedVariables())
 	v = r.config.Variables.Apply(v)
 
-	err := loadFixtures(r.config.FixturesDir, r.config.Storages, v.Fixtures())
-	if err != nil {
-		return nil, fmt.Errorf("unable to load fixtures [%s], error:\n%s", strings.Join(v.Fixtures(), ", "), err)
+	if r.config.DB != nil {
+		err := r.config.DB.LoadFixtures(r.config.FixturesDir, v.Fixtures())
+		if err != nil {
+			return nil, fmt.Errorf("load fixtures [%v]: %w", v.Fixtures(), err)
+		}
 	}
 
 	// reset mocks
@@ -239,16 +241,6 @@ func (r *Runner) setVariablesFromResponse(t models.TestInterface, contentType, b
 
 	r.config.Variables.Merge(vars)
 
-	return nil
-}
-
-func loadFixtures(location string, storages []storage.StorageInterface, names []string) error {
-	for _, s := range storages {
-		err := s.LoadFixtures(location, names)
-		if err != nil {
-			return fmt.Errorf("load fixtures: %w", err)
-		}
-	}
 	return nil
 }
 

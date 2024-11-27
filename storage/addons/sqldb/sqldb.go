@@ -40,10 +40,6 @@ func NewStorage(dbType SQLType, db *sql.DB, opts *StorageOpts) (*Storage, error)
 	}, nil
 }
 
-func (l *Storage) GetName() string {
-	return l.GetType()
-}
-
 func (l *Storage) GetType() string {
 	return string(l.dbType)
 }

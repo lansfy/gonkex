@@ -32,7 +32,7 @@ type RunWithTestingOpts struct {
 	EnvFilePath string
 
 	Mocks          *mocks.Mocks
-	Storages       []storage.StorageInterface
+	DB             storage.StorageInterface
 	MainOutputFunc output.OutputInterface
 	Outputs        []output.OutputInterface
 	Checkers       []checker.CheckerInterface
@@ -79,7 +79,7 @@ func RunWithTesting(t *testing.T, server *httptest.Server, opts *RunWithTestingO
 			Host:         server.URL,
 			Mocks:        opts.Mocks,
 			FixturesDir:  opts.FixturesDir,
-			Storages:     opts.Storages,
+			DB:           opts.DB,
 			MocksLoader:  mocksLoader,
 			Variables:    variables.New(),
 			HTTPProxyURL: proxyURL,
@@ -112,8 +112,8 @@ func addOutputs(runner *Runner, opts *RunWithTestingOpts) {
 func addCheckers(runner *Runner, opts *RunWithTestingOpts) {
 	runner.AddCheckers(response_body.NewChecker())
 	runner.AddCheckers(response_header.NewChecker())
-	if len(opts.Storages) != 0 {
-		runner.AddCheckers(response_db.NewChecker(opts.Storages))
+	if opts.DB != nil {
+		runner.AddCheckers(response_db.NewChecker(opts.DB))
 	}
 	runner.AddCheckers(opts.Checkers...)
 }
