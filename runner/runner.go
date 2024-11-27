@@ -190,6 +190,11 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		Test:                v,
 	}
 
+	// support for Trailer headers: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Trailer
+	for name, value := range resp.Trailer {
+		result.ResponseHeaders[name] = value
+	}
+
 	// launch script in cmd interface
 	if v.AfterRequestScriptPath() != "" {
 		if err := cmd_runner.CmdRun(v.AfterRequestScriptPath(), v.AfterRequestScriptTimeout()); err != nil {
