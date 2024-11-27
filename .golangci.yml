@@ -96,13 +96,11 @@ linters:
     - unused
     - whitespace
 
-run:
-  skip-dirs:
-    - vendor
-
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
+  exclude-dirs:
+    - storage/addons/sqldb/testfixtures
   exclude-rules:
     - path: _test\.go
       linters:
