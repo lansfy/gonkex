@@ -14,12 +14,12 @@ import (
 )
 
 type ResponseDbChecker struct {
-	storages []storage.StorageInterface
+	db storage.StorageInterface
 }
 
-func NewChecker(storages []storage.StorageInterface) checker.CheckerInterface {
+func NewChecker(db storage.StorageInterface) checker.CheckerInterface {
 	return &ResponseDbChecker{
-		storages: storages,
+		db: db,
 	}
 }
 
@@ -66,7 +66,7 @@ func (c *ResponseDbChecker) check(
 	}
 
 	// get DB response
-	actualDbResponse, err := newQuery(t.DbQueryString(), c.storages)
+	actualDbResponse, err := newQuery(t.DbQueryString(), c.db)
 	if err != nil {
 		return nil, err
 	}
@@ -136,8 +136,8 @@ func compareDbResponseLength(expected, actual []string, query interface{}) error
 	return err
 }
 
-func newQuery(dbQuery string, storages []storage.StorageInterface) ([]string, error) {
-	messages, err := storages[0].ExecuteQuery(dbQuery)
+func newQuery(dbQuery string, db storage.StorageInterface) ([]string, error) {
+	messages, err := db.ExecuteQuery(dbQuery)
 	if err != nil {
 		return nil, err
 	}
