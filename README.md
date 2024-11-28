@@ -5,8 +5,7 @@ Gonkex will test your services using their API. It can bomb the service with pre
 Capabilities:
 
 - works with REST/JSON API
-- tests service API for compliance with OpenAPI-specs
-- seeds the DB with fixtures data (supports PostgreSQL, MySQL)
+- seeds the DB with fixtures data (supports PostgreSQL, MySQL, Sqlite, TimescaleDB, MariaDB, SQLServer, ClickHouse)
 - provides mocks for external services
 - can be used as a library and ran together with unit-tests
 - stores the results as an [Allure](https://allurereport.org/) report
@@ -14,7 +13,6 @@ Capabilities:
 
 ## Table of contents
 
-- [Using the CLI](#using-the-cli)
 - [Using gonkex as a library](#using-gonkex-as-a-library)
 - [Test scenario example](#test-scenario-example)
 - [Test status](#test-status)
@@ -32,7 +30,6 @@ Capabilities:
   - [Deleting data from tables](#deleting-data-from-tables)
   - [Record templates](#record-templates)
   - [Record inheritance](#record-inheritance)
-  - [Record linking](#record-linking)
   - [Expressions](#expressions)
 - [Mocks](#mocks)
   - [Running mocks while using gonkex as a library](#running-mocks-while-using-gonkex-as-a-library)
@@ -53,24 +50,6 @@ Capabilities:
   - [Setup in Jetbrains IDE](#setup-in-jetbrains-ide)
   - [Setup is VSCode IDE](#setup-is-vscode-ide)
 
-## Using the CLI
-
-To test a service located on a remote host, use gonkex as a console util.
-
-`./gonkex -host <...> -tests <...> [-spec <...>] [-db_dsn <...> -fixtures <...>] [-allure] [-v]`
-
-- `-spec <...>` path to a file or URL with the swagger-specs for the service
-- `-host <...>` service host:port
-- `-tests <...>` test file or directory
-- `-db-type <...>` - database type. PostgreSQL, MySQL are currently supported.
-- `-db_dsn <...>` DSN for the test DB (the DB will be cleared before seeding!), supports only PostgreSQL
-- `-fixtures <...>` fixtures directory
-- `-allure` generate an Allure-report
-- `-v` verbose output
-- `-debug` debug output
-
-You can't use mocks in this mode.
-
 ## Using gonkex as a library
 
 To integrate functional and native Go tests and run them together, use gonkex as a library.
@@ -81,51 +60,55 @@ Import gonkex as a dependency to your project in this file.
 
 ```go
 import (
-    "github.com/lansfy/gonkex/runner"
-    "github.com/lansfy/gonkex/mocks"
+	"github.com/lansfy/gonkex/mocks"
+	"github.com/lansfy/gonkex/runner"
 )
 ```
 
-Create a test function.
+Create a test function:
 
 ```go
 package test
 
 import (
-  "testing"
+	"testing"
 
-  "github.com/lansfy/gonkex/fixtures"
-  "github.com/lansfy/gonkex/mocks"
-  "github.com/lansfy/gonkex/runner"
+	"github.com/lansfy/gonkex/mocks"
+	"github.com/lansfy/gonkex/storage"
+	"github.com/lansfy/gonkex/storage/addons/sqldb"
+	"github.com/lansfy/gonkex/runner"
 )
 
 func TestFuncCases(t *testing.T) {
-  // init the mocks if needed (details below)
-  // m := mocks.NewNop(...)
+	// init the mocks if needed (details below)
+	// m := mocks.NewNop(...)
 
-  // init the DB to load the fixtures if needed (details below)
-  // db := ...
+	// init the DB to load the fixtures if needed (details below)
+	//
+	// db := ...
+	// storage := sqldb.NewStorage(sqldb.PostgreSQL, db, nil)
+	//
+	// next sql storages supported:
+	//    sqldb.PostgreSQL,  sqldb.MySQL,   sqldb.Sqlite,  sqldb.ClickHouse,
+	//    sqldb.TimescaleDB, sqldb.MariaDB, sqldb.SQLServer
 
-  // create a server instance of your app
-  srv := server.NewServer()
-  defer srv.Close()
+	// create a server instance of your app
+	srv := server.NewServer()
+	defer srv.Close()
 
-  // run test cases from your dir with Allure report generation
-  runner.RunWithTesting(t, &runner.RunWithTestingParams{
-    Server:   srv,
-    TestsDir: "cases",
-    Mocks:    m,
-    DB:       db,
-    // Type of database, can be fixtures.Postgres, fixtures.Mysql, fixtures.CustomLoader
-    // if DB parameter present, by default uses fixtures.Postgres database type
-    DbType:      fixtures.Postgres,
-    FixturesDir: "fixtures",
-  })
+	// run test cases from current folder
+	runner.RunWithTesting(t, &runner.RunWithTestingParams{
+		Server:      srv,
+		TestsDir:    "cases",      // test case folder
+		FixturesDir: "fixtures",   // fixtures folder
+		Mocks:       m,
+		DB:          storage,
+	})
 }
 ```
 
-Starts from version 1.18.3, externally written fixture loader may be used for loading test data, if gonkex used as a library.
-To start using the custom loader, you need to import the custom module, that contains implementation of fixtures.Loader interface.
+Externally written storage may be used for loading test data, if gonkex used as a library.
+To start using the custom loader, you need to import the custom module, that contains implementation of storage.StorageInterface interface.
 
 The tests can be now ran with `go test`, for example: `go test ./...`.
 
@@ -441,9 +424,9 @@ Example:
  - name: "upload-files"
    method: POST
    form:
-       files:
-         file1: "testdata/upload-files/file1.txt"
-         file2: "testdata/upload-files/file2.log"
+     files:
+       file1: "testdata/upload-files/file1.txt"
+       file2: "testdata/upload-files/file2.log"
    headers:
      Content-Type: multipart/form-data # case-sensitive, can be omitted
    response:
@@ -499,7 +482,7 @@ tables:
       updated_at: 2016-01-01 12:30:12
 
   another_table:
-      ...
+    ...
   ...
 ```
 
@@ -545,14 +528,14 @@ Example of using a template in a fixture:
 
 ```yaml
 templates:
-   ...
+  ...
 tables:
-   clients:
-      - $extend: dummy_client
-      - $extend: dummy_client
-        name: Josh
-      - $extend: dummy_deleted_client
-        name: Jane
+  clients:
+    - $extend: dummy_client
+    - $extend: dummy_client
+      name: Josh
+    - $extend: dummy_deleted_client
+      name: Jane
 ```
 
 As you might have noticed, templates can be inherited as well with `$extend` keyword, but only if by the time of the dependent template definition the parent template is already defined (in this file or any other referenced with `inherits`).
@@ -590,38 +573,6 @@ Don't forget to declare the dependency between files in `inherits`, to make sure
 
 It's important to note that record inheritance only works with different fixture files. It's not possible to declare inheritance within one file.
 
-### Record linking
-
-Despite the fact that fixture files allow you to set values for autoincrement columns (usually `id`), it's not recommended doing it. It's very difficult to control that all the values for `id` are correct between different files and that they never interfere. In order to let the DB assign autoincrement values its enough to not set the value explicitly.
-
-However, if the value for `id` is not set explicitly, how is it possible to link several entities that should reference each other with ids? Fixtures let us to reference previously inserted records by their name, using `$refName.fieldName`.
-
-Let's declare a named record:
-
-```yaml
-# fixtures/post.yaml
-tables:
-  posts:
-    - $name: regular_post
-      title: Post title
-      text: Some text
-```
-
-Now, in order to link `posts` and `comments` tables, we can address the record using its name (`$regular_post`) and pass the field where the value should be taken from (`id`):
-
-```yaml
-# fixtures/comment.yaml
-tables:
-  comments:
-    - post_id: $regular_post.id
-      content: A comment...
-      author_name: John Doe
-```
-
-You can only reference fields of a previously inserted record. It's impossible to reference template fields, when trying to do that you'll get an `undefined reference` error.
-
-Take a note of a limitation: you can't reference records within one table of one file.
-
 ### Expressions
 
 When you need to write an expression execution result to the DB and not a static value, you can use `$eval()` construct. Everything inside the brackets will be inserted into the DB as raw, non-escaped data. This way, within `$eval()` you can write everything you would in a regular query.
@@ -646,18 +597,16 @@ Before running tests, all planned mocks are started. It means that gonkex spins 
 ```go
 // create empty server mocks
 m := mocks.NewNop(
-    "cart",
-    "loyalty",
-    "catalog",
-    "madmin",
-    "okz",
-    "discounts",
+	"cart",
+	"catalog",
+	"loyalty",
+	"discounts",
 )
 
 // spin up mocks
 err := m.Start()
 if err != nil {
-    t.Fatal(err)
+	t.Fatal(err)
 }
 defer m.Shutdown()
 ```
@@ -667,12 +616,10 @@ After spinning up the mock web-servers, we can get their addresses (host and por
 ```go
 // configuring and running the service
 srv := server.NewServer(&server.Config{
- CartAddr:      m.Service("cart").ServerAddr(),
- LoyaltyAddr:   m.Service("loyalty").ServerAddr(),
- CatalogAddr:   m.Service("catalog").ServerAddr(),
- MadminAddr:    m.Service("madmin").ServerAddr(),
- OkzAddr:       m.Service("okz").ServerAddr(),
- DiscountsAddr: m.Service("discounts").ServerAddr(),
+	CartAddr:      m.Service("cart").ServerAddr(),
+	CatalogAddr:   m.Service("catalog").ServerAddr(),
+	LoyaltyAddr:   m.Service("loyalty").ServerAddr(),
+	DiscountsAddr: m.Service("discounts").ServerAddr(),
 })
 defer srv.Close()
 ```
@@ -681,9 +628,9 @@ As soon as you spinned up your mocks and configured your service, you can run th
 
 ```go
 runner.RunWithTesting(t, &runner.RunWithTestingParams{
-    Server:    srv,
-    Directory: "tests/cases",
-    Mocks:     m, // passing the mocks to the test runner
+	Server:   srv,
+	TestsDir: "tests/cases",
+	Mocks:    m, // pass the mocks to the test runner
 })
 ```
 
@@ -964,19 +911,19 @@ Examples:
     service1:
       requestConstraints:
         - kind: bodyMatchesText
-            body: |-
-              query HeroNameAndFriends {
-                    hero {
+          body: |-
+            query HeroNameAndFriends {
+                  hero {
+                    name
+                    friends {
                       name
-                      friends {
-                        name
-                      }
                     }
                   }
+                }
     service2:
       requestConstraints:
         - kind: bodyMatchesText
-            regexp: (HeroNameAndFriends)
+          regexp: (HeroNameAndFriends)
     ...
 ```
 
@@ -1400,6 +1347,7 @@ But, for now, already acceptable style is:
 ```
 
 With second variant, you can run any amount of needed queries, after test case runned.
+
 *NOTE*: All mentioned below techniques are still work with both variants of query format.
 
 ### Query definition
