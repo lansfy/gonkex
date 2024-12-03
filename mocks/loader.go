@@ -166,7 +166,7 @@ func (l *Loader) loadMethodVaryStrategy(path string, def map[interface{}]interfa
 	return NewMethodVaryReply(methods), nil
 }
 
-func (l *Loader) loadFileStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *Loader) loadFileStrategy(_ string, def map[interface{}]interface{}) (ReplyStrategy, error) {
 	f, ok := def["filename"]
 	if !ok {
 		return nil, errors.New("`file` requires `filename` key")
@@ -186,7 +186,7 @@ func (l *Loader) loadFileStrategy(path string, def map[interface{}]interface{}) 
 	return NewFileReplyWithCode(filename, statusCode, headers)
 }
 
-func (l *Loader) loadConstantStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *Loader) loadConstantStrategy(_ string, def map[interface{}]interface{}) (ReplyStrategy, error) {
 	c, ok := def["body"]
 	if !ok {
 		return nil, errors.New("`constant` requires `body` key")
@@ -206,11 +206,11 @@ func (l *Loader) loadConstantStrategy(path string, def map[interface{}]interface
 	return NewConstantReplyWithCode([]byte(body), statusCode, headers), nil
 }
 
-func (l *Loader) loadDropRequestStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *Loader) loadDropRequestStrategy(_ string, _ map[interface{}]interface{}) (ReplyStrategy, error) {
 	return NewDropRequestReply(), nil
 }
 
-func (l *Loader) loadTemplateStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *Loader) loadTemplateStrategy(_ string, def map[interface{}]interface{}) (ReplyStrategy, error) {
 	c, ok := def["body"]
 	if !ok {
 		return nil, errors.New("`template` requires `body` key")

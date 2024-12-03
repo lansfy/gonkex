@@ -183,7 +183,7 @@ func (ctx *loadContext) generateTestFixtures() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		tables = append(tables, yaml.MapItem{lt.name, items})
+		tables = append(tables, yaml.MapItem{Key: lt.name, Value: items})
 	}
 
 	out, err := yaml.Marshal(tables)
@@ -239,7 +239,7 @@ func loadRow(row tableRow) (yaml.MapSlice, error) {
 		if err != nil {
 			return values, err
 		}
-		values = append(values, yaml.MapItem{name, val})
+		values = append(values, yaml.MapItem{Key: name, Value: val})
 	}
 	return values, nil
 }
