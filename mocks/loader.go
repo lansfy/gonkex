@@ -4,9 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
-
-	"github.com/lansfy/gonkex/compare"
 )
 
 type Loader struct {
@@ -95,10 +94,10 @@ func (l *Loader) loadDefinition(path string, rawDef interface{}) (*Definition, e
 func (l *Loader) loadStrategy(path, strategyName string, definition map[interface{}]interface{}, ak *[]string) (ReplyStrategy, error) {
 	switch strategyName {
 	case "nop":
-		return &nopReply{}, nil
+		return NewNopReply(), nil
 	case "uriVary":
 		*ak = append(*ak, "basePath", "uris")
-		return l.loadUriVaryStrategy(path, definition)
+		return l.loadUriVaryReplyStrategy(path, definition)
 	case "methodVary":
 		*ak = append(*ak, "methods")
 		return l.loadMethodVaryStrategy(path, definition)
@@ -124,7 +123,7 @@ func (l *Loader) loadStrategy(path, strategyName string, definition map[interfac
 	}
 }
 
-func (l *Loader) loadUriVaryStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *Loader) loadUriVaryReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
 	var basePath string
 	if b, ok := def["basePath"]; ok {
 		basePath = b.(string)
@@ -144,7 +143,7 @@ func (l *Loader) loadUriVaryStrategy(path string, def map[interface{}]interface{
 			uris[uri.(string)] = def
 		}
 	}
-	return NewUriVaryReply(basePath, uris), nil
+	return NewUriVaryReplyStrategy(basePath, uris), nil
 }
 
 func (l *Loader) loadMethodVaryStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
@@ -183,7 +182,11 @@ func (l *Loader) loadFileStrategy(path string, def map[interface{}]interface{}) 
 	if err != nil {
 		return nil, err
 	}
-	return NewFileReplyWithCode(filename, statusCode, headers)
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	return NewConstantReplyWithCode(content, statusCode, headers), nil
 }
 
 func (l *Loader) loadConstantStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
@@ -227,7 +230,7 @@ func (l *Loader) loadTemplateStrategy(path string, def map[interface{}]interface
 	if err != nil {
 		return nil, err
 	}
-	return newTemplateReply(body, statusCode, headers)
+	return NewTemplateReply(body, statusCode, headers)
 }
 
 func (l *Loader) loadSequenceStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
@@ -269,7 +272,7 @@ func (l *Loader) loadBasedOnRequestStrategy(path string, def map[interface{}]int
 			uris = append(uris, def)
 		}
 	}
-	return newBasedOnRequestReply(uris), nil
+	return NewBasedOnRequestReply(uris), nil
 }
 
 func (l *Loader) loadHeaders(def map[interface{}]interface{}) (map[string]string, error) {
@@ -322,237 +325,40 @@ func (l *Loader) loadConstraintOfKind(kind string, def map[interface{}]interface
 	switch kind {
 	case "nop":
 		return &nopConstraint{}, nil
-	case "bodyMatchesJSON":
-		*ak = append(*ak, "body", "comparisonParams")
-		return l.loadBodyMatchesJSONConstraint(def)
-	case "bodyJSONFieldMatchesJSON":
-		*ak = append(*ak, "path", "value", "comparisonParams")
-		return l.loadBodyJSONFieldMatchesJSONConstraint(def)
-	case "queryMatches":
-		*ak = append(*ak, "expectedQuery")
-		return l.loadQueryMatchesConstraint(def)
-	case "queryMatchesRegexp":
-		*ak = append(*ak, "expectedQuery")
-		return l.loadQueryMatchesRegexpConstraint(def)
+	case "methodIs":
+		*ak = append(*ak, "method")
+		return loadMethodConstraint(def)
 	case "methodIsGET":
 		return &methodConstraint{method: "GET"}, nil
 	case "methodIsPOST":
 		return &methodConstraint{method: "POST"}, nil
-	case "methodIs":
-		*ak = append(*ak, "method")
-		return l.loadMethodIsConstraint(def)
 	case "headerIs":
 		*ak = append(*ak, "header", "value", "regexp")
-		return l.loadHeaderIsConstraint(def)
-	case "bodyMatchesText":
-		*ak = append(*ak, "body", "regexp")
-		return l.loadBodyMatchesTextConstraint(def)
+		return loadHeaderConstraint(def)
 	case "pathMatches":
 		*ak = append(*ak, "path", "regexp")
-		return l.loadPathMatchesConstraint(def)
+		return loadPathConstraint(def)
+	case "queryMatches":
+		*ak = append(*ak, "expectedQuery")
+		return loadQueryConstraint(def)
+	case "queryMatchesRegexp":
+		*ak = append(*ak, "expectedQuery")
+		return loadQueryRegexpConstraint(def)
+	case "bodyMatchesText":
+		*ak = append(*ak, "body", "regexp")
+		return loadBodyMatchesTextConstraint(def)
+	case "bodyMatchesJSON":
+		*ak = append(*ak, "body", "comparisonParams")
+		return loadBodyMatchesJSONConstraint(def)
 	case "bodyMatchesXML":
 		*ak = append(*ak, "body", "comparisonParams")
-		return l.loadBodyMatchesXMLConstraint(def)
+		return loadBodyMatchesXMLConstraint(def)
+	case "bodyJSONFieldMatchesJSON":
+		*ak = append(*ak, "path", "value", "comparisonParams")
+		return loadBodyJSONFieldMatchesJSONConstraint(def)
 	default:
 		return nil, fmt.Errorf("unknown constraint: %s", kind)
 	}
-}
-
-func readCompareParams(def map[interface{}]interface{}) (compare.Params, error) {
-	params := compare.Params{
-		IgnoreArraysOrdering: true,
-	}
-
-	p, ok := def["comparisonParams"]
-	if !ok {
-		return params, nil
-	}
-
-	values, ok := p.(map[interface{}]interface{})
-	if !ok {
-		return params, errors.New("`comparisonParams` can't be parsed")
-	}
-
-	mapping := map[string]*bool{
-		"ignoreValues":         &params.IgnoreValues,
-		"ignoreArraysOrdering": &params.IgnoreArraysOrdering,
-		"disallowExtraFields":  &params.DisallowExtraFields,
-	}
-
-	for key, val := range values {
-		skey, ok := key.(string)
-		if !ok {
-			return params, errors.New("`comparisonParams` has non-string key")
-		}
-
-		bval, ok := val.(bool)
-		if !ok {
-			return params, errors.New("`comparisonParams` has non-bool values")
-		}
-
-		if pbval, ok := mapping[skey]; ok {
-			*pbval = bval
-		}
-	}
-	return params, nil
-}
-
-func (l *Loader) loadBodyMatchesJSONConstraint(def map[interface{}]interface{}) (verifier, error) {
-	c, ok := def["body"]
-	if !ok {
-		return nil, errors.New("`bodyMatchesJSON` requires `body` key")
-	}
-	body, ok := c.(string)
-	if !ok {
-		return nil, errors.New("`body` must be string")
-	}
-
-	params, err := readCompareParams(def)
-	if err != nil {
-		return nil, err
-	}
-
-	return newBodyMatchesJSONConstraint(body, params)
-}
-
-func (l *Loader) loadBodyJSONFieldMatchesJSONConstraint(def map[interface{}]interface{}) (verifier, error) {
-	c, ok := def["path"]
-	if !ok {
-		return nil, errors.New("`bodyJSONFieldMatchesJSON` requires `path` key")
-	}
-	path, ok := c.(string)
-	if !ok {
-		return nil, errors.New("`path` must be string")
-	}
-
-	c, ok = def["value"]
-	if !ok {
-		return nil, errors.New("`bodyJSONFieldMatchesJSON` requires `value` key")
-	}
-	value, ok := c.(string)
-	if !ok {
-		return nil, errors.New("`value` must be string")
-	}
-
-	params, err := readCompareParams(def)
-	if err != nil {
-		return nil, err
-	}
-
-	return newBodyJSONFieldMatchesJSONConstraint(path, value, params)
-}
-
-func (l *Loader) loadBodyMatchesXMLConstraint(def map[interface{}]interface{}) (verifier, error) {
-	c, ok := def["body"]
-	if !ok {
-		return nil, errors.New("`bodyMatchesXML` requires `body` key")
-	}
-	body, ok := c.(string)
-	if !ok {
-		return nil, errors.New("`body` must be string")
-	}
-
-	params, err := readCompareParams(def)
-	if err != nil {
-		return nil, err
-	}
-
-	return newBodyMatchesXMLConstraint(body, params)
-}
-
-func (l *Loader) loadPathMatchesConstraint(def map[interface{}]interface{}) (verifier, error) {
-	var pathStr, regexpStr string
-	if path, ok := def["path"]; ok {
-		pathStr, ok = path.(string)
-		if !ok {
-			return nil, errors.New("`path` must be string")
-		}
-	}
-	if regexp, ok := def["regexp"]; ok {
-		regexpStr, ok = regexp.(string)
-		if !ok || regexp == "" {
-			return nil, errors.New("`regexp` must be string")
-		}
-	}
-	return newPathConstraint(pathStr, regexpStr)
-}
-
-func (l *Loader) loadQueryMatchesConstraint(def map[interface{}]interface{}) (verifier, error) {
-	c, ok := def["expectedQuery"]
-	if !ok {
-		return nil, errors.New("`queryMatches` requires `expectedQuery` key")
-	}
-	query, ok := c.(string)
-	if !ok {
-		return nil, errors.New("`expectedQuery` must be string")
-	}
-	return newQueryConstraint(query)
-}
-
-func (l *Loader) loadQueryMatchesRegexpConstraint(def map[interface{}]interface{}) (verifier, error) {
-	c, ok := def["expectedQuery"]
-	if !ok {
-		return nil, errors.New("`queryMatchesRegexp` requires `expectedQuery` key")
-	}
-	query, ok := c.(string)
-	if !ok {
-		return nil, errors.New("`expectedQuery` must be string")
-	}
-	return newQueryRegexpConstraint(query)
-}
-
-func (l *Loader) loadMethodIsConstraint(def map[interface{}]interface{}) (verifier, error) {
-	c, ok := def["method"]
-	if !ok {
-		return nil, errors.New("`methodIs` requires `method` key")
-	}
-	method, ok := c.(string)
-	if !ok || method == "" {
-		return nil, errors.New("`method` must be string")
-	}
-	return &methodConstraint{method: method}, nil
-}
-
-func (l *Loader) loadHeaderIsConstraint(def map[interface{}]interface{}) (verifier, error) {
-	c, ok := def["header"]
-	if !ok {
-		return nil, errors.New("`headerIs` requires `header` key")
-	}
-	header, ok := c.(string)
-	if !ok || header == "" {
-		return nil, errors.New("`header` must be string")
-	}
-	var valueStr, regexpStr string
-	if value, ok := def["value"]; ok {
-		valueStr, ok = value.(string)
-		if !ok {
-			return nil, errors.New("`value` must be string")
-		}
-	}
-	if regexp, ok := def["regexp"]; ok {
-		regexpStr, ok = regexp.(string)
-		if !ok || regexp == "" {
-			return nil, errors.New("`regexp` must be string")
-		}
-	}
-	return newHeaderConstraint(header, valueStr, regexpStr)
-}
-
-func (l *Loader) loadBodyMatchesTextConstraint(def map[interface{}]interface{}) (verifier, error) {
-	var bodyStr, regexpStr string
-	if body, ok := def["body"]; ok {
-		bodyStr, ok = body.(string)
-		if !ok {
-			return nil, errors.New("`body` must be string")
-		}
-	}
-	if regexp, ok := def["regexp"]; ok {
-		regexpStr, ok = regexp.(string)
-		if !ok {
-			return nil, errors.New("`regexp` must be string")
-		}
-	}
-	return newBodyMatchesTextConstraint(bodyStr, regexpStr)
 }
 
 func validateMapKeys(m map[interface{}]interface{}, allowedKeys ...string) error {

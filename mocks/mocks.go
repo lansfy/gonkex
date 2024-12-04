@@ -23,7 +23,7 @@ func New(mocks ...*ServiceMock) *Mocks {
 func NewNop(serviceNames ...string) *Mocks {
 	mocksMap := make(map[string]*ServiceMock, len(serviceNames))
 	for _, name := range serviceNames {
-		mocksMap[name] = NewServiceMock(name, NewDefinition("$", nil, &failReply{}, CallsNoConstraint))
+		mocksMap[name] = NewServiceMock(name, NewDefinition("$", nil, NewFailReply(), CallsNoConstraint))
 	}
 	return &Mocks{
 		mocks: mocksMap,

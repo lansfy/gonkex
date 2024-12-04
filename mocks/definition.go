@@ -7,6 +7,8 @@ import (
 	"sync"
 )
 
+var _ contextAwareStrategy = (*Definition)(nil)
+
 const CallsNoConstraint = -1
 
 type Definition struct {
