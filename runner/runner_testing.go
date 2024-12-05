@@ -49,9 +49,7 @@ func registerMocksEnvironment(m *mocks.Mocks) {
 // RunWithTesting is a helper function the wraps the common Run and provides simple way
 // to configure Gonkex by filling the params structure.
 func RunWithTesting(t *testing.T, server *httptest.Server, opts *RunWithTestingOpts) {
-	var mocksLoader *mocks.Loader
 	if opts.Mocks != nil {
-		mocksLoader = mocks.NewLoader(opts.Mocks)
 		registerMocksEnvironment(opts.Mocks)
 	}
 
@@ -80,7 +78,6 @@ func RunWithTesting(t *testing.T, server *httptest.Server, opts *RunWithTestingO
 			Mocks:        opts.Mocks,
 			FixturesDir:  opts.FixturesDir,
 			DB:           opts.DB,
-			MocksLoader:  mocksLoader,
 			Variables:    variables.New(),
 			HTTPProxyURL: proxyURL,
 		},

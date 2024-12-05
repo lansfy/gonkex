@@ -2,7 +2,6 @@ package mocks
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,15 +11,10 @@ import (
 )
 
 func loadBodyMatchesXMLConstraint(def map[interface{}]interface{}) (verifier, error) {
-	c, ok := def["body"]
-	if !ok {
-		return nil, errors.New("`bodyMatchesXML` requires `body` key")
+	body, err := getRequiredStringKey(def, "body", true)
+	if err != nil {
+		return nil, err
 	}
-	body, ok := c.(string)
-	if !ok {
-		return nil, errors.New("`body` must be string")
-	}
-
 	params, err := readCompareParams(def)
 	if err != nil {
 		return nil, err
@@ -64,8 +58,4 @@ func (c *bodyMatchesXMLConstraint) Verify(r *http.Request) []error {
 	}
 
 	return compare.Compare(c.expectedBody, actual, c.compareParams)
-}
-
-func (c *bodyMatchesXMLConstraint) Fields() []string {
-	return []string{"body", "comparisonParams"}
 }

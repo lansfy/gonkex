@@ -1,25 +1,19 @@
 package mocks
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 )
 
 func loadPathConstraint(def map[interface{}]interface{}) (verifier, error) {
-	var pathStr, regexpStr string
-	if path, ok := def["path"]; ok {
-		pathStr, ok = path.(string)
-		if !ok {
-			return nil, errors.New("`path` must be string")
-		}
+	pathStr, err := getOptionalStringKey(def, "path", true)
+	if err != nil {
+		return nil, err
 	}
-	if regexp, ok := def["regexp"]; ok {
-		regexpStr, ok = regexp.(string)
-		if !ok || regexp == "" {
-			return nil, errors.New("`regexp` must be string")
-		}
+	regexpStr, err := getOptionalStringKey(def, "regexp", false)
+	if err != nil {
+		return nil, err
 	}
 	return newPathConstraint(pathStr, regexpStr)
 }
@@ -54,8 +48,4 @@ func (c *pathConstraint) Verify(r *http.Request) []error {
 		return []error{fmt.Errorf("url path %s doesn't match regexp %s", path, c.regexp)}
 	}
 	return nil
-}
-
-func (c *pathConstraint) Fields() []string {
-	return []string{"path", "regexp"}
 }

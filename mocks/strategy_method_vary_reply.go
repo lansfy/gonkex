@@ -1,9 +1,29 @@
 package mocks
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 )
+
+func loadMethodVaryStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+	var methods map[string]*Definition
+	if u, ok := def["methods"]; ok {
+		methodsMap, ok := u.(map[interface{}]interface{})
+		if !ok {
+			return nil, errors.New("map under `methods` key required")
+		}
+		methods = make(map[string]*Definition, len(methodsMap))
+		for method, v := range methodsMap {
+			def, err := loadDefinition(path+"."+method.(string), v)
+			if err != nil {
+				return nil, err
+			}
+			methods[method.(string)] = def
+		}
+	}
+	return NewMethodVaryReply(methods), nil
+}
 
 func NewMethodVaryReply(variants map[string]*Definition) ReplyStrategy {
 	return &methodVaryReply{

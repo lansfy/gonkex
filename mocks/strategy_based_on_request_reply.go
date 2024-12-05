@@ -1,9 +1,34 @@
 package mocks
 
 import (
+	"errors"
 	"net/http"
+	"strconv"
 	"sync"
 )
+
+func loadBasedOnRequestReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+	var uris []*Definition
+	if u, ok := def["uris"]; ok {
+		urisList, ok := u.([]interface{})
+		if !ok {
+			return nil, errors.New("list under `uris` key required")
+		}
+		uris = make([]*Definition, 0, len(urisList))
+		for i, v := range urisList {
+			v, ok := v.(map[interface{}]interface{})
+			if !ok {
+				return nil, errors.New("`uris` list item must be a map")
+			}
+			def, err := loadDefinition(path+"."+strconv.Itoa(i), v)
+			if err != nil {
+				return nil, err
+			}
+			uris = append(uris, def)
+		}
+	}
+	return NewBasedOnRequestReply(uris), nil
+}
 
 func NewBasedOnRequestReply(variants []*Definition) ReplyStrategy {
 	return &basedOnRequestReply{

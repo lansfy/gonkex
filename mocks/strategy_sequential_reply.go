@@ -1,9 +1,30 @@
 package mocks
 
 import (
+	"errors"
 	"net/http"
+	"strconv"
 	"sync"
 )
+
+func loadSequenceReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+	if _, ok := def["sequence"]; !ok {
+		return nil, errors.New("`sequence` key required")
+	}
+	seqSlice, ok := def["sequence"].([]interface{})
+	if !ok {
+		return nil, errors.New("`sequence` must be a list")
+	}
+	strategies := make([]*Definition, len(seqSlice))
+	for i, v := range seqSlice {
+		def, err := loadDefinition(path+"."+strconv.Itoa(i), v)
+		if err != nil {
+			return nil, err
+		}
+		strategies[i] = def
+	}
+	return NewSequentialReply(strategies), nil
+}
 
 func NewSequentialReply(strategies []*Definition) ReplyStrategy {
 	return &sequentialReply{

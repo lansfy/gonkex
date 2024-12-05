@@ -24,7 +24,6 @@ type Config struct {
 	FixturesDir  string
 	DB           storage.StorageInterface
 	Mocks        *mocks.Mocks
-	MocksLoader  *mocks.Loader
 	Variables    *variables.Variables
 	HTTPProxyURL *url.URL
 }
@@ -140,8 +139,8 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	}
 
 	// load mocks
-	if r.config.MocksLoader != nil && v.ServiceMocks() != nil {
-		if err := r.config.MocksLoader.Load(v.ServiceMocks()); err != nil {
+	if v.ServiceMocks() != nil {
+		if err := r.config.Mocks.LoadDefinitions(v.ServiceMocks()); err != nil {
 			return nil, err
 		}
 	}

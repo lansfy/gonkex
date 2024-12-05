@@ -2,7 +2,6 @@ package mocks
 
 import (
 	"bytes"
-	"errors"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -13,24 +12,14 @@ import (
 )
 
 func loadBodyJSONFieldMatchesJSONConstraint(def map[interface{}]interface{}) (verifier, error) {
-	c, ok := def["path"]
-	if !ok {
-		return nil, errors.New("`bodyJSONFieldMatchesJSON` requires `path` key")
+	path, err := getRequiredStringKey(def, "path", false)
+	if err != nil {
+		return nil, err
 	}
-	path, ok := c.(string)
-	if !ok {
-		return nil, errors.New("`path` must be string")
+	value, err := getRequiredStringKey(def, "value", true)
+	if err != nil {
+		return nil, err
 	}
-
-	c, ok = def["value"]
-	if !ok {
-		return nil, errors.New("`bodyJSONFieldMatchesJSON` requires `value` key")
-	}
-	value, ok := c.(string)
-	if !ok {
-		return nil, errors.New("`value` must be string")
-	}
-
 	params, err := readCompareParams(def)
 	if err != nil {
 		return nil, err
@@ -82,8 +71,4 @@ func (c *bodyJSONFieldMatchesJSONConstraint) Verify(r *http.Request) []error {
 		return []error{err}
 	}
 	return compare.Compare(c.expected, actual, c.compareParams)
-}
-
-func (c *bodyJSONFieldMatchesJSONConstraint) Fields() []string {
-	return []string{"path", "value", "comparisonParams"}
 }

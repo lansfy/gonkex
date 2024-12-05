@@ -1,34 +1,27 @@
 package mocks
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 )
 
 func loadHeaderConstraint(def map[interface{}]interface{}) (verifier, error) {
-	c, ok := def["header"]
-	if !ok {
-		return nil, errors.New("`headerIs` requires `header` key")
+	header, err := getRequiredStringKey(def, "header", false)
+	if err != nil {
+		return nil, err
 	}
-	header, ok := c.(string)
-	if !ok || header == "" {
-		return nil, errors.New("`header` must be string")
+
+	valueStr, err := getOptionalStringKey(def, "value", true)
+	if err != nil {
+		return nil, err
 	}
-	var valueStr, regexpStr string
-	if value, ok := def["value"]; ok {
-		valueStr, ok = value.(string)
-		if !ok {
-			return nil, errors.New("`value` must be string")
-		}
+
+	regexpStr, err := getOptionalStringKey(def, "regexp", false)
+	if err != nil {
+		return nil, err
 	}
-	if regexp, ok := def["regexp"]; ok {
-		regexpStr, ok = regexp.(string)
-		if !ok || regexp == "" {
-			return nil, errors.New("`regexp` must be string")
-		}
-	}
+
 	return newHeaderConstraint(header, valueStr, regexpStr)
 }
 
@@ -67,8 +60,4 @@ func (c *headerConstraint) Verify(r *http.Request) []error {
 		return []error{fmt.Errorf("%s header value %s doesn't match regexp %s", c.header, value, c.regexp)}
 	}
 	return nil
-}
-
-func (c *headerConstraint) Fields() []string {
-	return []string{"header", "value", "regexp"}
 }

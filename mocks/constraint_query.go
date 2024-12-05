@@ -1,7 +1,6 @@
 package mocks
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -11,13 +10,9 @@ import (
 )
 
 func loadQueryConstraint(def map[interface{}]interface{}) (verifier, error) {
-	c, ok := def["expectedQuery"]
-	if !ok {
-		return nil, errors.New("`queryMatches` requires `expectedQuery` key")
-	}
-	query, ok := c.(string)
-	if !ok {
-		return nil, errors.New("`expectedQuery` must be string")
+	query, err := getRequiredStringKey(def, "expectedQuery", false)
+	if err != nil {
+		return nil, err
 	}
 	return newQueryConstraint(query)
 }
@@ -56,8 +51,4 @@ func (c *queryConstraint) Verify(r *http.Request) (errors []error) {
 	}
 
 	return errors
-}
-
-func (c *queryConstraint) Fields() []string {
-	return []string{"expectedQuery"}
 }

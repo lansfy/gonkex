@@ -50,24 +50,24 @@ func Test_queryConstraint_Verify(t *testing.T) {
 		wantErrors int
 	}{
 		{
-			name:       "expected",
-			query:      "people=2&food=tea&food=cake",
+			name:  "expected",
+			query: "people=2&food=tea&food=cake",
 		},
 		{
-			name:       "different order (1)",
-			query:      "food=tea&food=cake&people=2",
+			name:  "different order (1)",
+			query: "food=tea&food=cake&people=2",
 		},
 		{
-			name:       "different order (2)",
-			query:      "food=cake&food=tea&people=2",
+			name:  "different order (2)",
+			query: "food=cake&food=tea&people=2",
 		},
 		{
-			name:       "different order (3)",
-			query:      "people=2&food=cake&food=tea",
+			name:  "different order (3)",
+			query: "people=2&food=cake&food=tea",
 		},
 		{
-			name:       "unexpected keys are ignored",
-			query:      "food=cake&food=tea&people=2&one-more=person",
+			name:  "unexpected keys are ignored",
+			query: "food=cake&food=tea&people=2&one-more=person",
 		},
 		{
 			name:       "unexpected value",

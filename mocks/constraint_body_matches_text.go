@@ -2,7 +2,6 @@ package mocks
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -10,22 +9,16 @@ import (
 )
 
 func loadBodyMatchesTextConstraint(def map[interface{}]interface{}) (verifier, error) {
-	var bodyStr, regexpStr string
-	if body, ok := def["body"]; ok {
-		bodyStr, ok = body.(string)
-		if !ok {
-			return nil, errors.New("`body` must be string")
-		}
+	bodyStr, err := getOptionalStringKey(def, "body", true)
+	if err != nil {
+		return nil, err
 	}
-	if regexp, ok := def["regexp"]; ok {
-		regexpStr, ok = regexp.(string)
-		if !ok {
-			return nil, errors.New("`regexp` must be string")
-		}
+	regexpStr, err := getOptionalStringKey(def, "regexp", false)
+	if err != nil {
+		return nil, err
 	}
 	return newBodyMatchesTextConstraint(bodyStr, regexpStr)
 }
-
 
 func newBodyMatchesTextConstraint(body, re string) (verifier, error) {
 	var reCompiled *regexp.Regexp
@@ -66,8 +59,4 @@ func (c *bodyMatchesTextConstraint) Verify(r *http.Request) []error {
 		return []error{fmt.Errorf("body value\n%s\ndoesn't match regexp %s", body, c.regexp)}
 	}
 	return nil
-}
-
-func (c *bodyMatchesTextConstraint) Fields() []string {
-	return []string{"body", "regexp"}
 }

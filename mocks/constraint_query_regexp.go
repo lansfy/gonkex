@@ -1,7 +1,6 @@
 package mocks
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -10,13 +9,9 @@ import (
 )
 
 func loadQueryRegexpConstraint(def map[interface{}]interface{}) (verifier, error) {
-	c, ok := def["expectedQuery"]
-	if !ok {
-		return nil, errors.New("`queryMatchesRegexp` requires `expectedQuery` key")
-	}
-	query, ok := c.(string)
-	if !ok {
-		return nil, errors.New("`expectedQuery` must be string")
+	query, err := getRequiredStringKey(def, "expectedQuery", false)
+	if err != nil {
+		return nil, err
 	}
 	return newQueryRegexpConstraint(query)
 }
@@ -69,8 +64,4 @@ func (c *queryRegexpConstraint) Verify(r *http.Request) (errors []error) {
 	}
 
 	return errors
-}
-
-func (c *queryRegexpConstraint) Fields() []string {
-	return []string{"expectedQuery"}
 }

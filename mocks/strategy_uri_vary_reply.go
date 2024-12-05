@@ -1,9 +1,33 @@
 package mocks
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 )
+
+func loadUriVaryReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+	basePath, err := getOptionalStringKey(def, "basePath", true)
+	if err != nil {
+		return nil, err
+	}
+	var uris map[string]*Definition
+	if u, ok := def["uris"]; ok {
+		urisMap, ok := u.(map[interface{}]interface{})
+		if !ok {
+			return nil, errors.New("map under `uris` key required")
+		}
+		uris = make(map[string]*Definition, len(urisMap))
+		for uri, v := range urisMap {
+			def, err := loadDefinition(path+"."+uri.(string), v)
+			if err != nil {
+				return nil, err
+			}
+			uris[uri.(string)] = def
+		}
+	}
+	return NewUriVaryReplyStrategy(basePath, uris), nil
+}
 
 func NewUriVaryReplyStrategy(basePath string, variants map[string]*Definition) ReplyStrategy {
 	return &uriVaryReply{
