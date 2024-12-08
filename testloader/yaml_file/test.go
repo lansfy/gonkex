@@ -1,8 +1,6 @@
 package yaml_file
 
 import (
-	"strings"
-
 	"github.com/lansfy/gonkex/models"
 )
 
@@ -11,10 +9,13 @@ type dbCheck struct {
 	response []string
 }
 
-func (c *dbCheck) DbQueryString() string        { return c.query }
-func (c *dbCheck) DbResponseJson() []string     { return c.response }
-func (c *dbCheck) SetDbQueryString(q string)    { c.query = q }
-func (c *dbCheck) SetDbResponseJson(r []string) { c.response = r }
+func (c *dbCheck) DbQueryString() string {
+	return c.query
+}
+
+func (c *dbCheck) DbResponseJson() []string {
+	return c.response
+}
 
 type Test struct {
 	TestDefinition
@@ -26,8 +27,6 @@ type Test struct {
 	ResponseHeaders    map[int]map[string]string
 	BeforeScript       string
 	AfterRequestScript string
-	DbQuery            string
-	DbResponse         []string
 
 	CombinedVariables map[string]string
 
@@ -139,16 +138,9 @@ func (t *Test) ContentType() string {
 	return t.HeadersVal["Content-Type"]
 }
 
-func (t *Test) DbQueryString() string {
-	return t.DbQuery
+func (t *Test) GetDatabaseChecks() []models.DatabaseCheck {
+	return t.DbChecks
 }
-
-func (t *Test) DbResponseJson() []string {
-	return t.DbResponse
-}
-
-func (t *Test) GetDatabaseChecks() []models.DatabaseCheck       { return t.DbChecks }
-func (t *Test) SetDatabaseChecks(checks []models.DatabaseCheck) { t.DbChecks = checks }
 
 func (t *Test) GetVariables() map[string]string {
 	return t.Variables
@@ -172,52 +164,37 @@ func (t *Test) GetFileName() string {
 
 func (t *Test) Clone() models.TestInterface {
 	res := *t
-
 	return &res
-}
-
-func (t *Test) SetQuery(val string) {
-	var query strings.Builder
-	query.Grow(len(val) + 1)
-	if val != "" && val[0] != '?' {
-		query.WriteString("?")
-	}
-	query.WriteString(val)
-	t.QueryParams = query.String()
-}
-
-func (t *Test) SetMethod(val string) {
-	t.Method = val
-}
-
-func (t *Test) SetPath(val string) {
-	t.RequestURL = val
-}
-
-func (t *Test) SetRequest(val string) {
-	t.Request = val
-}
-
-func (t *Test) SetForm(val *models.Form) {
-	t.Form = val
-}
-
-func (t *Test) SetResponses(val map[int]string) {
-	t.Responses = val
-}
-
-func (t *Test) SetHeaders(val map[string]string) {
-	t.HeadersVal = val
-}
-
-func (t *Test) SetDbQueryString(query string) {
-	t.DbQuery = query
-}
-
-func (t *Test) SetDbResponseJson(responses []string) {
-	t.DbResponse = responses
 }
 
 func (t *Test) SetStatus(status string) {
 	t.Status = status
+}
+
+func (t *Test) ApplyVariables(perform func(string) string) {
+	t.QueryParams = performQuery(t.QueryParams, perform)
+	t.Method = perform(t.Method)
+	t.RequestURL = perform(t.RequestURL)
+	t.Request = perform(t.Request)
+
+	dbChecks := []models.DatabaseCheck{}
+	for _, def := range t.GetDatabaseChecks() {
+		newCheck := &dbCheck{
+			query:    perform(def.DbQueryString()),
+			response: performDbResponses(def.DbResponseJson(), perform),
+		}
+		dbChecks = append(dbChecks, newCheck)
+	}
+	t.DbChecks = dbChecks
+
+	t.Responses = performResponses(t.Responses, perform)
+	t.HeadersVal = performHeaders(t.HeadersVal, perform)
+
+	if t.Form != nil {
+		t.Form = performForm(t.Form, perform)
+	}
+
+	for _, definition := range t.ServiceMocks() {
+		performInterface(definition, perform)
+	}
 }

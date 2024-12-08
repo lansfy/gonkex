@@ -25,12 +25,6 @@ func NewChecker(db storage.StorageInterface) checker.CheckerInterface {
 
 func (c *ResponseDbChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
 	var errors []error
-	errs, err := c.check(t.GetName(), t.IgnoreDbOrdering(), t, result)
-	if err != nil {
-		return nil, err
-	}
-	errors = append(errors, errs...)
-
 	for _, dbCheck := range t.GetDatabaseChecks() {
 		errs, err := c.check(t.GetName(), t.IgnoreDbOrdering(), dbCheck, result)
 		if err != nil {
@@ -49,12 +43,6 @@ func (c *ResponseDbChecker) check(
 	result *models.Result,
 ) ([]error, error) {
 	var errors []error
-
-	// don't check if there are no data for db test
-	if t.DbQueryString() == "" && t.DbResponseJson() == nil {
-		return errors, nil
-	}
-
 	// check expected db query exist
 	if t.DbQueryString() == "" {
 		return nil, fmt.Errorf("DB query not found for test \"%s\"", testName)

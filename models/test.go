@@ -3,9 +3,6 @@ package models
 type DatabaseCheck interface {
 	DbQueryString() string
 	DbResponseJson() []string
-
-	SetDbQueryString(string)
-	SetDbResponseJson([]string)
 }
 
 // Common Test interface
@@ -21,7 +18,6 @@ type TestInterface interface {
 	GetName() string
 	GetDescription() string
 	GetStatus() string
-	SetStatus(string)
 	Fixtures() []string
 	ServiceMocks() map[string]interface{}
 	Pause() int
@@ -33,26 +29,12 @@ type TestInterface interface {
 	Headers() map[string]string
 	ContentType() string
 	GetForm() *Form
-	DbQueryString() string
-	DbResponseJson() []string
 	GetVariables() map[string]string
 	GetCombinedVariables() map[string]string
 	GetVariablesToSet() map[int]map[string]string
 	GetDatabaseChecks() []DatabaseCheck
-	SetDatabaseChecks([]DatabaseCheck)
 
 	GetFileName() string
-
-	// setters
-	SetQuery(string)
-	SetMethod(string)
-	SetPath(string)
-	SetRequest(string)
-	SetForm(form *Form)
-	SetResponses(map[int]string)
-	SetHeaders(map[string]string)
-	SetDbQueryString(string)
-	SetDbResponseJson([]string)
 
 	// comparison properties
 	NeedsCheckingValues() bool
@@ -60,6 +42,10 @@ type TestInterface interface {
 	DisallowExtraFields() bool
 	IgnoreDbOrdering() bool
 
+	SetStatus(status string)
+
+	// ApplyVariables run specified function for every string in object
+	ApplyVariables(func(string) string)
 	// Clone returns copy of current object
 	Clone() TestInterface
 }
