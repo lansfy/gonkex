@@ -128,7 +128,7 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	if r.config.DB != nil {
 		err := r.config.DB.LoadFixtures(r.config.FixturesDir, v.Fixtures())
 		if err != nil {
-			return nil, fmt.Errorf("load fixtures [%v]: %w", v.Fixtures(), err)
+			return nil, fmt.Errorf("load fixtures %v: %w", v.Fixtures(), err)
 		}
 	}
 

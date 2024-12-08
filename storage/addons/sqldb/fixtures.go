@@ -177,16 +177,33 @@ func (ctx *loadContext) loadYml(location string, data []byte) error {
 }
 
 func (ctx *loadContext) generateTestFixtures() ([]byte, error) {
-	tables := yaml.MapSlice{}
+	tables := []tableContent{}
 	for _, lt := range ctx.tables {
-		items, err := ctx.processTableContent(lt.rows)
+		items, err := ctx.processTableContent(lt.name, lt.rows)
 		if err != nil {
 			return nil, err
 		}
-		tables = append(tables, yaml.MapItem{lt.name, items})
+		// append rows to global tables
+		found := false
+		for idx := range tables {
+			if tables[idx].name == lt.name {
+				tables[idx].items = append(tables[idx].items, items...)
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			tables = append(tables, tableContent{name: lt.name, items: items})
+		}
 	}
 
-	out, err := yaml.Marshal(tables)
+	yamlTables := yaml.MapSlice{}
+	for _, t := range tables {
+		yamlTables = append(yamlTables, yaml.MapItem{t.name, t.items})
+	}
+
+	out, err := yaml.Marshal(yamlTables)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +211,12 @@ func (ctx *loadContext) generateTestFixtures() ([]byte, error) {
 	return out, nil
 }
 
-func (ctx *loadContext) processTableContent(rows table) ([]yaml.MapSlice, error) {
+type tableContent struct {
+	name  string
+	items []yaml.MapSlice
+}
+
+func (ctx *loadContext) processTableContent(tableName string, rows table) ([]yaml.MapSlice, error) {
 	// $extend keyword allows to import values from a named row
 	for i, row := range rows {
 		if _, ok := row[actionExtend]; !ok {
@@ -219,7 +241,6 @@ func (ctx *loadContext) processTableContent(rows table) ([]yaml.MapSlice, error)
 		}
 		items = append(items, values)
 	}
-
 	return items, nil
 }
 
