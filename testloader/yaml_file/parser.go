@@ -99,7 +99,11 @@ func makeTestFromDefinition(filePath string, testDefinition TestDefinition) ([]T
 			dbChecks = append(dbChecks, &dbCheck{query: testDefinition.DbQueryTmpl, response: testDefinition.DbResponseTmpl})
 		}
 		for _, check := range testDefinition.DatabaseChecks {
-			dbChecks = append(dbChecks, &dbCheck{query: check.DbQueryTmpl, response: check.DbResponseTmpl})
+			dbChecks = append(dbChecks, &dbCheck{
+				query:    check.DbQueryTmpl,
+				response: check.DbResponseTmpl,
+				params:   check.ComparisonParams,
+			})
 		}
 		test.DbChecks = dbChecks
 
@@ -244,7 +248,10 @@ func makeTestFromDefinition(filePath string, testDefinition TestDefinition) ([]T
 				return nil, err
 			}
 
-			c := &dbCheck{query: query}
+			c := &dbCheck{
+				query:  query,
+				params: check.ComparisonParams,
+			}
 			for _, tpl := range check.DbResponseTmpl {
 				responseString, err := substituteArgs(tpl, testCase.DbResponseArgs)
 				if err != nil {

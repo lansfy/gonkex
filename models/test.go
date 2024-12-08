@@ -1,8 +1,15 @@
 package models
 
+type ComparisonParams interface {
+	IgnoreValuesChecking() bool
+	IgnoreArraysOrdering() bool
+	DisallowExtraFields() bool
+}
+
 type DatabaseCheck interface {
 	DbQueryString() string
 	DbResponseJson() []string
+	GetComparisonParams() ComparisonParams
 }
 
 // Common Test interface
@@ -29,18 +36,15 @@ type TestInterface interface {
 	Headers() map[string]string
 	ContentType() string
 	GetForm() *Form
+
+	GetDatabaseChecks() []DatabaseCheck
+	GetComparisonParams() ComparisonParams
+
 	GetVariables() map[string]string
 	GetCombinedVariables() map[string]string
 	GetVariablesToSet() map[int]map[string]string
-	GetDatabaseChecks() []DatabaseCheck
 
 	GetFileName() string
-
-	// comparison properties
-	NeedsCheckingValues() bool
-	IgnoreArraysOrdering() bool
-	DisallowExtraFields() bool
-	IgnoreDbOrdering() bool
 
 	SetStatus(status string)
 

@@ -26,7 +26,7 @@ func NewChecker(db storage.StorageInterface) checker.CheckerInterface {
 func (c *ResponseDbChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
 	var errors []error
 	for _, dbCheck := range t.GetDatabaseChecks() {
-		errs, err := c.check(t.GetName(), t.IgnoreDbOrdering(), dbCheck, result)
+		errs, err := c.check(t.GetName(), dbCheck, result)
 		if err != nil {
 			return nil, err
 		}
@@ -38,7 +38,6 @@ func (c *ResponseDbChecker) Check(t models.TestInterface, result *models.Result)
 
 func (c *ResponseDbChecker) check(
 	testName string,
-	ignoreOrdering bool,
 	t models.DatabaseCheck,
 	result *models.Result,
 ) ([]error, error) {
@@ -79,8 +78,12 @@ func (c *ResponseDbChecker) check(
 		return nil, err
 	}
 
+	cmpOptions := t.GetComparisonParams()
+
 	errs := compare.Compare(expectedItems, actualItems, compare.Params{
-		IgnoreArraysOrdering: ignoreOrdering,
+		IgnoreValues:         cmpOptions.IgnoreValuesChecking(),
+		IgnoreArraysOrdering: cmpOptions.IgnoreArraysOrdering(),
+		DisallowExtraFields:  cmpOptions.DisallowExtraFields(),
 	})
 
 	errors = append(errors, errs...)

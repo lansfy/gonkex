@@ -1,12 +1,14 @@
 package yaml_file
 
 import (
+	"github.com/lansfy/gonkex/compare"
 	"github.com/lansfy/gonkex/models"
 )
 
 type dbCheck struct {
 	query    string
 	response []string
+	params   compare.Params
 }
 
 func (c *dbCheck) DbQueryString() string {
@@ -15,6 +17,26 @@ func (c *dbCheck) DbQueryString() string {
 
 func (c *dbCheck) DbResponseJson() []string {
 	return c.response
+}
+
+func (c *dbCheck) GetComparisonParams() models.ComparisonParams {
+	return &cmpParams{c.params}
+}
+
+type cmpParams struct {
+	params compare.Params
+}
+
+func (c *cmpParams) IgnoreValuesChecking() bool {
+	return c.params.IgnoreValues
+}
+
+func (c *cmpParams) IgnoreArraysOrdering() bool {
+	return c.params.IgnoreArraysOrdering
+}
+
+func (c *cmpParams) DisallowExtraFields() bool {
+	return c.params.DisallowExtraFields
 }
 
 type Test struct {
@@ -69,10 +91,6 @@ func (t *Test) GetResponseHeaders(code int) (map[string]string, bool) {
 	return val, ok
 }
 
-func (t *Test) NeedsCheckingValues() bool {
-	return !t.ComparisonParams.IgnoreValues
-}
-
 func (t *Test) GetName() string {
 	return t.Name
 }
@@ -83,18 +101,6 @@ func (t *Test) GetDescription() string {
 
 func (t *Test) GetStatus() string {
 	return t.Status
-}
-
-func (t *Test) IgnoreArraysOrdering() bool {
-	return t.ComparisonParams.IgnoreArraysOrdering
-}
-
-func (t *Test) DisallowExtraFields() bool {
-	return t.ComparisonParams.DisallowExtraFields
-}
-
-func (t *Test) IgnoreDbOrdering() bool {
-	return t.ComparisonParams.IgnoreDbOrdering
 }
 
 func (t *Test) Fixtures() []string {
@@ -138,6 +144,10 @@ func (t *Test) ContentType() string {
 	return t.HeadersVal["Content-Type"]
 }
 
+func (t *Test) GetComparisonParams() models.ComparisonParams {
+	return &cmpParams{t.ComparisonParams}
+}
+
 func (t *Test) GetDatabaseChecks() []models.DatabaseCheck {
 	return t.DbChecks
 }
@@ -179,9 +189,15 @@ func (t *Test) ApplyVariables(perform func(string) string) {
 
 	dbChecks := []models.DatabaseCheck{}
 	for _, def := range t.GetDatabaseChecks() {
+		cmpOptions := def.GetComparisonParams()
 		newCheck := &dbCheck{
 			query:    perform(def.DbQueryString()),
 			response: performDbResponses(def.DbResponseJson(), perform),
+			params: compare.Params{
+				IgnoreValues:         cmpOptions.IgnoreValuesChecking(),
+				IgnoreArraysOrdering: cmpOptions.IgnoreArraysOrdering(),
+				DisallowExtraFields:  cmpOptions.DisallowExtraFields(),
+			},
 		}
 		dbChecks = append(dbChecks, newCheck)
 	}

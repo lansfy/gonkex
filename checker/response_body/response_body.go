@@ -61,10 +61,12 @@ func compareJsonBody(t models.TestInterface, expectedBody string, result *models
 		return []error{errors.New("could not parse response")}, nil
 	}
 
+	cmpOptions := t.GetComparisonParams()
+
 	params := compare.Params{
-		IgnoreValues:         !t.NeedsCheckingValues(),
-		IgnoreArraysOrdering: t.IgnoreArraysOrdering(),
-		DisallowExtraFields:  t.DisallowExtraFields(),
+		IgnoreValues:         cmpOptions.IgnoreValuesChecking(),
+		IgnoreArraysOrdering: cmpOptions.IgnoreArraysOrdering(),
+		DisallowExtraFields:  cmpOptions.DisallowExtraFields(),
 	}
 
 	return compare.Compare(expected, actual, params), nil
