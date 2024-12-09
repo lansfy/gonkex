@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"sync"
@@ -19,6 +20,9 @@ type ServiceMock struct {
 }
 
 func NewServiceMock(serviceName string, mock *Definition) *ServiceMock {
+	if mock == nil {
+		mock = NewDefinition("$", nil, NewFailReply(), CallsNoConstraint)
+	}
 	return &ServiceMock{
 		mock:              mock,
 		defaultDefinition: mock,
@@ -63,6 +67,16 @@ func (m *ServiceMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		errs := m.mock.Execute(w, r)
 		m.errors = append(m.errors, errs...)
 	}
+}
+
+func (m *ServiceMock) LoadDefinition(newDefinition interface{}) error {
+	def, err := loadDefinition("$", newDefinition)
+	if err != nil {
+		return fmt.Errorf("load definition for %s: %w", m.ServiceName, err)
+	}
+	// load the Definition into the mock
+	m.SetDefinition(def)
+	return nil
 }
 
 func (m *ServiceMock) SetDefinition(newDefinition *Definition) {

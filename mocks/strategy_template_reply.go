@@ -11,6 +11,37 @@ import (
 	"github.com/Masterminds/sprig/v3"
 )
 
+func loadTemplateReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+	body, err := getRequiredStringKey(def, "body", true)
+	if err != nil {
+		return nil, err
+	}
+	statusCode, err := getOptionalIntKey(def, "statusCode", http.StatusOK)
+	if err != nil {
+		return nil, err
+	}
+	headers, err := loadHeaders(def)
+	if err != nil {
+		return nil, err
+	}
+	return NewTemplateReply(body, statusCode, headers)
+}
+
+func NewTemplateReply(content string, statusCode int, headers map[string]string) (ReplyStrategy, error) {
+	tmpl, err := template.New("").Funcs(sprig.GenericFuncMap()).Parse(content)
+	if err != nil {
+		return nil, fmt.Errorf("template syntax error: %w", err)
+	}
+
+	strategy := &templateReply{
+		replyBodyTemplate: tmpl,
+		statusCode:        statusCode,
+		headers:           headers,
+	}
+
+	return strategy, nil
+}
+
 type templateReply struct {
 	replyBodyTemplate *template.Template
 	statusCode        int
@@ -39,21 +70,6 @@ func (tr *templateRequest) Json() (map[string]interface{}, error) {
 	}
 
 	return tr.jsonData, nil
-}
-
-func newTemplateReply(content string, statusCode int, headers map[string]string) (ReplyStrategy, error) {
-	tmpl, err := template.New("").Funcs(sprig.GenericFuncMap()).Parse(content)
-	if err != nil {
-		return nil, fmt.Errorf("template syntax error: %w", err)
-	}
-
-	strategy := &templateReply{
-		replyBodyTemplate: tmpl,
-		statusCode:        statusCode,
-		headers:           headers,
-	}
-
-	return strategy, nil
 }
 
 func (s *templateReply) executeResponseTemplate(r *http.Request) (string, error) {

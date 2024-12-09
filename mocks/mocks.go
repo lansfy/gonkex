@@ -23,7 +23,7 @@ func New(mocks ...*ServiceMock) *Mocks {
 func NewNop(serviceNames ...string) *Mocks {
 	mocksMap := make(map[string]*ServiceMock, len(serviceNames))
 	for _, name := range serviceNames {
-		mocksMap[name] = NewServiceMock(name, NewDefinition("$", nil, &failReply{}, CallsNoConstraint))
+		mocksMap[name] = NewServiceMock(name, nil)
 	}
 	return &Mocks{
 		mocks: mocksMap,
@@ -96,4 +96,19 @@ func (m *Mocks) GetNames() []string {
 		names = append(names, n)
 	}
 	return names
+}
+
+func (m *Mocks) LoadDefinitions(definitions map[string]interface{}) error {
+	for serviceName, definition := range definitions {
+		service := m.Service(serviceName)
+		if service == nil {
+			return fmt.Errorf("unknown mock name: %s", serviceName)
+		}
+
+		err := service.LoadDefinition(definition)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
