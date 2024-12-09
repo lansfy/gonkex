@@ -1,11 +1,15 @@
 package models
 
+type ComparisonParams interface {
+	IgnoreValuesChecking() bool
+	IgnoreArraysOrdering() bool
+	DisallowExtraFields() bool
+}
+
 type DatabaseCheck interface {
 	DbQueryString() string
 	DbResponseJson() []string
-
-	SetDbQueryString(string)
-	SetDbResponseJson([]string)
+	GetComparisonParams() ComparisonParams
 }
 
 // Common Test interface
@@ -21,7 +25,6 @@ type TestInterface interface {
 	GetName() string
 	GetDescription() string
 	GetStatus() string
-	SetStatus(string)
 	Fixtures() []string
 	ServiceMocks() map[string]interface{}
 	Pause() int
@@ -33,33 +36,20 @@ type TestInterface interface {
 	Headers() map[string]string
 	ContentType() string
 	GetForm() *Form
-	DbQueryString() string
-	DbResponseJson() []string
+
+	GetDatabaseChecks() []DatabaseCheck
+	GetComparisonParams() ComparisonParams
+
 	GetVariables() map[string]string
 	GetCombinedVariables() map[string]string
 	GetVariablesToSet() map[int]map[string]string
-	GetDatabaseChecks() []DatabaseCheck
-	SetDatabaseChecks([]DatabaseCheck)
 
 	GetFileName() string
 
-	// setters
-	SetQuery(string)
-	SetMethod(string)
-	SetPath(string)
-	SetRequest(string)
-	SetForm(form *Form)
-	SetResponses(map[int]string)
-	SetHeaders(map[string]string)
-	SetDbQueryString(string)
-	SetDbResponseJson([]string)
+	SetStatus(status string)
 
-	// comparison properties
-	NeedsCheckingValues() bool
-	IgnoreArraysOrdering() bool
-	DisallowExtraFields() bool
-	IgnoreDbOrdering() bool
-
+	// ApplyVariables run specified function for every string in object
+	ApplyVariables(func(string) string)
 	// Clone returns copy of current object
 	Clone() TestInterface
 }

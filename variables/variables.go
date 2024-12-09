@@ -38,37 +38,9 @@ func (vs *Variables) Set(name, value string) {
 
 func (vs *Variables) Apply(t models.TestInterface) models.TestInterface {
 	newTest := t.Clone()
-
-	if vs == nil {
-		return newTest
+	if vs != nil {
+		newTest.ApplyVariables(vs.perform)
 	}
-
-	newTest.SetQuery(vs.perform(newTest.ToQuery()))
-	newTest.SetMethod(vs.perform(newTest.GetMethod()))
-	newTest.SetPath(vs.perform(newTest.Path()))
-	newTest.SetRequest(vs.perform(newTest.GetRequest()))
-	newTest.SetDbQueryString(vs.perform(newTest.DbQueryString()))
-	newTest.SetDbResponseJson(vs.performDbResponses(newTest.DbResponseJson()))
-
-	dbChecks := []models.DatabaseCheck{}
-	for _, def := range newTest.GetDatabaseChecks() {
-		def.SetDbQueryString(vs.perform(def.DbQueryString()))
-		def.SetDbResponseJson(vs.performDbResponses(def.DbResponseJson()))
-		dbChecks = append(dbChecks, def)
-	}
-	newTest.SetDatabaseChecks(dbChecks)
-
-	newTest.SetResponses(vs.performResponses(newTest.GetResponses()))
-	newTest.SetHeaders(vs.performHeaders(newTest.Headers()))
-
-	if form := newTest.GetForm(); form != nil {
-		newTest.SetForm(vs.performForm(form))
-	}
-
-	for _, definition := range newTest.ServiceMocks() {
-		vs.performInterface(definition)
-	}
-
 	return newTest
 }
 
@@ -106,27 +78,6 @@ func (vs *Variables) perform(str string) string {
 	return str
 }
 
-func (vs *Variables) performInterface(value interface{}) {
-	if mapValue, ok := value.(map[interface{}]interface{}); ok {
-		for key := range mapValue {
-			if strValue, ok := mapValue[key].(string); ok {
-				mapValue[key] = vs.perform(strValue)
-			} else {
-				vs.performInterface(mapValue[key])
-			}
-		}
-	}
-	if arrValue, ok := value.([]interface{}); ok {
-		for idx := range arrValue {
-			if strValue, ok := arrValue[idx].(string); ok {
-				arrValue[idx] = vs.perform(strValue)
-			} else {
-				vs.performInterface(arrValue[idx])
-			}
-		}
-	}
-}
-
 func (vs *Variables) get(name string) *Variable {
 	v := vs.variables[name]
 	if v == nil {
@@ -134,50 +85,6 @@ func (vs *Variables) get(name string) *Variable {
 	}
 
 	return v
-}
-
-func (vs *Variables) performForm(form *models.Form) *models.Form {
-	files := make(map[string]string, len(form.Files))
-
-	for k, v := range form.Files {
-		files[k] = vs.perform(v)
-	}
-
-	return &models.Form{Files: files}
-}
-
-func (vs *Variables) performHeaders(headers map[string]string) map[string]string {
-	res := make(map[string]string)
-
-	for k, v := range headers {
-		res[k] = vs.perform(v)
-	}
-
-	return res
-}
-
-func (vs *Variables) performResponses(responses map[int]string) map[int]string {
-	res := make(map[int]string)
-
-	for k, v := range responses {
-		res[k] = vs.perform(v)
-	}
-
-	return res
-}
-
-func (vs *Variables) performDbResponses(responses []string) []string {
-	if responses == nil {
-		return nil
-	}
-
-	res := make([]string, len(responses))
-
-	for idx, v := range responses {
-		res[idx] = vs.perform(v)
-	}
-
-	return res
 }
 
 func (vs *Variables) Add(v *Variable) *Variables {

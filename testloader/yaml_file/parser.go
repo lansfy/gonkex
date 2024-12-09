@@ -92,13 +92,18 @@ func makeTestFromDefinition(filePath string, testDefinition TestDefinition) ([]T
 		test.ResponseHeaders = testDefinition.ResponseHeaders
 		test.BeforeScript = testDefinition.BeforeScriptParams.PathTmpl
 		test.AfterRequestScript = testDefinition.AfterRequestScriptParams.PathTmpl
-		test.DbQuery = testDefinition.DbQueryTmpl
-		test.DbResponse = testDefinition.DbResponseTmpl
 		test.CombinedVariables = testDefinition.Variables
 
 		dbChecks := []models.DatabaseCheck{}
+		if testDefinition.DbQueryTmpl != "" {
+			dbChecks = append(dbChecks, &dbCheck{query: testDefinition.DbQueryTmpl, response: testDefinition.DbResponseTmpl})
+		}
 		for _, check := range testDefinition.DatabaseChecks {
-			dbChecks = append(dbChecks, &dbCheck{query: check.DbQueryTmpl, response: check.DbResponseTmpl})
+			dbChecks = append(dbChecks, &dbCheck{
+				query:    check.DbQueryTmpl,
+				response: check.DbResponseTmpl,
+				params:   check.ComparisonParams,
+			})
 		}
 		test.DbChecks = dbChecks
 
@@ -197,20 +202,23 @@ func makeTestFromDefinition(filePath string, testDefinition TestDefinition) ([]T
 			return nil, err
 		}
 
-		test.DbQuery, err = substituteArgs(testDefinition.DbQueryTmpl, testCase.DbQueryArgs)
-		if err != nil {
-			return nil, err
-		}
-
 		for key, value := range testCase.Variables {
 			combinedVariables[key] = value.(string)
 		}
 		test.CombinedVariables = combinedVariables
 
+		var tmpDbQuery string
+		var tmpDbResponse []string
+
+		tmpDbQuery, err = substituteArgs(testDefinition.DbQueryTmpl, testCase.DbQueryArgs)
+		if err != nil {
+			return nil, err
+		}
+
 		// compile DbResponse
 		if testCase.DbResponse != nil {
 			// DbResponse from test case has top priority
-			test.DbResponse = testCase.DbResponse
+			tmpDbResponse = testCase.DbResponse
 		} else {
 			if len(testDefinition.DbResponseTmpl) != 0 {
 				// compile DbResponse string by string
@@ -219,21 +227,31 @@ func makeTestFromDefinition(filePath string, testDefinition TestDefinition) ([]T
 					if err != nil {
 						return nil, err
 					}
-					test.DbResponse = append(test.DbResponse, dbResponseString)
+					tmpDbResponse = append(tmpDbResponse, dbResponseString)
 				}
 			} else {
-				test.DbResponse = testDefinition.DbResponseTmpl
+				tmpDbResponse = testDefinition.DbResponseTmpl
 			}
 		}
 
 		dbChecks := []models.DatabaseCheck{}
+		if tmpDbQuery != "" {
+			dbChecks = append(dbChecks, &dbCheck{
+				query:    tmpDbQuery,
+				response: tmpDbResponse,
+			})
+		}
+
 		for _, check := range testDefinition.DatabaseChecks {
 			query, err := substituteArgs(check.DbQueryTmpl, testCase.DbQueryArgs)
 			if err != nil {
 				return nil, err
 			}
 
-			c := &dbCheck{query: query}
+			c := &dbCheck{
+				query:  query,
+				params: check.ComparisonParams,
+			}
 			for _, tpl := range check.DbResponseTmpl {
 				responseString, err := substituteArgs(tpl, testCase.DbResponseArgs)
 				if err != nil {

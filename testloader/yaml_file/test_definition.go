@@ -45,8 +45,9 @@ type CaseData struct {
 }
 
 type DatabaseCheck struct {
-	DbQueryTmpl    string   `json:"dbQuery" yaml:"dbQuery"`
-	DbResponseTmpl []string `json:"dbResponse" yaml:"dbResponse"`
+	DbQueryTmpl      string         `json:"dbQuery" yaml:"dbQuery"`
+	DbResponseTmpl   []string       `json:"dbResponse" yaml:"dbResponse"`
+	ComparisonParams compare.Params `json:"comparisonParams" yaml:"comparisonParams"`
 }
 
 type scriptParams struct {
