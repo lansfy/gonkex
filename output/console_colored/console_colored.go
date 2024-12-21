@@ -8,11 +8,8 @@ import (
 	"github.com/lansfy/gonkex/models"
 )
 
-const dotsPerLine = 80
-
 type ConsoleColoredOutput struct {
 	verbose       bool
-	dots          int
 	coloredPrintf func(format string, a ...interface{})
 }
 
@@ -30,14 +27,7 @@ func (o *ConsoleColoredOutput) Process(_ models.TestInterface, result *models.Re
 			return err
 		}
 		o.coloredPrintf("%s", text)
-	} else {
-		o.coloredPrintf(".")
-		o.dots++
-		if o.dots%dotsPerLine == 0 {
-			o.coloredPrintf("\n")
-		}
 	}
-
 	return nil
 }
 
