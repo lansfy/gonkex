@@ -9,8 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/joho/godotenv"
-
 	"github.com/lansfy/gonkex/checker"
 	"github.com/lansfy/gonkex/checker/response_body"
 	"github.com/lansfy/gonkex/checker/response_db"
@@ -18,13 +16,18 @@ import (
 	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/output"
+	coloredOutput "github.com/lansfy/gonkex/output/console_colored"
 	testingOutput "github.com/lansfy/gonkex/output/testing"
 	"github.com/lansfy/gonkex/storage"
 	"github.com/lansfy/gonkex/testloader/yaml_file"
 	"github.com/lansfy/gonkex/variables"
+
+	"github.com/fatih/color"
+	"github.com/joho/godotenv"
 )
 
 var DefaultOutput = testingOutput.NewOutput()
+var DefaultColoredOutput = coloredOutput.NewOutput(false)
 
 type RunWithTestingOpts struct {
 	TestsDir    string
@@ -95,10 +98,13 @@ func RunWithTesting(t *testing.T, server *httptest.Server, opts *RunWithTestingO
 }
 
 func addOutputs(runner *Runner, opts *RunWithTestingOpts) {
-	if opts.MainOutputFunc != nil {
+	switch {
+	case opts.MainOutputFunc != nil:
 		runner.AddOutput(opts.MainOutputFunc)
-	} else {
+	case color.NoColor:
 		runner.AddOutput(DefaultOutput)
+	default:
+		runner.AddOutput(DefaultColoredOutput)
 	}
 
 	for _, o := range opts.Outputs {
