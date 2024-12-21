@@ -33,24 +33,8 @@ func (d *Definition) Execute(w http.ResponseWriter, r *http.Request) []error {
 	d.mutex.Lock()
 	d.calls++
 	d.mutex.Unlock()
-	var errors []error
-	if len(d.requestConstraints) > 0 {
-		requestDump, err := httputil.DumpRequest(r, true)
-		if err != nil {
-			fmt.Printf("Gonkex internal error: %s\n", err)
-		}
 
-		for _, c := range d.requestConstraints {
-			errs := c.Verify(r)
-			for _, e := range errs {
-				errors = append(errors, &RequestConstraintError{
-					error:       e,
-					Constraint:  c,
-					RequestDump: requestDump,
-				})
-			}
-		}
-	}
+	errors := verifyRequestConstraints(d.requestConstraints, r)
 	if d.replyStrategy != nil {
 		errors = append(errors, d.replyStrategy.HandleRequest(w, r)...)
 	}
@@ -82,23 +66,27 @@ func (d *Definition) EndRunningContext() []error {
 }
 
 func verifyRequestConstraints(requestConstraints []verifier, r *http.Request) []error {
+	if len(requestConstraints) == 0 {
+		return []error{}
+	}
+
+	requestDump, err := httputil.DumpRequest(r, true)
+	if err != nil {
+		requestDump = []byte(fmt.Sprintf("dump request: %v", err))
+	}
+
 	var errors []error
-	if len(requestConstraints) > 0 {
-		requestDump, err := httputil.DumpRequest(r, true)
-		if err != nil {
-			requestDump = []byte(fmt.Sprintf("failed to dump request: %s", err))
-		}
-		for _, c := range requestConstraints {
-			errs := c.Verify(r)
-			for _, e := range errs {
-				errors = append(errors, &RequestConstraintError{
-					error:       e,
-					Constraint:  c,
-					RequestDump: requestDump,
-				})
-			}
+	for _, c := range requestConstraints {
+		errs := c.Verify(r)
+		for _, e := range errs {
+			errors = append(errors, &RequestConstraintError{
+				error:       e,
+				Constraint:  c,
+				RequestDump: requestDump,
+			})
 		}
 	}
+
 	return errors
 }
 func (d *Definition) ExecuteWithoutVerifying(w http.ResponseWriter, r *http.Request) []error {

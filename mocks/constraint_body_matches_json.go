@@ -1,10 +1,8 @@
 package mocks
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/lansfy/gonkex/compare"
@@ -41,13 +39,16 @@ type bodyMatchesJSONConstraint struct {
 	compareParams compare.Params
 }
 
+func (c *bodyMatchesJSONConstraint) GetName() string {
+	return "bodyMatchesJSON"
+}
+
 func (c *bodyMatchesJSONConstraint) Verify(r *http.Request) []error {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := getBodyCopy(r)
 	if err != nil {
 		return []error{err}
 	}
-	// write body for future reusing
-	r.Body = ioutil.NopCloser(bytes.NewReader(body))
+
 	if len(body) == 0 {
 		return []error{fmt.Errorf("request is empty")}
 	}

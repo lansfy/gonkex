@@ -31,6 +31,16 @@ const (
 
 var regexExprRx = regexp.MustCompile(`^\$matchRegexp\((.+)\)$`)
 
+// StringAsRegexp ensures that provided string has format "$matchRegexp(...)" and returns
+// the value from brackets
+func StringAsRegexp(expr string) (string, bool) {
+	if matches := regexExprRx.FindStringSubmatch(expr); matches != nil {
+		return matches[1], true
+	}
+
+	return "", false
+}
+
 // Compare compares values as plain text
 // It can be compared several ways:
 //   - Pure values: should be equal
@@ -176,15 +186,16 @@ func compareRegex(path string, expected, actual interface{}) (errors []error) {
 		return errors
 	}
 
-	value := fmt.Sprintf("%v", actual)
+	regexExpr, _ = StringAsRegexp(regexExpr)
 
-	rx, err := regexp.Compile(retrieveRegexStr(regexExpr))
+	rx, err := regexp.Compile(regexExpr)
 	if err != nil {
 		errors = append(errors, makeError(path, "can not compile regex", nil, "error"))
 
 		return errors
 	}
 
+	value := fmt.Sprintf("%v", actual)
 	if !rx.MatchString(value) {
 		errors = append(errors, makeError(path, "value does not match regex", expected, actual))
 
@@ -194,21 +205,13 @@ func compareRegex(path string, expected, actual interface{}) (errors []error) {
 	return nil
 }
 
-func retrieveRegexStr(expr string) string {
-	if matches := regexExprRx.FindStringSubmatch(expr); matches != nil {
-		return matches[1]
-	}
-
-	return ""
-}
-
 func leafMatchType(expected interface{}) leafsMatchType {
 	val, ok := expected.(string)
 	if !ok {
 		return pure
 	}
 
-	if matches := regexExprRx.FindStringSubmatch(val); matches != nil {
+	if _, ok = StringAsRegexp(val); ok {
 		return regex
 	}
 

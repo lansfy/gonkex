@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httputil"
-	"reflect"
 )
 
 type Error struct {
@@ -23,8 +22,8 @@ type RequestConstraintError struct {
 }
 
 func (e *RequestConstraintError) Error() string {
-	kind := reflect.TypeOf(e.Constraint).String()
-	return fmt.Sprintf("request constraint %s failed: %s, request was:\n %s", kind, e.error.Error(), e.RequestDump)
+	kind := e.Constraint.GetName()
+	return fmt.Sprintf("request constraint %q: %s, request was:\n%s", kind, e.error.Error(), e.RequestDump)
 }
 
 func unhandledRequestError(r *http.Request) []error {

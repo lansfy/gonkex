@@ -32,6 +32,10 @@ type queryConstraint struct {
 	expectedQuery url.Values
 }
 
+func (c *queryConstraint) GetName() string {
+	return "queryMatches"
+}
+
 func (c *queryConstraint) Verify(r *http.Request) (errors []error) {
 	gotQuery := r.URL.Query()
 	for key, want := range c.expectedQuery {

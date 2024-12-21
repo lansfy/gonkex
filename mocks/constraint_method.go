@@ -11,11 +11,19 @@ func loadMethodConstraint(def map[interface{}]interface{}) (verifier, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &methodConstraint{method: method}, nil
+	return &methodConstraint{
+		name:   "methodIs",
+		method: method,
+	}, nil
 }
 
 type methodConstraint struct {
+	name   string
 	method string
+}
+
+func (c *methodConstraint) GetName() string {
+	return c.name
 }
 
 func (c *methodConstraint) Verify(r *http.Request) []error {

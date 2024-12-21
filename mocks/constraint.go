@@ -5,5 +5,6 @@ import (
 )
 
 type verifier interface {
+	GetName() string
 	Verify(r *http.Request) []error
 }

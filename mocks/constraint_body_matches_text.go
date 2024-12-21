@@ -1,9 +1,7 @@
 package mocks
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"regexp"
 )
@@ -41,22 +39,23 @@ type bodyMatchesTextConstraint struct {
 	regexp *regexp.Regexp
 }
 
+func (c *bodyMatchesTextConstraint) GetName() string {
+	return "bodyMatchesText"
+}
+
 func (c *bodyMatchesTextConstraint) Verify(r *http.Request) []error {
-	ioBody, err := ioutil.ReadAll(r.Body)
+	body, err := getBodyCopy(r)
 	if err != nil {
 		return []error{err}
 	}
 
-	// write body for future reusing
-	r.Body = ioutil.NopCloser(bytes.NewReader(ioBody))
+	textBody := string(body)
 
-	body := string(ioBody)
-
-	if c.body != "" && c.body != body {
-		return []error{fmt.Errorf("body value\n%s\ndoesn't match expected\n%s", body, c.body)}
+	if c.body != "" && c.body != textBody {
+		return []error{fmt.Errorf("body value\n%s\ndoesn't match expected\n%s", textBody, c.body)}
 	}
-	if c.regexp != nil && !c.regexp.MatchString(body) {
-		return []error{fmt.Errorf("body value\n%s\ndoesn't match regexp %s", body, c.regexp)}
+	if c.regexp != nil && !c.regexp.MatchString(textBody) {
+		return []error{fmt.Errorf("body value\n%s\ndoesn't match regexp %s", textBody, c.regexp)}
 	}
 	return nil
 }

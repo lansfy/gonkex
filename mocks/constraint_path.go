@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+
+	"github.com/lansfy/gonkex/compare"
 )
 
 func loadPathConstraint(def map[interface{}]interface{}) (verifier, error) {
@@ -15,6 +17,12 @@ func loadPathConstraint(def map[interface{}]interface{}) (verifier, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if s, ok := compare.StringAsRegexp(pathStr); ok {
+		pathStr = ""
+		regexpStr = s
+	}
+
 	return newPathConstraint(pathStr, regexpStr)
 }
 
@@ -37,6 +45,10 @@ func newPathConstraint(path, re string) (verifier, error) {
 type pathConstraint struct {
 	path   string
 	regexp *regexp.Regexp
+}
+
+func (c *pathConstraint) GetName() string {
+	return "pathMatches"
 }
 
 func (c *pathConstraint) Verify(r *http.Request) []error {
