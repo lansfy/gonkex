@@ -72,7 +72,7 @@ func (m *ServiceMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (m *ServiceMock) LoadDefinition(newDefinition interface{}) error {
 	def, err := loadDefinition("$", newDefinition)
 	if err != nil {
-		return fmt.Errorf("load definition for %s: %w", m.ServiceName, err)
+		return fmt.Errorf("load definition for '%s': %w", m.ServiceName, err)
 	}
 	// load the Definition into the mock
 	m.SetDefinition(def)

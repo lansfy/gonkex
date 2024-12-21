@@ -50,7 +50,7 @@ func LoadFixtures(dialect SQLType, db *sql.DB, location string, names []string) 
 	for _, name := range names {
 		err := ctx.loadFile(location, name)
 		if err != nil {
-			return fmt.Errorf("parse fixture file %s: %w", name, err)
+			return fmt.Errorf("parse file for fixture %q: %w", name, err)
 		}
 	}
 
@@ -86,6 +86,9 @@ func findFixturePath(location, name string) (string, error) {
 		if _, err = os.Stat(candidate); err == nil {
 			return candidate, nil
 		}
+	}
+	if os.IsNotExist(err) {
+		return "", errors.New("file not exists")
 	}
 	return "", err
 }

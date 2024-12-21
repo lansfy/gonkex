@@ -50,7 +50,7 @@ func (s *basedOnRequestReply) HandleRequest(w http.ResponseWriter, r *http.Reque
 	var errors []error
 	for _, def := range s.variants {
 		errs := verifyRequestConstraints(def.requestConstraints, r)
-		if errs == nil {
+		if len(errs) == 0 {
 			return def.ExecuteWithoutVerifying(w, r)
 		}
 		errors = append(errors, errs...)

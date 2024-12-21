@@ -43,6 +43,10 @@ type queryRegexpConstraint struct {
 	expectedQuery map[string][]string
 }
 
+func (c *queryRegexpConstraint) GetName() string {
+	return "queryMatchesRegexp"
+}
+
 func (c *queryRegexpConstraint) Verify(r *http.Request) (errors []error) {
 	gotQuery := r.URL.Query()
 	for key, want := range c.expectedQuery {

@@ -3,8 +3,6 @@ package mocks
 import (
 	"errors"
 	"fmt"
-
-	"github.com/lansfy/gonkex/compare"
 )
 
 func loadDefinition(path string, rawDef interface{}) (*Definition, error) {
@@ -24,7 +22,7 @@ func loadDefinition(path string, rawDef interface{}) (*Definition, error) {
 		for i, c := range constraints {
 			constraint, err := loadConstraint(c)
 			if err != nil {
-				return nil, fmt.Errorf("at path %s: unable to load constraint %d: %v", path, i+1, err)
+				return nil, fmt.Errorf("at path %s: unable to load constraint %d: %w", path, i+1, err)
 			}
 			requestConstraints[i] = constraint
 		}
@@ -41,22 +39,28 @@ func loadDefinition(path string, rawDef interface{}) (*Definition, error) {
 	if err != nil {
 		return nil, fmt.Errorf("at path %s: %w", path, err)
 	}
-	replyStrategy, err := loadStrategy(path+"."+strategyName, strategyName, def, &ak)
+
+	wrap := func(err error) error {
+		return fmt.Errorf("strategy '%s': %w", strategyName, err)
+	}
+
+	replyStrategy, err := loadStrategy(path, strategyName, def, &ak)
 	if err != nil {
-		return nil, fmt.Errorf("`%s`: %w", strategyName, err)
+		return nil, wrap(err)
 	}
 	callsConstraint, err := getOptionalIntKey(def, "calls", CallsNoConstraint)
 	if err != nil {
-		return nil, fmt.Errorf("`%s`: %w", strategyName, err)
+		return nil, wrap(err)
 	}
-	if err := validateMapKeys(def, ak...); err != nil {
-		return nil, err
+	if err := validateMapKeys(def, ak); err != nil {
+		return nil, wrap(err)
 	}
 
 	return NewDefinition(path, requestConstraints, replyStrategy, callsConstraint), nil
 }
 
 func loadStrategy(path, strategyName string, definition map[interface{}]interface{}, ak *[]string) (ReplyStrategy, error) {
+	path = path + "." + strategyName
 	switch strategyName {
 	case "nop":
 		return NewNopReply(), nil
@@ -98,12 +102,17 @@ func loadConstraint(definition interface{}) (verifier, error) {
 		return nil, err
 	}
 	ak := []string{"kind"}
+
+	wrap := func(err error) error {
+		return fmt.Errorf("constraint '%s': %w", kind, err)
+	}
+
 	c, err := loadConstraintOfKind(kind, def, &ak)
 	if err != nil {
-		return nil, err
+		return nil, wrap(err)
 	}
-	if err := validateMapKeys(def, ak...); err != nil {
-		return nil, err
+	if err := validateMapKeys(def, ak); err != nil {
+		return nil, wrap(err)
 	}
 	return c, nil
 }
@@ -116,9 +125,9 @@ func loadConstraintOfKind(kind string, def map[interface{}]interface{}, ak *[]st
 		*ak = append(*ak, "method")
 		return loadMethodConstraint(def)
 	case "methodIsGET":
-		return &methodConstraint{method: "GET"}, nil
+		return &methodConstraint{name: kind, method: "GET"}, nil
 	case "methodIsPOST":
-		return &methodConstraint{method: "POST"}, nil
+		return &methodConstraint{name: kind, method: "POST"}, nil
 	case "headerIs":
 		*ak = append(*ak, "header", "value", "regexp")
 		return loadHeaderConstraint(def)
@@ -144,84 +153,26 @@ func loadConstraintOfKind(kind string, def map[interface{}]interface{}, ak *[]st
 		*ak = append(*ak, "path", "value", "comparisonParams")
 		return loadBodyJSONFieldMatchesJSONConstraint(def)
 	default:
-		return nil, fmt.Errorf("unknown constraint: %s", kind)
+		return nil, errors.New("unknown constraint")
 	}
 }
 
-func loadHeaders(def map[interface{}]interface{}) (map[string]string, error) {
-	var headers map[string]string
-	if h, ok := def["headers"]; ok {
-		hMap, ok := h.(map[interface{}]interface{})
-		if !ok {
-			return nil, errors.New("`headers` must be a map")
-		}
-		headers = make(map[string]string, len(hMap))
-		for k, v := range hMap {
-			key, ok := k.(string)
-			if !ok {
-				return nil, errors.New("`headers` requires string keys")
-			}
-			value, ok := v.(string)
-			if !ok {
-				return nil, errors.New("`headers` requires string values")
-			}
-			headers[key] = value
-		}
-	}
-	return headers, nil
-}
-
-func readCompareParams(def map[interface{}]interface{}) (compare.Params, error) {
-	params := compare.Params{
-		IgnoreArraysOrdering: true,
-	}
-
-	p, ok := def["comparisonParams"]
-	if !ok {
-		return params, nil
-	}
-
-	values, ok := p.(map[interface{}]interface{})
-	if !ok {
-		return params, errors.New("`comparisonParams` can't be parsed")
-	}
-
-	mapping := map[string]*bool{
-		"ignoreValues":         &params.IgnoreValues,
-		"ignoreArraysOrdering": &params.IgnoreArraysOrdering,
-		"disallowExtraFields":  &params.DisallowExtraFields,
-	}
-
-	for key, val := range values {
+func validateMapKeys(m map[interface{}]interface{}, allowedKeys []string) error {
+	for key := range m {
 		skey, ok := key.(string)
 		if !ok {
-			return params, errors.New("`comparisonParams` has non-string key")
+			return fmt.Errorf("key '%v' has non-string type", key)
 		}
 
-		bval, ok := val.(bool)
-		if !ok {
-			return params, errors.New("`comparisonParams` has non-bool values")
-		}
-
-		if pbval, ok := mapping[skey]; ok {
-			*pbval = bval
-		}
-	}
-	return params, nil
-}
-
-func validateMapKeys(m map[interface{}]interface{}, allowedKeys ...string) error {
-	for k := range m {
-		k := k.(string)
 		found := false
 		for _, ak := range allowedKeys {
-			if ak == k {
+			if ak == skey {
 				found = true
 				break
 			}
 		}
 		if !found {
-			return fmt.Errorf("unexpected key %s (expecting %v)", k, allowedKeys)
+			return fmt.Errorf("unexpected key '%s' (allowed only %v)", skey, allowedKeys)
 		}
 	}
 	return nil

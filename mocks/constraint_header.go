@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+
+	"github.com/lansfy/gonkex/compare"
 )
 
 func loadHeaderConstraint(def map[interface{}]interface{}) (verifier, error) {
@@ -20,6 +22,11 @@ func loadHeaderConstraint(def map[interface{}]interface{}) (verifier, error) {
 	regexpStr, err := getOptionalStringKey(def, "regexp", false)
 	if err != nil {
 		return nil, err
+	}
+
+	if s, ok := compare.StringAsRegexp(valueStr); ok {
+		valueStr = ""
+		regexpStr = s
 	}
 
 	return newHeaderConstraint(header, valueStr, regexpStr)
@@ -46,6 +53,10 @@ type headerConstraint struct {
 	header string
 	value  string
 	regexp *regexp.Regexp
+}
+
+func (c *headerConstraint) GetName() string {
+	return "headerIs"
 }
 
 func (c *headerConstraint) Verify(r *http.Request) []error {
