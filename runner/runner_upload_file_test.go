@@ -16,7 +16,7 @@ func TestUploadFiles(t *testing.T) {
 	defer srv.Close()
 
 	// TODO: refactor RunWithTesting() for testing negative scenario (when tests has expected errors)
-	RunWithTesting(t, srv, &RunWithTestingOpts{
+	RunWithTesting(t, srv.URL, &RunWithTestingOpts{
 		TestsDir: filepath.Join("testdata", "upload-files"),
 	})
 }

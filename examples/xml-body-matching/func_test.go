@@ -11,7 +11,7 @@ func TestProxy(t *testing.T) {
 	initServer()
 	srv := httptest.NewServer(nil)
 
-	runner.RunWithTesting(t, srv, &runner.RunWithTestingOpts{
+	runner.RunWithTesting(t, srv.URL, &runner.RunWithTestingOpts{
 		TestsDir: "cases",
 	})
 }

@@ -97,8 +97,7 @@ func TestFuncCases(t *testing.T) {
 	defer srv.Close()
 
 	// run test cases from current folder
-	runner.RunWithTesting(t, &runner.RunWithTestingParams{
-		Server:      srv,
+	runner.RunWithTesting(t, srv.URL, &runner.RunWithTestingParams{
 		TestsDir:    "cases",      // test case folder
 		FixturesDir: "fixtures",   // fixtures folder
 		Mocks:       m,
@@ -627,8 +626,7 @@ defer srv.Close()
 As soon as you spinned up your mocks and configured your service, you can run the tests.
 
 ```go
-runner.RunWithTesting(t, &runner.RunWithTestingParams{
-	Server:   srv,
+runner.RunWithTesting(t, srv.URL, &runner.RunWithTestingParams{
 	TestsDir: "tests/cases",
 	Mocks:    m, // pass the mocks to the test runner
 })

@@ -3,7 +3,6 @@ package runner
 import (
 	"errors"
 	"fmt"
-	"net/http/httptest"
 	"net/url"
 	"os"
 	"strings"
@@ -51,7 +50,7 @@ func registerMocksEnvironment(m *mocks.Mocks) {
 
 // RunWithTesting is a helper function the wraps the common Run and provides simple way
 // to configure Gonkex by filling the params structure.
-func RunWithTesting(t *testing.T, server *httptest.Server, opts *RunWithTestingOpts) {
+func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 	if opts.Mocks != nil {
 		registerMocksEnvironment(opts.Mocks)
 	}
@@ -77,7 +76,7 @@ func RunWithTesting(t *testing.T, server *httptest.Server, opts *RunWithTestingO
 	handler := testingHandler{t}
 	runner := New(
 		&Config{
-			Host:         server.URL,
+			Host:         serverURL,
 			Mocks:        opts.Mocks,
 			FixturesDir:  opts.FixturesDir,
 			DB:           opts.DB,
