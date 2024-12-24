@@ -12,7 +12,7 @@ func Test_API(t *testing.T) {
 
 	srv := httptest.NewServer(nil)
 
-	runner.RunWithTesting(t, srv, &runner.RunWithTestingOpts{
+	runner.RunWithTesting(t, srv.URL, &runner.RunWithTestingOpts{
 		TestsDir: "tests/cases",
 	})
 }

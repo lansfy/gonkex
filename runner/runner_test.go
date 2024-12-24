@@ -11,7 +11,7 @@ func TestDontFollowRedirects(t *testing.T) {
 	srv := testServerRedirect()
 	defer srv.Close()
 
-	RunWithTesting(t, srv, &RunWithTestingOpts{
+	RunWithTesting(t, srv.URL, &RunWithTestingOpts{
 		TestsDir: filepath.Join("testdata", "dont-follow-redirects"),
 	})
 }

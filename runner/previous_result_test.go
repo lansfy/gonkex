@@ -16,7 +16,7 @@ func Test_PreviousResult(t *testing.T) {
 	srv := testServer()
 	defer srv.Close()
 
-	RunWithTesting(t, srv, &RunWithTestingOpts{
+	RunWithTesting(t, srv.URL, &RunWithTestingOpts{
 		TestsDir: filepath.Join("testdata", "previous-result"),
 	})
 }
