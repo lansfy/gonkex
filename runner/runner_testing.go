@@ -15,18 +15,15 @@ import (
 	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/output"
-	coloredOutput "github.com/lansfy/gonkex/output/console_colored"
-	testingOutput "github.com/lansfy/gonkex/output/testing"
+	"github.com/lansfy/gonkex/output/terminal"
 	"github.com/lansfy/gonkex/storage"
 	"github.com/lansfy/gonkex/testloader/yaml_file"
 	"github.com/lansfy/gonkex/variables"
 
-	"github.com/fatih/color"
 	"github.com/joho/godotenv"
 )
 
-var DefaultOutput = testingOutput.NewOutput()
-var DefaultColoredOutput = coloredOutput.NewOutput(false)
+var DefaultOutput = terminal.NewOutput(nil)
 
 type RunWithTestingOpts struct {
 	TestsDir    string
@@ -97,13 +94,10 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 }
 
 func addOutputs(runner *Runner, opts *RunWithTestingOpts) {
-	switch {
-	case opts.MainOutputFunc != nil:
+	if opts.MainOutputFunc != nil {
 		runner.AddOutput(opts.MainOutputFunc)
-	case color.NoColor:
+	} else {
 		runner.AddOutput(DefaultOutput)
-	default:
-		runner.AddOutput(DefaultColoredOutput)
 	}
 
 	for _, o := range opts.Outputs {
