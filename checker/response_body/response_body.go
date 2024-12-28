@@ -10,12 +10,26 @@ import (
 	"github.com/lansfy/gonkex/compare"
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/xmlparsing"
+
+	"github.com/fatih/color"
 )
 
 type ResponseBodyChecker struct{}
 
 func NewChecker() checker.CheckerInterface {
 	return &ResponseBodyChecker{}
+}
+
+func createWrongStatusError(statusCode int, known map[int]string) error {
+	knownCodes := []string{}
+	for code := range known {
+		knownCodes = append(knownCodes, fmt.Sprintf("%d", code))
+	}
+	return fmt.Errorf(
+		"server responded with unexpected status:\n     expected: %s\n       actual: %s",
+		color.GreenString("%s", strings.Join(knownCodes, "/")),
+		color.RedString("%d", statusCode),
+	)
 }
 
 func (c *ResponseBodyChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
@@ -45,8 +59,7 @@ func (c *ResponseBodyChecker) Check(t models.TestInterface, result *models.Resul
 		}
 	}
 	if !foundResponse {
-		err := fmt.Errorf("server responded with status %d", result.ResponseStatusCode)
-		errs = append(errs, err)
+		errs = append(errs, createWrongStatusError(result.ResponseStatusCode, t.GetResponses()))
 	}
 
 	return errs, nil

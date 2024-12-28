@@ -3,7 +3,6 @@ package runner
 import (
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
 	"testing"
 )
 
@@ -12,7 +11,7 @@ func TestDontFollowRedirects(t *testing.T) {
 	defer srv.Close()
 
 	RunWithTesting(t, srv.URL, &RunWithTestingOpts{
-		TestsDir: filepath.Join("testdata", "dont-follow-redirects"),
+		TestsDir: "testdata/dont-follow-redirects",
 	})
 }
 

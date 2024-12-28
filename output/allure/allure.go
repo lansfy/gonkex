@@ -1,4 +1,4 @@
-package allure_report
+package allure
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lansfy/gonkex/output/allure_report/beans"
+	"github.com/lansfy/gonkex/output/allure/beans"
 )
 
 type Allure struct {

@@ -1,0 +1,12 @@
+- name: Test case 3
+  description: Test wrong http code and db output error
+  method: GET
+  path: /json
+  response:
+    400: >
+      {"somefield": 1234}
+  dbChecks:
+    - dbQuery: "SELECT *"
+      dbResponse:
+        - '{"field1": "value2"}'
+        - '{"field2": 124}'

@@ -1,0 +1,40 @@
+
+       Name: Test case 3
+Description: Test wrong http code and db output error
+       File: testdata/errors-example/case3.yaml
+
+Request:
+     Method: GET
+       Path: /json
+      Query: 
+       Body:
+<no body>
+
+Response:
+     Status: 200 OK
+       Body:
+{"somefield":123}
+       Db Request #1:
+SELECT *
+       Db Response #1:
+{"field1":"value1"}
+{"field2":123}
+
+
+     Result: ERRORS!
+
+Errors:
+
+1) server responded with unexpected status:
+     expected: 400
+       actual: 200
+
+2) at path $[0].field1 values do not match:
+     expected: value2
+       actual: value1
+
+3) at path $[1].field2 values do not match:
+     expected: 124
+       actual: 123
+
+

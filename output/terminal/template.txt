@@ -1,7 +1,6 @@
 
        Name: {{ green .Test.GetName }}
-       Description: 
-{{- if .Test.GetDescription }}{{ green .Test.GetDescription }}{{ else }}{{ green " No description" }}{{ end }}
+Description: {{if .Test.GetDescription }}{{ green .Test.GetDescription }}{{ else }}{{ green "No description" }}{{ end }}
        File: {{ green .Test.GetFileName }}
 
 Request:
@@ -24,19 +23,26 @@ Request:
 {{ if .RequestBody }}{{ cyan .RequestBody }}{{ else }}{{ cyan "<no body>" }}{{ end }}
 
 Response:
+{{- if show_headers }}
+    Headers:
+{{- range $header, $values := .ResponseHeaders }}
+{{- range $idx, $val := $values }}
+       {{ cyan $header }}{{ cyan ": " }}{{ cyan $val }}
+{{- end }}
+{{- end }}
+{{- end }}
      Status: {{ cyan .ResponseStatus }}
        Body:
 {{ if .ResponseBody }}{{ yellow .ResponseBody }}{{ else }}{{ yellow "<no body>" }}{{ end }}
-
-{{ range $i, $dbr := .DatabaseResult }}
-{{ if $dbr.Query }}
+{{- range $i, $dbr := .DatabaseResult }}
+{{- if $dbr.Query }}
        Db Request #{{ inc $i }}:
 {{ cyan $dbr.Query }}
        Db Response #{{ inc $i }}:
-{{ range $value := $dbr.Response }}
+{{- range $value := $dbr.Response }}
 {{ yellow $value }}{{ end }}
-{{ end }}
-{{ end }}
+{{- end }}
+{{- end }}
 
 {{ if .Errors }}
      Result: {{ danger "ERRORS!" }}

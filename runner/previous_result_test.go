@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
 	"testing"
 )
 
@@ -17,7 +16,7 @@ func Test_PreviousResult(t *testing.T) {
 	defer srv.Close()
 
 	RunWithTesting(t, srv.URL, &RunWithTestingOpts{
-		TestsDir: filepath.Join("testdata", "previous-result"),
+		TestsDir: "testdata/previous-result",
 	})
 }
 

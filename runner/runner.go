@@ -28,27 +28,24 @@ type Config struct {
 	HTTPProxyURL *url.URL
 }
 
-type (
-	testExecutor func(models.TestInterface) (*models.Result, error)
-	testHandler  func(models.TestInterface, testExecutor) error
-)
+type testExecutor func(models.TestInterface) (*models.Result, error)
+type testHandler func(models.TestInterface, testExecutor) error
 
 type Runner struct {
-	loader               testloader.LoaderInterface
-	testExecutionHandler testHandler
-	output               []output.OutputInterface
-	checkers             []checker.CheckerInterface
-	client               *http.Client
-
-	config *Config
+	loader   testloader.LoaderInterface
+	handler  testHandler
+	output   []output.OutputInterface
+	checkers []checker.CheckerInterface
+	client   *http.Client
+	config   *Config
 }
 
 func New(config *Config, loader testloader.LoaderInterface, handler testHandler) *Runner {
 	return &Runner{
-		config:               config,
-		loader:               loader,
-		testExecutionHandler: handler,
-		client:               newClient(config.HTTPProxyURL),
+		config:  config,
+		loader:  loader,
+		handler: handler,
+		client:  newClient(config.HTTPProxyURL),
 	}
 }
 
@@ -96,7 +93,7 @@ func (r *Runner) Run() error {
 
 			return testResult, nil
 		}
-		err := r.testExecutionHandler(test, testExecutor)
+		err := r.handler(test, testExecutor)
 		if err != nil {
 			return fmt.Errorf("test %s error: %s", test.GetName(), err)
 		}
