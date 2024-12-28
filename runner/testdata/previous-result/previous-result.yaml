@@ -4,6 +4,7 @@
     200: "bla"
   variables_to_set:
     200: "myResp"
+
 - method: "GET"
   path: "/some/path/plain_text"
   response:
@@ -28,6 +29,7 @@
       someField: "other"
       nestedVar1: "nested_info.nested_field_1"
       nestedVar2: "nested_info.nested_field_2"
+
 - method: "GET"
   path: "/some/path/json"
   response:

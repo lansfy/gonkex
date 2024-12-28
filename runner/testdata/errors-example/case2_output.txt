@@ -1,0 +1,35 @@
+
+       Name: Test case 2
+Description: Test json field and header mismatch error
+       File: testdata/errors-example/case2.yaml
+
+Request:
+     Method: GET
+       Path: /json
+      Query: 
+       Body:
+<no body>
+
+Response:
+    Headers:
+       Content-Length: 17
+       Content-Type: application/json
+       Date: Sat, 1 Dec 2024 00:00:00 GMT
+     Status: 200 OK
+       Body:
+{"somefield":123}
+
+
+     Result: ERRORS!
+
+Errors:
+
+1) at path $.somefield values do not match:
+     expected: 1234
+       actual: 123
+
+2) response header Content-Type value does not match:
+     expected: text/plain
+       actual: application/json
+
+

@@ -1,4 +1,4 @@
-package allure_report
+package allure
 
 import (
 	"bytes"
@@ -10,12 +10,12 @@ import (
 	"github.com/lansfy/gonkex/models"
 )
 
-type AllureReportOutput struct {
+type Output struct {
 	reportLocation string
 	allure         Allure
 }
 
-func NewOutput(suiteName, reportLocation string) *AllureReportOutput {
+func NewOutput(suiteName, reportLocation string) *Output {
 	resultsDir, _ := filepath.Abs(reportLocation)
 	_ = os.Mkdir(resultsDir, 0o777)
 	a := Allure{
@@ -24,20 +24,20 @@ func NewOutput(suiteName, reportLocation string) *AllureReportOutput {
 	}
 	a.StartSuite(suiteName, time.Now())
 
-	return &AllureReportOutput{
+	return &Output{
 		reportLocation: reportLocation,
 		allure:         a,
 	}
 }
 
-func (o *AllureReportOutput) Process(t models.TestInterface, result *models.Result) error {
+func (o *Output) Process(t models.TestInterface, result *models.Result) error {
 	testCase := o.allure.StartCase(t.GetName(), time.Now())
 	testCase.SetDescriptionOrDefaultValue(t.GetDescription(), "No description")
 	testCase.AddLabel("story", result.Path)
 
 	o.allure.AddAttachment(
 		*bytes.NewBufferString("Request"),
-		*bytes.NewBufferString(fmt.Sprintf(`Query: %s \n Body: %s`, result.Query, result.RequestBody)),
+		*bytes.NewBufferString(fmt.Sprintf(`Query: %s\n Body: %s`, result.Query, result.RequestBody)),
 		"txt")
 	o.allure.AddAttachment(
 		*bytes.NewBufferString("Response"),
@@ -63,6 +63,6 @@ func (o *AllureReportOutput) Process(t models.TestInterface, result *models.Resu
 	return nil
 }
 
-func (o *AllureReportOutput) Finalize() {
+func (o *Output) Finalize() {
 	_ = o.allure.EndSuite(time.Now())
 }

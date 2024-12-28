@@ -1,0 +1,10 @@
+- name: Test case 2
+  description: Test json field and header mismatch error
+  method: GET
+  path: /json
+  response:
+    200: >
+      {"somefield": 1234}
+  responseHeaders:
+    200:
+      Content-Type: text/plain

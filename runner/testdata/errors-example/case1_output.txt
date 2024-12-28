@@ -1,0 +1,27 @@
+
+       Name: Test case 1
+Description: Test body mismatch error
+       File: testdata/errors-example/case1.yaml
+
+Request:
+     Method: GET
+       Path: /text
+      Query: ?aaa=bbb
+       Body:
+<no body>
+
+Response:
+     Status: 200 OK
+       Body:
+1234
+
+
+     Result: ERRORS!
+
+Errors:
+
+1) at path $ values do not match:
+     expected: 123
+       actual: 1234
+
+

@@ -1,0 +1,7 @@
+- name: Test case 1
+  description: Test body mismatch error
+  method: GET
+  path: /text
+  query: ?aaa=bbb
+  response:
+    200: "123"
