@@ -1,13 +1,11 @@
 package response_header
 
 import (
-	"fmt"
 	"net/textproto"
 
 	"github.com/lansfy/gonkex/checker"
+	"github.com/lansfy/gonkex/colorize"
 	"github.com/lansfy/gonkex/models"
-
-	"github.com/fatih/color"
 )
 
 type ResponseHeaderChecker struct{}
@@ -28,9 +26,9 @@ func (c *ResponseHeaderChecker) Check(t models.TestInterface, result *models.Res
 		k = textproto.CanonicalMIMEHeaderKey(k)
 		actualValues, ok := result.ResponseHeaders[k]
 		if !ok {
-			errs = append(errs, fmt.Errorf(
-				"response does not include expected header %s",
-				color.CyanString(k),
+			errs = append(errs, colorize.NewError(
+				colorize.None("response does not include expected header "),
+				colorize.Cyan(k),
 			))
 			continue
 		}
@@ -45,17 +43,17 @@ func (c *ResponseHeaderChecker) Check(t models.TestInterface, result *models.Res
 			continue
 		}
 		if len(actualValues) == 1 {
-			errs = append(errs, fmt.Errorf(
-				"response header %s value does not match:\n     expected: %s\n       actual: %s",
-				color.CyanString(k),
-				color.GreenString("%s", v),
-				color.RedString("%v", actualValues[0]),
+			errs = append(errs, colorize.NewNotEqualError(
+				"response header ", k, " value does not match:",
+				v,
+				actualValues[0],
 			))
 		} else {
-			errs = append(errs, fmt.Errorf(
-				"response header %s value does not match expected %s",
-				color.CyanString(k),
-				color.GreenString("%s", v),
+			errs = append(errs, colorize.NewError(
+				colorize.None("response header "),
+				colorize.Cyan(k),
+				colorize.None(" value does not match expected "),
+				colorize.Green(v),
 			))
 		}
 	}

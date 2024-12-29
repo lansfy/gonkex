@@ -6,7 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/fatih/color"
+	"github.com/lansfy/gonkex/colorize"
+
 	"github.com/kylelemons/godebug/diff"
 )
 
@@ -218,22 +219,22 @@ func leafMatchType(expected interface{}) leafsMatchType {
 	return pure
 }
 
-func diffStrings(a, b string) string {
+func diffStrings(a, b string) []*colorize.Part {
 	chunks := diff.DiffChunks(strings.Split(a, "\n"), strings.Split(b, "\n"))
 
-	buf := strings.Builder{}
+	parts := []*colorize.Part{}
 	for _, c := range chunks {
 		for _, line := range c.Added {
-			buf.WriteString(color.RedString("+%s\n", line))
+			parts = append(parts, colorize.Red(fmt.Sprintf("+%s\n", line)))
 		}
 		for _, line := range c.Deleted {
-			buf.WriteString(color.RedString("-%s\n", line))
+			parts = append(parts, colorize.Red(fmt.Sprintf("-%s\n", line)))
 		}
 		for _, line := range c.Equal {
-			buf.WriteString(color.GreenString(" %s\n", line))
+			parts = append(parts, colorize.Green(fmt.Sprintf(" %s\n", line)))
 		}
 	}
-	return strings.TrimRight(buf.String(), "\n")
+	return parts
 }
 
 func makeValueCompareError(path, msg string, expected, actual interface{}) error {
@@ -243,24 +244,18 @@ func makeValueCompareError(path, msg string, expected, actual interface{}) error
 		return makeError(path, msg, expected, actual)
 	}
 
-	// special case for strings
-	changes := diffStrings(actualStr, expectedStr)
-	return fmt.Errorf(
-		"at path %s %s:\n     diff (--- expected vs +++ actual):\n%s",
-		color.CyanString(path),
-		msg,
-		changes,
-	)
+	// special case for multi-line strings
+	parts := []*colorize.Part{
+		colorize.None("at path "),
+		colorize.Cyan(path),
+		colorize.None(" " + msg + ":\n     diff (--- expected vs +++ actual):\n"),
+	}
+	parts = append(parts, diffStrings(actualStr, expectedStr)...)
+	return colorize.NewError(parts...)
 }
 
 func makeError(path, msg string, expected, actual interface{}) error {
-	return fmt.Errorf(
-		"at path %s %s:\n     expected: %s\n       actual: %s",
-		color.CyanString(path),
-		msg,
-		color.GreenString("%v", expected),
-		color.RedString("%v", actual),
-	)
+	return colorize.NewNotEqualError("at path ", path, " "+msg+":", expected, actual)
 }
 
 func convertToArray(array interface{}) []interface{} {
