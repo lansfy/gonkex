@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	"github.com/lansfy/gonkex/checker"
+	"github.com/lansfy/gonkex/colorize"
 	"github.com/lansfy/gonkex/compare"
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/storage"
 
-	"github.com/fatih/color"
 	"github.com/kylelemons/godebug/pretty"
 )
 
@@ -112,19 +112,20 @@ func toJSONArray(items []string, qual, testName string) ([]interface{}, error) {
 }
 
 func compareDbResponseLength(expected, actual []string, query interface{}) error {
-	var err error
-
-	if len(expected) != len(actual) {
-		err = fmt.Errorf(
-			"quantity of items in database do not match (-expected: %s +actual: %s)\n     test query:\n%s\n    result diff:\n%s",
-			color.CyanString("%v", len(expected)),
-			color.CyanString("%v", len(actual)),
-			color.CyanString("%v", query),
-			color.CyanString("%v", pretty.Compare(expected, actual)),
-		)
+	if len(expected) == len(actual) {
+		return nil
 	}
 
-	return err
+	return colorize.NewError(
+		colorize.None("quantity of items in database do not match (-expected: "),
+		colorize.Cyan(len(expected)),
+		colorize.None(" +actual: "),
+		colorize.Cyan(len(actual)),
+		colorize.None(")\n     test query:\n"),
+		colorize.Cyan(query),
+		colorize.None("\n    result diff:\n"),
+		colorize.Cyan(pretty.Compare(expected, actual)),
+	)
 }
 
 func newQuery(dbQuery string, db storage.StorageInterface) ([]string, error) {

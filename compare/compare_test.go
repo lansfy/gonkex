@@ -5,17 +5,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/fatih/color"
 	"github.com/stretchr/testify/assert"
 )
 
 func makeErrorString(path, msg string, expected, actual interface{}) string {
 	return fmt.Sprintf(
-		"at path %s %s:\n     expected: %s\n       actual: %s",
-		color.CyanString(path),
+		"at path %s %s:\n     expected: %v\n       actual: %v",
+		path,
 		msg,
-		color.GreenString("%v", expected),
-		color.RedString("%v", actual),
+		expected,
+		actual,
 	)
 }
 

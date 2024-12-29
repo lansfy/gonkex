@@ -17,7 +17,6 @@ import (
 	"github.com/lansfy/gonkex/testloader/yaml_file"
 	"github.com/lansfy/gonkex/variables"
 
-	"github.com/fatih/color"
 	"github.com/stretchr/testify/require"
 )
 
@@ -58,7 +57,6 @@ func normalize(s string) string {
 }
 
 func Test_Error_Examples(t *testing.T) {
-	color.NoColor = true
 	initErrorServer()
 	server := httptest.NewServer(nil)
 
@@ -80,6 +78,7 @@ func Test_Error_Examples(t *testing.T) {
 
 			buf := &strings.Builder{}
 			output := terminal.NewOutput(&terminal.OutputOpts{
+				Policy:       terminal.PolicyForceNoColor,
 				CustomWriter: buf,
 			})
 			r.AddOutput(output)

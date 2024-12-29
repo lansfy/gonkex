@@ -3,12 +3,15 @@ package terminal
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
 	"io"
 	"text/template"
 
-	"github.com/fatih/color"
+	"github.com/lansfy/gonkex/colorize"
 	"github.com/lansfy/gonkex/models"
+
+	"github.com/fatih/color"
 	"github.com/mattn/go-colorable"
 )
 
@@ -100,22 +103,36 @@ func getTemplateFuncMap(policy ColorPolicy, showHeaders bool) template.FuncMap {
 	funcMap := template.FuncMap{}
 	if policy == PolicyForceColor {
 		funcMap = template.FuncMap{
-			"green":   color.GreenString,
-			"cyan":    color.CyanString,
-			"yellow":  color.YellowString,
-			"danger":  color.New(color.FgHiWhite, color.BgRed).Sprint,
-			"success": color.New(color.FgHiWhite, color.BgGreen).Sprint,
+			"green":      color.GreenString,
+			"cyan":       color.CyanString,
+			"yellow":     color.YellowString,
+			"danger":     color.New(color.FgHiWhite, color.BgRed).Sprint,
+			"success":    color.New(color.FgHiWhite, color.BgGreen).Sprint,
+			"printError": printWithColor,
 		}
 	} else {
 		funcMap = template.FuncMap{
-			"green":   fmt.Sprintf,
-			"cyan":    fmt.Sprintf,
-			"yellow":  fmt.Sprintf,
-			"danger":  fmt.Sprintf,
-			"success": fmt.Sprintf,
+			"green":      fmt.Sprintf,
+			"cyan":       fmt.Sprintf,
+			"yellow":     fmt.Sprintf,
+			"danger":     fmt.Sprintf,
+			"success":    fmt.Sprintf,
+			"printError": suppressColor,
 		}
 	}
 	funcMap["inc"] = func(i int) int { return i + 1 }
 	funcMap["show_headers"] = func() bool { return showHeaders }
 	return funcMap
+}
+
+func suppressColor(err error) string {
+	return err.Error()
+}
+
+func printWithColor(err error) string {
+	var pErr *colorize.Error
+	if errors.As(err, &pErr) {
+		return pErr.ColorError()
+	}
+	return err.Error()
 }
