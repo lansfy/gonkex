@@ -14,10 +14,6 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-type ResponseSchemaChecker struct {
-	swagger *spec.Swagger
-}
-
 func NewChecker(specLocation string) checker.CheckerInterface {
 	document, err := loads.Spec(specLocation)
 	if err != nil {
@@ -27,12 +23,16 @@ func NewChecker(specLocation string) checker.CheckerInterface {
 	if err != nil {
 		return nil
 	}
-	return &ResponseSchemaChecker{
+	return &responseSchemaChecker{
 		swagger: document.Spec(),
 	}
 }
 
-func (c *ResponseSchemaChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
+type responseSchemaChecker struct {
+	swagger *spec.Swagger
+}
+
+func (c *responseSchemaChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
 	// decode actual body
 	var actual interface{}
 	if err := json.Unmarshal([]byte(result.ResponseBody), &actual); err != nil {

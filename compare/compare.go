@@ -221,20 +221,7 @@ func leafMatchType(expected interface{}) leafsMatchType {
 
 func diffStrings(a, b string) []*colorize.Part {
 	chunks := diff.DiffChunks(strings.Split(a, "\n"), strings.Split(b, "\n"))
-
-	parts := []*colorize.Part{}
-	for _, c := range chunks {
-		for _, line := range c.Added {
-			parts = append(parts, colorize.Red(fmt.Sprintf("+%s\n", line)))
-		}
-		for _, line := range c.Deleted {
-			parts = append(parts, colorize.Red(fmt.Sprintf("-%s\n", line)))
-		}
-		for _, line := range c.Equal {
-			parts = append(parts, colorize.Green(fmt.Sprintf(" %s\n", line)))
-		}
-	}
-	return parts
+	return colorize.MakeColorDiff(chunks)
 }
 
 func makeValueCompareError(path, msg string, expected, actual interface{}) error {
@@ -250,12 +237,13 @@ func makeValueCompareError(path, msg string, expected, actual interface{}) error
 		colorize.Cyan(path),
 		colorize.None(" " + msg + ":\n     diff (--- expected vs +++ actual):\n"),
 	}
+
 	parts = append(parts, diffStrings(actualStr, expectedStr)...)
 	return colorize.NewError(parts...)
 }
 
 func makeError(path, msg string, expected, actual interface{}) error {
-	return colorize.NewNotEqualError("at path ", path, " "+msg+":", expected, actual)
+	return colorize.NewNotEqualError("at path ", path, " "+msg+":", expected, actual, nil)
 }
 
 func convertToArray(array interface{}) []interface{} {

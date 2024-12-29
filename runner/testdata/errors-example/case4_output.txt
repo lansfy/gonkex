@@ -1,0 +1,39 @@
+
+       Name: Test case 4
+Description: Test wrong number of db items error
+       File: testdata/errors-example/case4.yaml
+
+Request:
+     Method: GET
+       Path: /json
+      Query: 
+       Body:
+<no body>
+
+Response:
+     Status: 200 OK
+       Body:
+{"somefield":123}
+       Db Request #1:
+SELECT *
+       Db Response #1:
+{"field1":"value1"}
+{"field2":123}
+
+
+     Result: ERRORS!
+
+Errors:
+
+1) quantity of items in database do not match:
+     expected: 1
+       actual: 2
+
+   query: SELECT *
+   diff (--- expected vs +++ actual):
+ [
++ "{\"field1\":\"value1\"}",
+  "{\"field2\":123}",
+ ]
+
+
