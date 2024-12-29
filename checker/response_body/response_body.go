@@ -13,21 +13,21 @@ import (
 	"github.com/lansfy/gonkex/xmlparsing"
 )
 
-type ResponseBodyChecker struct{}
-
 func NewChecker() checker.CheckerInterface {
-	return &ResponseBodyChecker{}
+	return &responseBodyChecker{}
 }
+
+type responseBodyChecker struct{}
 
 func createWrongStatusError(statusCode int, known map[int]string) error {
 	knownCodes := []string{}
 	for code := range known {
 		knownCodes = append(knownCodes, fmt.Sprintf("%d", code))
 	}
-	return colorize.NewNotEqualError("server responded with unexpected ", "status", ":", strings.Join(knownCodes, " / "), statusCode)
+	return colorize.NewNotEqualError("server responded with unexpected ", "status", ":", strings.Join(knownCodes, " / "), statusCode, nil)
 }
 
-func (c *ResponseBodyChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
+func (c *responseBodyChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
 	var errs []error
 	var foundResponse bool
 	// test response with the expected response body

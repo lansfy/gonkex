@@ -8,13 +8,13 @@ import (
 	"github.com/lansfy/gonkex/models"
 )
 
-type ResponseHeaderChecker struct{}
-
 func NewChecker() checker.CheckerInterface {
-	return &ResponseHeaderChecker{}
+	return &responseHeaderChecker{}
 }
 
-func (c *ResponseHeaderChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
+type responseHeaderChecker struct{}
+
+func (c *responseHeaderChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
 	// test response headers with the expected headers
 	expectedHeaders, ok := t.GetResponseHeaders(result.ResponseStatusCode)
 	if !ok || len(expectedHeaders) == 0 {
@@ -47,6 +47,7 @@ func (c *ResponseHeaderChecker) Check(t models.TestInterface, result *models.Res
 				"response header ", k, " value does not match:",
 				v,
 				actualValues[0],
+				nil,
 			))
 		} else {
 			errs = append(errs, colorize.NewError(

@@ -1,0 +1,11 @@
+- name: Test case 4
+  description: Test wrong number of db items error
+  method: GET
+  path: /json
+  response:
+    200: >
+      {"somefield": 123}
+  dbChecks:
+    - dbQuery: "SELECT *"
+      dbResponse:
+        - '{"field2":123}'

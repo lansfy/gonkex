@@ -3,6 +3,7 @@ package response_db
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/lansfy/gonkex/checker"
 	"github.com/lansfy/gonkex/colorize"
@@ -10,20 +11,21 @@ import (
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/storage"
 
+	"github.com/kylelemons/godebug/diff"
 	"github.com/kylelemons/godebug/pretty"
 )
 
-type ResponseDbChecker struct {
-	db storage.StorageInterface
-}
-
 func NewChecker(db storage.StorageInterface) checker.CheckerInterface {
-	return &ResponseDbChecker{
+	return &responseDbChecker{
 		db: db,
 	}
 }
 
-func (c *ResponseDbChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
+type responseDbChecker struct {
+	db storage.StorageInterface
+}
+
+func (c *responseDbChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
 	var errors []error
 	for _, dbCheck := range t.GetDatabaseChecks() {
 		errs, err := c.check(t.GetName(), dbCheck, result)
@@ -36,7 +38,7 @@ func (c *ResponseDbChecker) Check(t models.TestInterface, result *models.Result)
 	return errors, nil
 }
 
-func (c *ResponseDbChecker) check(
+func (c *responseDbChecker) check(
 	testName string,
 	t models.DatabaseCheck,
 	result *models.Result,
@@ -115,6 +117,26 @@ func compareDbResponseLength(expected, actual []string, query interface{}) error
 	if len(expected) == len(actual) {
 		return nil
 	}
+
+	diffCfg := *pretty.DefaultConfig
+	diffCfg.Diffable = true
+	chunks := diff.DiffChunks(strings.Split(diffCfg.Sprint(expected), "\n"), strings.Split(diffCfg.Sprint(actual), "\n"))
+
+	tail := []*colorize.Part{
+		colorize.None("\n\n   query: "),
+		colorize.Cyan(query),
+		colorize.None("\n   diff (--- expected vs +++ actual):\n"),
+	}
+	tail = append(tail, colorize.MakeColorDiff(chunks)...)
+
+	return colorize.NewNotEqualError(
+		"quantity of ",
+		"items in database",
+		" do not match:",
+		len(expected),
+		len(actual),
+		tail,
+	)
 
 	return colorize.NewError(
 		colorize.None("quantity of items in database do not match (-expected: "),

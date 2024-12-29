@@ -20,6 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const showOnScreen = false // get output on screen to debug colors
 var dateRegexp = regexp.MustCompile("(Mon|Tue|Wed|Thu|Fri|Sat|Sun), ([0-3][0-9]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ([0-9]{4}) ([01][0-9]|2[0-3])(:[0-5][0-9]){2} GMT")
 
 type fakeStorage struct{}
@@ -60,7 +61,7 @@ func Test_Error_Examples(t *testing.T) {
 	initErrorServer()
 	server := httptest.NewServer(nil)
 
-	for caseID := 1; caseID <= 3; caseID++ {
+	for caseID := 1; caseID <= 4; caseID++ {
 		t.Run(fmt.Sprintf("case%d", caseID), func(t *testing.T) {
 			expected, err := os.ReadFile(fmt.Sprintf("testdata/errors-example/case%d_output.txt", caseID))
 			require.NoError(t, err)
@@ -77,10 +78,13 @@ func Test_Error_Examples(t *testing.T) {
 			)
 
 			buf := &strings.Builder{}
-			output := terminal.NewOutput(&terminal.OutputOpts{
-				Policy:       terminal.PolicyForceNoColor,
-				CustomWriter: buf,
-			})
+			opts := &terminal.OutputOpts{}
+			if !showOnScreen {
+				opts.Policy = terminal.PolicyForceNoColor
+				opts.CustomWriter = buf
+			}
+
+			output := terminal.NewOutput(opts)
 			r.AddOutput(output)
 			r.AddCheckers(response_body.NewChecker())
 			r.AddCheckers(response_header.NewChecker())
@@ -89,7 +93,10 @@ func Test_Error_Examples(t *testing.T) {
 			err = r.Run()
 			require.NoError(t, err)
 
-			require.Equal(t, normalize(string(expected)), normalize(buf.String()))
+			if !showOnScreen {
+				require.Equal(t, normalize(string(expected)), normalize(buf.String()))
+			}
 		})
 	}
+	require.Equal(t, false, showOnScreen)
 }

@@ -78,6 +78,10 @@ func NewError(parts ...*Part) error {
 	return &Error{parts}
 }
 
-func NewNotEqualError(before, entity, after string, expected, actual interface{}) error {
-	return NewError(None(before), Cyan(entity), None(after+"\n     expected: "), Green(expected), None("\n       actual: "), Red(actual))
+func NewNotEqualError(before, entity, after string, expected, actual interface{}, tail []*Part) error {
+	parts := []*Part{
+		None(before), Cyan(entity), None(after + "\n     expected: "), Green(expected), None("\n       actual: "), Red(actual),
+	}
+	parts = append(parts, tail...)
+	return NewError(parts...)
 }
