@@ -3,9 +3,40 @@ package mocks
 import (
 	"errors"
 	"fmt"
+	"text/template"
 )
 
-func loadDefinition(path string, rawDef interface{}) (*Definition, error) {
+type Loader interface {
+	LoadDefinition(rawDef interface{}) (*Definition, error)
+}
+
+type YamlLoaderOpts struct {
+	TemplateReplyFuncs template.FuncMap
+}
+
+func NewYamlLoader(opts *YamlLoaderOpts) Loader {
+	var funcs template.FuncMap
+	if opts != nil {
+		funcs = opts.TemplateReplyFuncs
+	}
+	return &loaderImpl{
+		TemplateReplyFuncs: funcs,
+	}
+}
+
+type loaderImpl struct {
+	TemplateReplyFuncs template.FuncMap
+}
+
+func (l *loaderImpl) LoadDefinition(rawDef interface{}) (*Definition, error) {
+	def, err := l.loadDefinition("$", rawDef)
+	if err != nil {
+		return nil, err
+	}
+	return def, nil
+}
+
+func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definition, error) {
 	def, ok := rawDef.(map[interface{}]interface{})
 	if !ok {
 		return nil, fmt.Errorf("at path %s: Definition must be key-values", path)
@@ -44,7 +75,7 @@ func loadDefinition(path string, rawDef interface{}) (*Definition, error) {
 		return fmt.Errorf("strategy '%s': %w", strategyName, err)
 	}
 
-	replyStrategy, err := loadStrategy(path, strategyName, def, &ak)
+	replyStrategy, err := l.loadStrategy(path, strategyName, def, &ak)
 	if err != nil {
 		return nil, wrap(err)
 	}
@@ -59,34 +90,35 @@ func loadDefinition(path string, rawDef interface{}) (*Definition, error) {
 	return NewDefinition(path, requestConstraints, replyStrategy, callsConstraint), nil
 }
 
-func loadStrategy(path, strategyName string, definition map[interface{}]interface{}, ak *[]string) (ReplyStrategy, error) {
+func (l *loaderImpl) loadStrategy(path, strategyName string, definition map[interface{}]interface{},
+	ak *[]string) (ReplyStrategy, error) {
 	path = path + "." + strategyName
 	switch strategyName {
 	case "nop":
 		return NewNopReply(), nil
 	case "constant":
 		*ak = append(*ak, "body", "statusCode", "headers")
-		return loadConstantStrategy(path, definition)
+		return l.loadConstantStrategy(path, definition)
 	case "sequence":
 		*ak = append(*ak, "sequence")
-		return loadSequenceReplyStrategy(path, definition)
+		return l.loadSequenceReplyStrategy(path, definition)
 	case "template":
 		*ak = append(*ak, "body", "statusCode", "headers")
-		return loadTemplateReplyStrategy(path, definition)
+		return l.loadTemplateReplyStrategy(path, definition)
 	case "basedOnRequest":
 		*ak = append(*ak, "basePath", "uris")
-		return loadBasedOnRequestReplyStrategy(path, definition)
+		return l.loadBasedOnRequestReplyStrategy(path, definition)
 	case "file":
 		*ak = append(*ak, "filename", "statusCode", "headers")
-		return loadFileStrategy(path, definition)
+		return l.loadFileStrategy(path, definition)
 	case "uriVary":
 		*ak = append(*ak, "basePath", "uris")
-		return loadUriVaryReplyStrategy(path, definition)
+		return l.loadUriVaryReplyStrategy(path, definition)
 	case "methodVary":
 		*ak = append(*ak, "methods")
-		return loadMethodVaryStrategy(path, definition)
+		return l.loadMethodVaryStrategy(path, definition)
 	case "dropRequest":
-		return loadDropRequestStrategy(path, definition)
+		return l.loadDropRequestStrategy(path, definition)
 	default:
 		return nil, errors.New("unknown strategy")
 	}

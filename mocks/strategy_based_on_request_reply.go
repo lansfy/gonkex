@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-func loadBasedOnRequestReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *loaderImpl) loadBasedOnRequestReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
 	var uris []*Definition
 	if u, ok := def["uris"]; ok {
 		urisList, ok := u.([]interface{})
@@ -20,7 +20,7 @@ func loadBasedOnRequestReplyStrategy(path string, def map[interface{}]interface{
 			if !ok {
 				return nil, errors.New("`uris` list item must be a map")
 			}
-			def, err := loadDefinition(path+"."+strconv.Itoa(i), v)
+			def, err := l.loadDefinition(path+"."+strconv.Itoa(i), v)
 			if err != nil {
 				return nil, err
 			}

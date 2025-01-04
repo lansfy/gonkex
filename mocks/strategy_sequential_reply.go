@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-func loadSequenceReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *loaderImpl) loadSequenceReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
 	if _, ok := def["sequence"]; !ok {
 		return nil, errors.New("`sequence` key required")
 	}
@@ -17,7 +17,7 @@ func loadSequenceReplyStrategy(path string, def map[interface{}]interface{}) (Re
 	}
 	strategies := make([]*Definition, len(seqSlice))
 	for i, v := range seqSlice {
-		def, err := loadDefinition(path+"."+strconv.Itoa(i), v)
+		def, err := l.loadDefinition(path+"."+strconv.Itoa(i), v)
 		if err != nil {
 			return nil, err
 		}

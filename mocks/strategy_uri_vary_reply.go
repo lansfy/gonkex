@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func loadUriVaryReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *loaderImpl) loadUriVaryReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
 	basePath, err := getOptionalStringKey(def, "basePath", true)
 	if err != nil {
 		return nil, err
@@ -19,7 +19,7 @@ func loadUriVaryReplyStrategy(path string, def map[interface{}]interface{}) (Rep
 		}
 		uris = make(map[string]*Definition, len(urisMap))
 		for uri, v := range urisMap {
-			def, err := loadDefinition(path+"."+uri.(string), v)
+			def, err := l.loadDefinition(path+"."+uri.(string), v)
 			if err != nil {
 				return nil, err
 			}

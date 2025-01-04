@@ -7,11 +7,9 @@ import (
 	"net/http"
 	"sync"
 	"text/template"
-
-	"github.com/Masterminds/sprig/v3"
 )
 
-func loadTemplateReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *loaderImpl) loadTemplateReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
 	body, err := getRequiredStringKey(def, "body", true)
 	if err != nil {
 		return nil, err
@@ -24,11 +22,12 @@ func loadTemplateReplyStrategy(path string, def map[interface{}]interface{}) (Re
 	if err != nil {
 		return nil, err
 	}
-	return NewTemplateReply(body, statusCode, headers)
+	return NewTemplateReply(body, statusCode, headers, l.TemplateReplyFuncs)
 }
 
-func NewTemplateReply(content string, statusCode int, headers map[string]string) (ReplyStrategy, error) {
-	tmpl, err := template.New("").Funcs(sprig.GenericFuncMap()).Parse(content)
+func NewTemplateReply(content string, statusCode int, headers map[string]string,
+	funcs template.FuncMap) (ReplyStrategy, error) {
+	tmpl, err := template.New("").Funcs(funcs).Parse(content)
 	if err != nil {
 		return nil, fmt.Errorf("template syntax error: %w", err)
 	}
