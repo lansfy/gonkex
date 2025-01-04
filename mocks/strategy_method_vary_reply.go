@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func loadMethodVaryStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *loaderImpl) loadMethodVaryStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
 	var methods map[string]*Definition
 	if u, ok := def["methods"]; ok {
 		methodsMap, ok := u.(map[interface{}]interface{})
@@ -15,7 +15,7 @@ func loadMethodVaryStrategy(path string, def map[interface{}]interface{}) (Reply
 		}
 		methods = make(map[string]*Definition, len(methodsMap))
 		for method, v := range methodsMap {
-			def, err := loadDefinition(path+"."+method.(string), v)
+			def, err := l.loadDefinition(path+"."+method.(string), v)
 			if err != nil {
 				return nil, err
 			}

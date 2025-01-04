@@ -54,6 +54,8 @@ body: "Multi-header test"`,
 		},
 	}
 
+	loader := &loaderImpl{}
+
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
 			// Create the reply strategy
@@ -61,7 +63,7 @@ body: "Multi-header test"`,
 			err := yaml.Unmarshal([]byte(tt.content), &def)
 			require.NoError(t, err)
 
-			reply, err := loadConstantStrategy("$", def)
+			reply, err := loader.loadConstantStrategy("$", def)
 			require.NoError(t, err)
 
 			// Mock request and response

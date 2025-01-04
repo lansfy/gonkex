@@ -98,17 +98,18 @@ func (m *Mocks) GetNames() []string {
 	return names
 }
 
-func (m *Mocks) LoadDefinitions(definitions map[string]interface{}) error {
+func (m *Mocks) LoadDefinitions(loader Loader, definitions map[string]interface{}) error {
 	for serviceName, definition := range definitions {
 		service := m.Service(serviceName)
 		if service == nil {
 			return fmt.Errorf("unknown mock name: %s", serviceName)
 		}
 
-		err := service.LoadDefinition(definition)
+		def, err := loader.LoadDefinition(definition)
 		if err != nil {
-			return err
+			return fmt.Errorf("load definition for '%s': %w", serviceName, err)
 		}
+		service.SetDefinition(def)
 	}
 	return nil
 }

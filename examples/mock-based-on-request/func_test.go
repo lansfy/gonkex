@@ -4,10 +4,22 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"text/template"
 
 	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/runner"
 )
+
+// defaultFunc returns the default value if the provided value is empty (nil or empty string)
+func defaultFunc(defaultValue interface{}, value interface{}) interface{} {
+	if value == nil {
+		return defaultValue
+	}
+	if str, ok := value.(string); ok && str == "" {
+		return defaultValue
+	}
+	return value
+}
 
 func TestProxy(t *testing.T) {
 	m := mocks.NewNop("backend")
@@ -20,8 +32,13 @@ func TestProxy(t *testing.T) {
 	initServer()
 	srv := httptest.NewServer(nil)
 
+	funcMap := template.FuncMap{
+		"default": defaultFunc,
+	}
+
 	runner.RunWithTesting(t, srv.URL, &runner.RunWithTestingOpts{
-		TestsDir: "cases",
-		Mocks:    m,
+		TestsDir:           "cases",
+		Mocks:              m,
+		TemplateReplyFuncs: funcMap,
 	})
 }

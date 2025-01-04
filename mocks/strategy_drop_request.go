@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func loadDropRequestStrategy(path string, _ map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *loaderImpl) loadDropRequestStrategy(path string, _ map[interface{}]interface{}) (ReplyStrategy, error) {
 	return NewDropRequestReply(), nil
 }
 

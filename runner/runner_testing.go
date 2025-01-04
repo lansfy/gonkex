@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"text/template"
 
 	"github.com/lansfy/gonkex/checker"
 	"github.com/lansfy/gonkex/checker/response_body"
@@ -35,6 +36,8 @@ type RunWithTestingOpts struct {
 	MainOutputFunc output.OutputInterface
 	Outputs        []output.OutputInterface
 	Checkers       []checker.CheckerInterface
+
+	TemplateReplyFuncs template.FuncMap
 }
 
 func registerMocksEnvironment(m *mocks.Mocks) {
@@ -73,8 +76,11 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 	handler := testingHandler{t}
 	runner := New(
 		&Config{
-			Host:         serverURL,
-			Mocks:        opts.Mocks,
+			Host:  serverURL,
+			Mocks: opts.Mocks,
+			MocksLoader: mocks.NewYamlLoader(&mocks.YamlLoaderOpts{
+				TemplateReplyFuncs: opts.TemplateReplyFuncs,
+			}),
 			FixturesDir:  opts.FixturesDir,
 			DB:           opts.DB,
 			Variables:    variables.New(),

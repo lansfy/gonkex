@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	urlpkg "net/url"
+	"net/url"
 	"os"
 	"sync/atomic"
 
@@ -25,15 +25,15 @@ func initServer() {
 }
 
 func Do(w http.ResponseWriter, r *http.Request) {
-	params1 := urlpkg.Values{"key": []string{"value1"}}.Encode()
-	params2 := urlpkg.Values{"key": []string{"value2"}}.Encode()
-	params3 := urlpkg.Values{"value": []string{"3"}}.Encode()
-	params4 := urlpkg.Values{"value": []string{"4"}}.Encode()
+	params1 := url.Values{"key": []string{"value1"}}.Encode()
+	params2 := url.Values{"key": []string{"value2"}}.Encode()
+	params3 := url.Values{"value": []string{"3"}}.Encode()
+	params4 := url.Values{"value": []string{"4"}}.Encode()
 
 	doRequest := func(params string, method string, reqBody []byte) (int64, error) {
-		url := fmt.Sprintf("http://%s/request?%s", os.Getenv("BACKEND_ADDR"), params)
+		link := fmt.Sprintf("http://%s/request?%s", os.Getenv("BACKEND_ADDR"), params)
 
-		req, err := http.NewRequest(method, url, bytes.NewReader(reqBody))
+		req, err := http.NewRequest(method, link, bytes.NewReader(reqBody))
 		if err != nil {
 			return 0, fmt.Errorf("failed to build request: %w", err)
 		}
@@ -48,14 +48,14 @@ func Do(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(res.Body)
 		_ = res.Body.Close()
 		if err != nil {
-			return 0, fmt.Errorf("cannot read response body %w", err)
+			return 0, fmt.Errorf("cannot read response body: %w", err)
 		}
 		var resp struct {
 			Value int64 `json:"value"`
 		}
 		err = json.Unmarshal(body, &resp)
 		if err != nil {
-			return 0, fmt.Errorf("cannot unmarshal response body %w", err)
+			return 0, fmt.Errorf("cannot unmarshal response body: %w", err)
 		}
 		return resp.Value, nil
 	}
