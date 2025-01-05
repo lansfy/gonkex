@@ -1,50 +1,51 @@
 package colorize
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/fatih/color"
 )
 
-type Color int
-
-const (
-	ColorRed Color = iota
-	ColorCyan
-	ColorGreen
-	ColorNone
-)
-
-type Part struct {
-	attr  Color
-	value string
+func Red(v interface{}) Part {
+	return &partImpl{color.HiRedString, fmt.Sprintf("%v", v), false}
 }
 
-func Red(v interface{}) *Part {
-	return &Part{ColorRed, fmt.Sprintf("%v", v)}
+func Cyan(v interface{}) Part {
+	return &partImpl{color.HiCyanString, fmt.Sprintf("%v", v), true}
 }
 
-func Cyan(v interface{}) *Part {
-	return &Part{ColorCyan, fmt.Sprintf("%v", v)}
+func Green(v interface{}) Part {
+	return &partImpl{color.HiGreenString, fmt.Sprintf("%v", v), false}
 }
 
-func Green(v interface{}) *Part {
-	return &Part{ColorGreen, fmt.Sprintf("%v", v)}
+func None(v interface{}) Part {
+	return &partImpl{asIsString, fmt.Sprintf("%v", v), false}
 }
 
-func None(v interface{}) *Part {
-	return &Part{ColorNone, fmt.Sprintf("%v", v)}
+func SubError(err error) Part {
+	return &subErrorImpl{err}
 }
 
 type Error struct {
-	parts []*Part
+	parts []Part
+}
+
+func (e *Error) AddParts(values ...Part) *Error {
+	e.parts = append(e.parts, values...)
+	return e
+}
+
+func (e *Error) SetSubError(err error) *Error {
+	e.AddParts(SubError(err))
+	return e
 }
 
 func (e *Error) Error() string {
 	buf := strings.Builder{}
 	for _, p := range e.parts {
-		buf.WriteString(p.value)
+		buf.WriteString(p.Text())
 	}
 	return buf.String()
 }
@@ -56,32 +57,56 @@ func asIsString(format string, a ...interface{}) string {
 func (e *Error) ColorError() string {
 	buf := strings.Builder{}
 	for _, p := range e.parts {
-		if p.value == "" {
-			continue
-		}
-		f := asIsString
-		switch p.attr {
-		case ColorRed:
-			f = color.RedString
-		case ColorCyan:
-			f = color.CyanString
-		case ColorGreen:
-			f = color.GreenString
-		}
-
-		buf.WriteString(f(p.value))
+		buf.WriteString(p.ColorText())
 	}
 	return buf.String()
 }
 
-func NewError(parts ...*Part) error {
-	return &Error{parts}
+func alternateJoin(list1, list2 []Part) []Part {
+	result := []Part{}
+	i, j := 0, 0
+	for len(result) != len(list1)+len(list2) {
+		if i < len(list1) {
+			result = append(result, list1[i])
+			i++
+		}
+		if j < len(list2) {
+			result = append(result, list2[j])
+			j++
+		}
+	}
+
+	return result
 }
 
-func NewNotEqualError(before, entity, after string, expected, actual interface{}, tail []*Part) error {
-	parts := []*Part{
+func GetColoredValue(err error) string {
+	var pErr *Error
+	if errors.As(err, &pErr) {
+		return pErr.ColorError()
+	}
+	return err.Error()
+}
+
+func NewError(format string, values ...Part) *Error {
+	plain := []Part{}
+	for _, s := range strings.Split(format, "%s") {
+		plain = append(plain, None(s))
+	}
+	return &Error{alternateJoin(plain, values)}
+}
+
+func NewEntityError(pattern, entity string) *Error {
+	return NewError(pattern, Cyan(entity))
+}
+
+func NewNotEqualError(pattern, entity string, expected, actual interface{}) *Error {
+	pattern += "\n     expected: %s\n       actual: %s"
+	return NewError(pattern, Cyan(entity), Green(expected), Red(actual))
+}
+
+func NewNotEqualError2(before, entity, after string, expected, actual interface{}) *Error {
+	parts := []Part{
 		None(before), Cyan(entity), None(after + "\n     expected: "), Green(expected), None("\n       actual: "), Red(actual),
 	}
-	parts = append(parts, tail...)
-	return NewError(parts...)
+	return NewError("", parts...)
 }

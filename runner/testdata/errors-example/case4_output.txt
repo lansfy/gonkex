@@ -25,15 +25,16 @@ SELECT *
 
 Errors:
 
-1) quantity of items in database do not match:
+1) quantity of 'items in database' do not match:
      expected: 1
        actual: 2
 
-   query: SELECT *
+   query: 'SELECT *'
    diff (--- expected vs +++ actual):
  [
 + "{\"field1\":\"value1\"}",
   "{\"field2\":123}",
  ]
+
 
 

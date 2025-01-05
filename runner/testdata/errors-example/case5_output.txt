@@ -1,0 +1,27 @@
+
+       Name: Test case 5
+Description: Test mock call count error
+       File: testdata/errors-example/case5.yaml
+
+Request:
+     Method: GET
+       Path: /json
+      Query: 
+       Body:
+<no body>
+
+Response:
+     Status: 200 OK
+       Body:
+{"somefield":123}
+
+
+     Result: ERRORS!
+
+Errors:
+
+1) mock 'subservice': at path '$': number of 'calls' does not match:
+     expected: 1
+       actual: 0
+
+

@@ -2,10 +2,11 @@ package mocks
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
+	"github.com/lansfy/gonkex/colorize"
 	"github.com/lansfy/gonkex/compare"
+
 	"github.com/tidwall/gjson"
 )
 
@@ -58,10 +59,10 @@ func (c *bodyJSONFieldMatchesJSONConstraint) Verify(r *http.Request) []error {
 
 	value := gjson.Get(string(body), c.path)
 	if !value.Exists() {
-		return []error{fmt.Errorf("json field %s does not exist", c.path)}
+		return []error{colorize.NewEntityError("json field %s does not exist", c.path)}
 	}
 	if value.String() == "" {
-		return []error{fmt.Errorf("json field %s is empty", c.path)}
+		return []error{colorize.NewEntityError("json field %s is empty", c.path)}
 	}
 
 	var actual interface{}

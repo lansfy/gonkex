@@ -3,7 +3,6 @@ package terminal
 import (
 	"bytes"
 	_ "embed"
-	"errors"
 	"fmt"
 	"io"
 	"text/template"
@@ -108,7 +107,7 @@ func getTemplateFuncMap(policy ColorPolicy, showHeaders bool) template.FuncMap {
 			"yellow":     color.YellowString,
 			"danger":     color.New(color.FgHiWhite, color.BgRed).Sprint,
 			"success":    color.New(color.FgHiWhite, color.BgGreen).Sprint,
-			"printError": printWithColor,
+			"printError": colorize.GetColoredValue,
 		}
 	} else {
 		funcMap = template.FuncMap{
@@ -126,13 +125,5 @@ func getTemplateFuncMap(policy ColorPolicy, showHeaders bool) template.FuncMap {
 }
 
 func suppressColor(err error) string {
-	return err.Error()
-}
-
-func printWithColor(err error) string {
-	var pErr *colorize.Error
-	if errors.As(err, &pErr) {
-		return pErr.ColorError()
-	}
 	return err.Error()
 }

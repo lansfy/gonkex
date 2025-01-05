@@ -73,7 +73,7 @@ func Test_methodConstraint_Verify(t *testing.T) {
 			description: "method does not match",
 			method:      "POST",
 			request:     &http.Request{Method: "GET"},
-			wantErr:     "method does not match: expected GET, actual POST",
+			wantErr:     "'method' does not match:\n     expected: POST\n       actual: GET",
 		},
 	}
 

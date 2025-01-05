@@ -122,7 +122,7 @@ func compareDbResponseLength(expected, actual []string, query interface{}) error
 	diffCfg.Diffable = true
 	chunks := diff.DiffChunks(strings.Split(diffCfg.Sprint(expected), "\n"), strings.Split(diffCfg.Sprint(actual), "\n"))
 
-	tail := []*colorize.Part{
+	tail := []colorize.Part{
 		colorize.None("\n\n   query: "),
 		colorize.Cyan(query),
 		colorize.None("\n   diff (--- expected vs +++ actual):\n"),
@@ -130,22 +130,17 @@ func compareDbResponseLength(expected, actual []string, query interface{}) error
 	tail = append(tail, colorize.MakeColorDiff(chunks)...)
 
 	return colorize.NewNotEqualError(
-		"quantity of ",
+		"quantity of %s do not match:",
 		"items in database",
-		" do not match:",
 		len(expected),
 		len(actual),
-		tail,
-	)
+	).AddParts(tail...)
 
 	return colorize.NewError(
-		colorize.None("quantity of items in database do not match (-expected: "),
+		"quantity of items in database do not match (-expected: %s +actual: %s)\n     test query:\n%s\n    result diff:\n%s",
 		colorize.Cyan(len(expected)),
-		colorize.None(" +actual: "),
 		colorize.Cyan(len(actual)),
-		colorize.None(")\n     test query:\n"),
 		colorize.Cyan(query),
-		colorize.None("\n    result diff:\n"),
 		colorize.Cyan(pretty.Compare(expected, actual)),
 	)
 }

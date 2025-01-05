@@ -1,0 +1,13 @@
+- name: Test case 5
+  description: Test mock call count error
+  method: GET
+  path: /json
+  response:
+    200: >
+      {"somefield": 123}
+  mocks:
+    subservice:
+      calls: 1
+      strategy: constant
+      body: "{}"
+      statusCode: 200

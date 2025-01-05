@@ -1,10 +1,13 @@
 package mocks
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"sync"
+
+	"github.com/lansfy/gonkex/colorize"
 )
 
 var _ contextAwareStrategy = (*Definition)(nil)
@@ -58,8 +61,10 @@ func (d *Definition) EndRunningContext() []error {
 		errs = s.EndRunningContext()
 	}
 	if d.callsConstraint != CallsNoConstraint && d.calls != d.callsConstraint {
-		err := fmt.Errorf("at path %s: number of calls does not match: expected %d, actual %d",
-			d.path, d.callsConstraint, d.calls)
+		err := colorize.NewEntityError("at path %s", d.path)
+		err.SetSubError(
+			colorize.NewNotEqualError("number of %s does not match:", "calls", d.callsConstraint, d.calls),
+		)
 		errs = append(errs, err)
 	}
 	return errs
@@ -79,11 +84,9 @@ func verifyRequestConstraints(requestConstraints []verifier, r *http.Request) []
 	for _, c := range requestConstraints {
 		errs := c.Verify(r)
 		for _, e := range errs {
-			errors = append(errors, &RequestConstraintError{
-				error:       e,
-				Constraint:  c,
-				RequestDump: requestDump,
-			})
+			err := colorize.NewEntityError("request constraint %s", c.GetName()).SetSubError(e)
+			err.AddParts(colorize.None(", request was:\n\n"), colorize.None(string(requestDump)))
+			errors = append(errors, err)
 		}
 	}
 
@@ -97,6 +100,6 @@ func (d *Definition) ExecuteWithoutVerifying(w http.ResponseWriter, r *http.Requ
 		return d.replyStrategy.HandleRequest(w, r)
 	}
 	return []error{
-		fmt.Errorf("reply strategy undefined"),
+		errors.New("reply strategy undefined"),
 	}
 }

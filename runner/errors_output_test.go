@@ -13,6 +13,7 @@ import (
 	"github.com/lansfy/gonkex/checker/response_body"
 	"github.com/lansfy/gonkex/checker/response_db"
 	"github.com/lansfy/gonkex/checker/response_header"
+	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/output/terminal"
 	"github.com/lansfy/gonkex/testloader/yaml_file"
 	"github.com/lansfy/gonkex/variables"
@@ -61,17 +62,24 @@ func Test_Error_Examples(t *testing.T) {
 	initErrorServer()
 	server := httptest.NewServer(nil)
 
-	for caseID := 1; caseID <= 4; caseID++ {
+	for caseID := 1; caseID <= 5; caseID++ {
 		t.Run(fmt.Sprintf("case%d", caseID), func(t *testing.T) {
 			expected, err := os.ReadFile(fmt.Sprintf("testdata/errors-example/case%d_output.txt", caseID))
 			require.NoError(t, err)
+
+			m := mocks.NewNop("subservice")
+			err = m.Start()
+			require.NoError(t, err)
+			defer m.Shutdown()
 
 			testHandler := NewConsoleHandler()
 			yamlLoader := yaml_file.NewLoader(fmt.Sprintf("testdata/errors-example/case%d.yaml", caseID))
 			r := New(
 				&Config{
-					Host:      server.URL,
-					Variables: variables.New(),
+					Host:        server.URL,
+					Variables:   variables.New(),
+					Mocks:       m,
+					MocksLoader: mocks.NewYamlLoader(nil),
 				},
 				yamlLoader,
 				testHandler.HandleTest,
@@ -94,7 +102,7 @@ func Test_Error_Examples(t *testing.T) {
 			require.NoError(t, err)
 
 			if !showOnScreen {
-				require.Equal(t, normalize(string(expected)), normalize(buf.String()))
+				require.Equal(t, normalize(buf.String()), normalize(string(expected)))
 			}
 		})
 	}

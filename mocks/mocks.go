@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"strings"
+
+	"github.com/lansfy/gonkex/colorize"
 )
 
 type Mocks struct {
@@ -107,7 +109,9 @@ func (m *Mocks) LoadDefinitions(loader Loader, definitions map[string]interface{
 
 		def, err := loader.LoadDefinition(definition)
 		if err != nil {
-			return fmt.Errorf("load definition for '%s': %w", serviceName, err)
+			perr := colorize.NewEntityError("load definition for %s", serviceName)
+			perr.SetSubError(err)
+			return perr
 		}
 		service.SetDefinition(def)
 	}

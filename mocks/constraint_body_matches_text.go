@@ -52,10 +52,10 @@ func (c *bodyMatchesTextConstraint) Verify(r *http.Request) []error {
 	textBody := string(body)
 
 	if c.body != "" && c.body != textBody {
-		return []error{fmt.Errorf("body value\n%s\ndoesn't match expected\n%s", textBody, c.body)}
+		return []error{fmt.Errorf("body value\n%s\ndoes not match expected\n%s", textBody, c.body)}
 	}
 	if c.regexp != nil && !c.regexp.MatchString(textBody) {
-		return []error{fmt.Errorf("body value\n%s\ndoesn't match regexp %s", textBody, c.regexp)}
+		return []error{fmt.Errorf("body value\n%s\ndoes not match regexp %s", textBody, c.regexp)}
 	}
 	return nil
 }
