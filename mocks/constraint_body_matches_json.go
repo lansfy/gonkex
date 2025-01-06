@@ -2,7 +2,7 @@ package mocks
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 
 	"github.com/lansfy/gonkex/compare"
@@ -50,7 +50,7 @@ func (c *bodyMatchesJSONConstraint) Verify(r *http.Request) []error {
 	}
 
 	if len(body) == 0 {
-		return []error{fmt.Errorf("request is empty")}
+		return []error{errors.New("request is empty")}
 	}
 	var actual interface{}
 	err = json.Unmarshal(body, &actual)

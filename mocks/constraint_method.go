@@ -1,9 +1,10 @@
 package mocks
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/lansfy/gonkex/colorize"
 )
 
 func loadMethodConstraint(def map[interface{}]interface{}) (verifier, error) {
@@ -28,7 +29,7 @@ func (c *methodConstraint) GetName() string {
 
 func (c *methodConstraint) Verify(r *http.Request) []error {
 	if !strings.EqualFold(r.Method, c.method) {
-		return []error{fmt.Errorf("method does not match: expected %s, actual %s", r.Method, c.method)}
+		return []error{colorize.NewNotEqualError("%s does not match:", "method", c.method, r.Method)}
 	}
 	return nil
 }

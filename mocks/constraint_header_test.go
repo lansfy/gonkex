@@ -100,7 +100,7 @@ func Test_headerConstraint_Verify(t *testing.T) {
 			request: &http.Request{
 				Header: http.Header{},
 			},
-			wantErr: "request doesn't have header X-Test",
+			wantErr: "request does not have header 'X-Test'",
 		},
 		{
 			description: "header value does not match",
@@ -109,7 +109,7 @@ func Test_headerConstraint_Verify(t *testing.T) {
 			request: &http.Request{
 				Header: http.Header{"X-Test": []string{"actual-value"}},
 			},
-			wantErr: "X-Test header value actual-value doesn't match expected expected-value",
+			wantErr: "'X-Test' header value does not match:\n     expected: expected-value\n       actual: actual-value",
 		},
 		{
 			description: "header value matches regexp",
@@ -127,7 +127,7 @@ func Test_headerConstraint_Verify(t *testing.T) {
 			request: &http.Request{
 				Header: http.Header{"X-Test": []string{"wrong-value"}},
 			},
-			wantErr: "X-Test header value wrong-value doesn't match regexp ^test-.*$",
+			wantErr: "'X-Test' header value does not match regexp:\n     expected: ^test-.*$\n       actual: wrong-value",
 		},
 		{
 			description: "header value matches expected value",

@@ -24,11 +24,11 @@ Response:
 
 Errors:
 
-1) at path $.somefield values do not match:
+1) at path '$.somefield' values do not match:
      expected: 1234
        actual: 123
 
-2) response header Content-Type value does not match:
+2) response header 'Content-Type' value does not match:
      expected: text/plain
        actual: application/json
 

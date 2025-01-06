@@ -10,7 +10,7 @@ import (
 
 func makeErrorString(path, msg string, expected, actual interface{}) string {
 	return fmt.Sprintf(
-		"at path %s %s:\n     expected: %v\n       actual: %v",
+		"at path '%s' %s:\n     expected: %v\n       actual: %v",
 		path,
 		msg,
 		expected,

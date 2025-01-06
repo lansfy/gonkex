@@ -5,6 +5,8 @@ import (
 	"net"
 	"net/http"
 	"sync"
+
+	"github.com/lansfy/gonkex/colorize"
 )
 
 type ServiceMock struct {
@@ -93,10 +95,9 @@ func (m *ServiceMock) EndRunningContext() []error {
 
 	errs := append(m.errors, m.mock.EndRunningContext()...)
 	for i, e := range errs {
-		errs[i] = &Error{
-			error:       e,
-			ServiceName: m.ServiceName,
-		}
+		err := colorize.NewEntityError("mock %s", m.ServiceName)
+		err.SetSubError(e)
+		errs[i] = err
 	}
 	return errs
 }

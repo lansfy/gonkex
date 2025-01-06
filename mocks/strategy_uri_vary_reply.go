@@ -1,9 +1,10 @@
 package mocks
 
 import (
-	"errors"
 	"net/http"
 	"strings"
+
+	"github.com/lansfy/gonkex/colorize"
 )
 
 func (l *loaderImpl) loadUriVaryReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
@@ -15,7 +16,7 @@ func (l *loaderImpl) loadUriVaryReplyStrategy(path string, def map[interface{}]i
 	if u, ok := def["uris"]; ok {
 		urisMap, ok := u.(map[interface{}]interface{})
 		if !ok {
-			return nil, errors.New("map under `uris` key required")
+			return nil, colorize.NewEntityError("map under %s key required", "uris")
 		}
 		uris = make(map[string]*Definition, len(urisMap))
 		for uri, v := range urisMap {

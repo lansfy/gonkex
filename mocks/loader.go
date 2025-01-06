@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"text/template"
+
+	"github.com/lansfy/gonkex/colorize"
 )
 
 type Loader interface {
@@ -37,9 +39,13 @@ func (l *loaderImpl) LoadDefinition(rawDef interface{}) (*Definition, error) {
 }
 
 func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definition, error) {
+	wrap := func(err error) error {
+		return colorize.NewEntityError("at path %s", path).SetSubError(err)
+	}
+
 	def, ok := rawDef.(map[interface{}]interface{})
 	if !ok {
-		return nil, fmt.Errorf("at path %s: Definition must be key-values", path)
+		return nil, wrap(errors.New("definition must be key-values"))
 	}
 
 	// load request constraints
@@ -47,13 +53,13 @@ func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definitio
 	if constraints, ok := def["requestConstraints"]; ok {
 		constraints, ok := constraints.([]interface{})
 		if !ok || len(constraints) == 0 {
-			return nil, fmt.Errorf("at path %s: `requestConstraints` requires array", path)
+			return nil, wrap(colorize.NewEntityError("%s requires array", "requestConstraints"))
 		}
 		requestConstraints = make([]verifier, len(constraints))
 		for i, c := range constraints {
 			constraint, err := loadConstraint(c)
 			if err != nil {
-				return nil, fmt.Errorf("at path %s: unable to load constraint %d: %w", path, i+1, err)
+				return nil, wrap(fmt.Errorf("unable to load constraint %d: %w", i+1, err))
 			}
 			requestConstraints[i] = constraint
 		}
@@ -68,11 +74,11 @@ func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definitio
 	// load reply strategy
 	strategyName, err := getRequiredStringKey(def, "strategy", false)
 	if err != nil {
-		return nil, fmt.Errorf("at path %s: %w", path, err)
+		return nil, wrap(err)
 	}
 
-	wrap := func(err error) error {
-		return fmt.Errorf("strategy '%s': %w", strategyName, err)
+	wrap = func(err error) error {
+		return colorize.NewEntityError("strategy %s", strategyName).SetSubError(err)
 	}
 
 	replyStrategy, err := l.loadStrategy(path, strategyName, def, &ak)
@@ -136,7 +142,7 @@ func loadConstraint(definition interface{}) (verifier, error) {
 	ak := []string{"kind"}
 
 	wrap := func(err error) error {
-		return fmt.Errorf("constraint '%s': %w", kind, err)
+		return colorize.NewEntityError("constraint %s", kind).SetSubError(err)
 	}
 
 	c, err := loadConstraintOfKind(kind, def, &ak)
@@ -193,7 +199,10 @@ func validateMapKeys(m map[interface{}]interface{}, allowedKeys []string) error 
 	for key := range m {
 		skey, ok := key.(string)
 		if !ok {
-			return fmt.Errorf("key '%v' has non-string type", key)
+			return colorize.NewEntityError(
+				"key %s has non-string type",
+				fmt.Sprintf("%v", key),
+			)
 		}
 
 		found := false

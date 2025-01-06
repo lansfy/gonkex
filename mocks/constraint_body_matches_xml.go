@@ -1,7 +1,7 @@
 package mocks
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 
 	"github.com/lansfy/gonkex/compare"
@@ -50,7 +50,7 @@ func (c *bodyMatchesXMLConstraint) Verify(r *http.Request) []error {
 	}
 
 	if len(body) == 0 {
-		return []error{fmt.Errorf("request is empty")}
+		return []error{errors.New("request is empty")}
 	}
 
 	actual, err := xmlparsing.Parse(string(body))

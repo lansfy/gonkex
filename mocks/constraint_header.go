@@ -1,10 +1,10 @@
 package mocks
 
 import (
-	"fmt"
 	"net/http"
 	"regexp"
 
+	"github.com/lansfy/gonkex/colorize"
 	"github.com/lansfy/gonkex/compare"
 )
 
@@ -62,13 +62,13 @@ func (c *headerConstraint) GetName() string {
 func (c *headerConstraint) Verify(r *http.Request) []error {
 	value := r.Header.Get(c.header)
 	if value == "" {
-		return []error{fmt.Errorf("request doesn't have header %s", c.header)}
+		return []error{colorize.NewEntityError("request does not have header %s", c.header)}
 	}
 	if c.value != "" && c.value != value {
-		return []error{fmt.Errorf("%s header value %s doesn't match expected %s", c.header, value, c.value)}
+		return []error{colorize.NewNotEqualError("%s header value does not match:", c.header, c.value, value)}
 	}
 	if c.regexp != nil && !c.regexp.MatchString(value) {
-		return []error{fmt.Errorf("%s header value %s doesn't match regexp %s", c.header, value, c.regexp)}
+		return []error{colorize.NewNotEqualError("%s header value does not match regexp:", c.header, c.regexp, value)}
 	}
 	return nil
 }

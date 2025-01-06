@@ -113,7 +113,7 @@ func Test_pathConstraint_Verify(t *testing.T) {
 			description: "path does not match",
 			path:        "/test",
 			reqPath:     "/mismatch",
-			wantErr:     "url path /mismatch doesn't match expected /test",
+			wantErr:     "url 'path' does not match expected:\n     expected: /test\n       actual: /mismatch",
 		},
 		{
 			description: "regexp matches",
@@ -125,7 +125,7 @@ func Test_pathConstraint_Verify(t *testing.T) {
 			description: "regexp does not match",
 			re:          "^/test[0-9]*$",
 			reqPath:     "/mismatch",
-			wantErr:     "url path /mismatch doesn't match regexp ^/test[0-9]*$",
+			wantErr:     "url 'path' does not match expected regexp:\n     expected: ^/test[0-9]*$\n       actual: /mismatch",
 		},
 	}
 

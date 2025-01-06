@@ -11,6 +11,7 @@ import (
 
 	"github.com/lansfy/gonkex/checker"
 	"github.com/lansfy/gonkex/cmd_runner"
+	"github.com/lansfy/gonkex/colorize"
 	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/output"
@@ -96,7 +97,7 @@ func (r *Runner) Run() error {
 		}
 		err := r.handler(test, testExecutor)
 		if err != nil {
-			return fmt.Errorf("test '%s' error: %w", test.GetName(), err)
+			return colorize.NewEntityError("test %s error", test.GetName()).SetSubError(err)
 		}
 	}
 

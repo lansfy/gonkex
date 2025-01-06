@@ -73,8 +73,8 @@ func TestCheckWhenNotMatchedShouldReturnError(t *testing.T) {
 		t,
 		errText,
 		[]string{
-			"response does not include expected header Content-Type",
-			"response header Accept value does not match:\n     expected: text/html\n       actual: application/json",
+			"response does not include expected header 'Content-Type'",
+			"response header 'Accept' value does not match:\n     expected: text/html\n       actual: application/json",
 		},
 	)
 }

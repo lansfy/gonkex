@@ -6,15 +6,6 @@ import (
 	"net/http/httputil"
 )
 
-type Error struct {
-	error
-	ServiceName string
-}
-
-func (e *Error) Error() string {
-	return fmt.Sprintf("mock %s: %s", e.ServiceName, e.error.Error())
-}
-
 type RequestConstraintError struct {
 	error
 	Constraint  verifier

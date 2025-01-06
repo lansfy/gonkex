@@ -24,7 +24,7 @@ func createWrongStatusError(statusCode int, known map[int]string) error {
 	for code := range known {
 		knownCodes = append(knownCodes, fmt.Sprintf("%d", code))
 	}
-	return colorize.NewNotEqualError("server responded with unexpected ", "status", ":", strings.Join(knownCodes, " / "), statusCode, nil)
+	return colorize.NewNotEqualError("server responded with unexpected %s:", "status", strings.Join(knownCodes, " / "), statusCode)
 }
 
 func (c *responseBodyChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {

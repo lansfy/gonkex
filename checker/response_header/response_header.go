@@ -27,7 +27,7 @@ func (c *responseHeaderChecker) Check(t models.TestInterface, result *models.Res
 		actualValues, ok := result.ResponseHeaders[k]
 		if !ok {
 			errs = append(errs, colorize.NewError(
-				colorize.None("response does not include expected header "),
+				"response does not include expected header %s",
 				colorize.Cyan(k),
 			))
 			continue
@@ -44,16 +44,15 @@ func (c *responseHeaderChecker) Check(t models.TestInterface, result *models.Res
 		}
 		if len(actualValues) == 1 {
 			errs = append(errs, colorize.NewNotEqualError(
-				"response header ", k, " value does not match:",
+				"response header %s value does not match:",
+				k,
 				v,
 				actualValues[0],
-				nil,
 			))
 		} else {
 			errs = append(errs, colorize.NewError(
-				colorize.None("response header "),
+				"response header %s value does not match expected %s",
 				colorize.Cyan(k),
-				colorize.None(" value does not match expected "),
 				colorize.Green(v),
 			))
 		}
