@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func (l *loaderImpl) loadFileStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *loaderImpl) loadFileStrategy(def map[interface{}]interface{}) (ReplyStrategy, error) {
 	filename, err := getRequiredStringKey(def, "filename", false)
 	if err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func (l *loaderImpl) loadFileStrategy(path string, def map[interface{}]interface
 	return NewConstantReplyWithCode(content, statusCode, headers), nil
 }
 
-func (l *loaderImpl) loadConstantStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *loaderImpl) loadConstantStrategy(def map[interface{}]interface{}) (ReplyStrategy, error) {
 	body, err := getRequiredStringKey(def, "body", true)
 	if err != nil {
 		return nil, err
@@ -60,6 +60,6 @@ func (s *constantReply) HandleRequest(w http.ResponseWriter, r *http.Request) []
 		w.Header().Add(k, v)
 	}
 	w.WriteHeader(s.statusCode)
-	w.Write(s.replyBody)
+	w.Write(s.replyBody) // nolint:errcheck
 	return nil
 }

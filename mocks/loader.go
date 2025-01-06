@@ -104,19 +104,19 @@ func (l *loaderImpl) loadStrategy(path, strategyName string, definition map[inte
 		return NewNopReply(), nil
 	case "constant":
 		*ak = append(*ak, "body", "statusCode", "headers")
-		return l.loadConstantStrategy(path, definition)
+		return l.loadConstantStrategy(definition)
 	case "sequence":
 		*ak = append(*ak, "sequence")
 		return l.loadSequenceReplyStrategy(path, definition)
 	case "template":
 		*ak = append(*ak, "body", "statusCode", "headers")
-		return l.loadTemplateReplyStrategy(path, definition)
+		return l.loadTemplateReplyStrategy(definition)
 	case "basedOnRequest":
 		*ak = append(*ak, "basePath", "uris")
 		return l.loadBasedOnRequestReplyStrategy(path, definition)
 	case "file":
 		*ak = append(*ak, "filename", "statusCode", "headers")
-		return l.loadFileStrategy(path, definition)
+		return l.loadFileStrategy(definition)
 	case "uriVary":
 		*ak = append(*ak, "basePath", "uris")
 		return l.loadUriVaryReplyStrategy(path, definition)
@@ -124,7 +124,7 @@ func (l *loaderImpl) loadStrategy(path, strategyName string, definition map[inte
 		*ak = append(*ak, "methods")
 		return l.loadMethodVaryStrategy(path, definition)
 	case "dropRequest":
-		return l.loadDropRequestStrategy(path, definition)
+		return l.loadDropRequestStrategy()
 	default:
 		return nil, errors.New("unknown strategy")
 	}

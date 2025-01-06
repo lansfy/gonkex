@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/lansfy/gonkex/compare"
@@ -116,22 +116,22 @@ func readCompareParams(def map[interface{}]interface{}) (compare.Params, error) 
 			return params, wrap(wrongTypeError(skey, "bool"))
 		}
 
-		if pbval, ok := mapping[skey]; ok {
-			*pbval = bval
-		} else {
+		pbval, ok := mapping[skey]
+		if !ok {
 			return params, wrap(fmt.Errorf("unexpected key '%s' (allowed only %v)", skey, allowedKeys))
 		}
+		*pbval = bval
 	}
 	return params, nil
 }
 
 func getBodyCopy(r *http.Request) ([]byte, error) {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
 
 	// write body for future reusing
-	r.Body = ioutil.NopCloser(bytes.NewReader(body))
+	r.Body = io.NopCloser(bytes.NewReader(body))
 	return body, nil
 }

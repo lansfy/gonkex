@@ -1,7 +1,7 @@
 package mocks
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -63,7 +63,7 @@ body: "Multi-header test"`,
 			err := yaml.Unmarshal([]byte(tt.content), &def)
 			require.NoError(t, err)
 
-			reply, err := loader.loadConstantStrategy("$", def)
+			reply, err := loader.loadConstantStrategy(def)
 			require.NoError(t, err)
 
 			// Mock request and response
@@ -98,7 +98,7 @@ func Test_ConstantReplyStrategy(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 200, res.StatusCode)
 
-		body, _ := ioutil.ReadAll(res.Body)
+		body, _ := io.ReadAll(res.Body)
 		res.Body.Close()
 		require.Equal(t, "somebodycontent", string(body))
 	}

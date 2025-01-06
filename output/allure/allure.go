@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"errors"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -79,10 +79,10 @@ func (a *Allure) CreateStep(name string, stepFunc func()) {
 func (a *Allure) StartStep(stepName string, start time.Time) {
 	var (
 		// FIXME: step is overwritten below
-		step  = beans.NewStep(stepName, start)
+		// step  = beans.NewStep(stepName, start)
 		suite = a.GetCurrentSuite()
 	)
-	step = currentStep[suite]
+	step := currentStep[suite]
 	step.Parent.AddStep(step)
 	currentStep[suite] = step
 }
@@ -119,7 +119,7 @@ func getBufferInfo(buf bytes.Buffer, typ string) (string, string) {
 
 func writeBuffer(pathDir string, buf bytes.Buffer, ext string) (string, error) {
 	fileName := uuid.New().String() + `-attachment.` + ext
-	err := ioutil.WriteFile(filepath.Join(pathDir, fileName), buf.Bytes(), 0o644)
+	err := os.WriteFile(filepath.Join(pathDir, fileName), buf.Bytes(), 0o644)
 
 	return fileName, err
 }
@@ -129,7 +129,7 @@ func writeSuite(pathDir string, suite *beans.Suite) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(pathDir, uuid.New().String()+`-testsuite.xml`), b, 0o644)
+	err = os.WriteFile(filepath.Join(pathDir, uuid.New().String()+`-testsuite.xml`), b, 0o644)
 	if err != nil {
 		return err
 	}

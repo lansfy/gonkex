@@ -135,14 +135,6 @@ func compareDbResponseLength(expected, actual []string, query interface{}) error
 		len(expected),
 		len(actual),
 	).AddParts(tail...)
-
-	return colorize.NewError(
-		"quantity of items in database do not match (-expected: %s +actual: %s)\n     test query:\n%s\n    result diff:\n%s",
-		colorize.Cyan(len(expected)),
-		colorize.Cyan(len(actual)),
-		colorize.Cyan(query),
-		colorize.Cyan(pretty.Compare(expected, actual)),
-	)
 }
 
 func newQuery(dbQuery string, db storage.StorageInterface) ([]string, error) {
