@@ -1,8 +1,9 @@
 package yaml_file
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewTestWithCases(t *testing.T) {
@@ -53,31 +54,20 @@ func TestNewTestWithCases(t *testing.T) {
 	}
 
 	tests, err := makeTestFromDefinition("cases/example.yaml", data)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(tests) != 2 {
-		t.Errorf("wait len(tests) == 2, got len(tests) == %d", len(tests))
-	}
+	require.NoError(t, err)
+	require.Len(t, tests, 2, "expected 2 tests")
 
 	reqData, err := tests[0].ToJSON()
-	if !reflect.DeepEqual(reqData, []byte(`{"foo": "bar", "hello": "world" }`)) {
-		t.Errorf("want request %s, got %s", `{"foo": "bar", "hello": "world" }`, reqData)
-	}
+	require.NoError(t, err)
+	require.JSONEq(t, `{"foo": "bar", "hello": "world" }`, string(reqData), "unexpected request JSON")
 
 	filename := tests[0].GetFileName()
-	if !reflect.DeepEqual(filename, "cases/example.yaml") {
-		t.Errorf("want filename %s, got %s", "cases/example.yaml", filename)
-	}
+	require.Equal(t, "cases/example.yaml", filename, "unexpected filename")
 
 	reqData, err = tests[1].ToJSON()
-	if !reflect.DeepEqual(reqData, []byte(`{"foo": "bar", "hello": "world2" }`)) {
-		t.Errorf("want request %s, got %s", `{"foo": "bar", "hello": "world2" }`, reqData)
-	}
+	require.NoError(t, err)
+	require.JSONEq(t, `{"foo": "bar", "hello": "world2" }`, string(reqData), "unexpected request JSON")
 
 	filename = tests[1].GetFileName()
-	if !reflect.DeepEqual(filename, "cases/example.yaml") {
-		t.Errorf("want filename %s, got %s", "cases/example.yaml", filename)
-	}
+	require.Equal(t, "cases/example.yaml", filename, "unexpected filename")
 }

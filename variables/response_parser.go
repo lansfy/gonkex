@@ -33,7 +33,7 @@ func fromJSON(names, paths []string, body string) (*Variables, error) {
 	for n, res := range results {
 		if !res.Exists() {
 			return nil,
-				fmt.Errorf("path '%s' doesn't exist in given json", paths[n])
+				fmt.Errorf("path '%s' does not exist in given json", paths[n])
 		}
 
 		vars.Add(NewVariable(names[n], res.String()))

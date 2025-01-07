@@ -46,7 +46,6 @@ linters-settings:
       - name: error-return
       - name: error-strings
       - name: errorf
-      - name: exported
       - name: identical-branches
       - name: if-return
       - name: import-shadowing
@@ -65,14 +64,13 @@ linters-settings:
       - name: unreachable-code
       #- name: unhandled-error
       - name: var-declaration
-      - name: var-naming
 
 linters:
   disable-all: true
   enable:
     - bodyclose
     - dogsled
-    #- errcheck
+    - errcheck
     - exportloopref
     #- funlen
     - gochecknoinits
@@ -80,19 +78,18 @@ linters:
     #- gocritic
     - gofmt
     - goimports
-    #- gosec
     - gosimple
-    #- govet
-    #- ineffassign
+    - govet
+    - ineffassign
     - lll
     - misspell
     - nakedret
-    #- revive
-    #- staticcheck
+    - revive
+    - staticcheck
     #- stylecheck
     - typecheck
     - unconvert
-    #- unparam
+    - unparam
     - unused
     - whitespace
 

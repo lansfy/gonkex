@@ -42,7 +42,7 @@ func (m *ServiceMock) StartServerWithAddr(addr string) error {
 	}
 	m.listener = ln
 	m.server = &http.Server{Addr: addr, Handler: m}
-	go m.server.Serve(ln)
+	go m.server.Serve(ln) // nolint:errcheck
 	return nil
 }
 
@@ -95,9 +95,7 @@ func (m *ServiceMock) EndRunningContext() []error {
 
 	errs := append(m.errors, m.mock.EndRunningContext()...)
 	for i, e := range errs {
-		err := colorize.NewEntityError("mock %s", m.ServiceName)
-		err.SetSubError(e)
-		errs[i] = err
+		errs[i] = colorize.NewEntityError("mock %s", m.ServiceName).SetSubError(e)
 	}
 	return errs
 }

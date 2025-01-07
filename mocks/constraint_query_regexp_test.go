@@ -3,8 +3,9 @@ package mocks
 import (
 	"net/http"
 	"net/url"
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_newQueryRegexpConstraint(t *testing.T) {
@@ -34,19 +35,14 @@ func Test_newQueryRegexpConstraint(t *testing.T) {
 			want:  queryRegexpConstraint{expectedQuery: map[string][]string{"a": {"1", "3"}, "b": {"$matchRegexp(\\d+)"}}},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := newQueryRegexpConstraint(tt.query)
-			if err != nil {
-				t.Errorf("newQueryRegexpConstraint() error = %v", err)
-				return
-			}
-			if got == nil {
-				t.Fatalf("unexpected. got nil instead of queryRegexpConstraint")
-			}
-			if !reflect.DeepEqual(*got, tt.want) {
-				t.Errorf("newQueryRegexpConstraint() = %v, want %v", *got, tt.want)
-			}
+
+			require.NoError(t, err)
+			require.NotNil(t, got)
+			require.Equal(t, tt.want, *got)
 		})
 	}
 }
@@ -101,16 +97,14 @@ func Test_queryRegexpConstraint_Verify(t *testing.T) {
 			wantErrors: 1,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &queryRegexpConstraint{
 				expectedQuery: tt.expQuery,
 			}
-			if gotErrors := c.Verify(tt.req); len(gotErrors) != tt.wantErrors {
-				t.Errorf("unexpected amount of errors. Got %v, want %v. Errors are: '%v'",
-					len(gotErrors), tt.wantErrors, gotErrors,
-				)
-			}
+			gotErrors := c.Verify(tt.req)
+			require.Equal(t, tt.wantErrors, len(gotErrors), "unexpected amount of errors. Got %v, want %v. Errors: '%v'", len(gotErrors), tt.wantErrors, gotErrors)
 		})
 	}
 }

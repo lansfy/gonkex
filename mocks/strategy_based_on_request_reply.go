@@ -47,15 +47,15 @@ func (s *basedOnRequestReply) HandleRequest(w http.ResponseWriter, r *http.Reque
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	var errors []error
+	var allerrors []error
 	for _, def := range s.variants {
 		errs := verifyRequestConstraints(def.requestConstraints, r)
 		if len(errs) == 0 {
 			return def.ExecuteWithoutVerifying(w, r)
 		}
-		errors = append(errors, errs...)
+		allerrors = append(allerrors, errs...)
 	}
-	return append(errors, unhandledRequestError(r)...)
+	return append(allerrors, unhandledRequestError(r)...)
 }
 
 func (s *basedOnRequestReply) ResetRunningContext() {

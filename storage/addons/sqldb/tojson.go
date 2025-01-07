@@ -21,12 +21,14 @@ func ExecuteQuery(_ SQLType, db *sql.DB, query string) ([]json.RawMessage, error
 	defer rows.Close()
 
 	for rows.Next() {
-		j, err := convertResultToJson(rows)
+		var j interface{}
+		j, err = convertResultToJson(rows)
 		if err != nil {
 			return nil, err
 		}
 
-		data, err := json.Marshal(j)
+		var data []byte
+		data, err = json.Marshal(j)
 		if err != nil {
 			return nil, err
 		}

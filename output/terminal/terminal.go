@@ -68,7 +68,7 @@ func (o *Output) Process(_ models.TestInterface, result *models.Result) error {
 		if err != nil {
 			return err
 		}
-		o.fprintf(o.opts.CustomWriter, "%s", text)
+		_, _ = o.fprintf(o.opts.CustomWriter, "%s", text)
 	}
 
 	return nil
@@ -87,7 +87,7 @@ func renderResult(result *models.Result, policy ColorPolicy) (string, error) {
 }
 
 func (o *Output) ShowSummary(summary *models.Summary) {
-	o.fprintf(
+	_, _ = o.fprintf(
 		o.opts.CustomWriter,
 		"\nsuccess %d, failed %d, skipped %d, broken %d, total %d\n",
 		summary.Total-summary.Broken-summary.Failed-summary.Skipped,
@@ -99,7 +99,7 @@ func (o *Output) ShowSummary(summary *models.Summary) {
 }
 
 func getTemplateFuncMap(policy ColorPolicy, showHeaders bool) template.FuncMap {
-	funcMap := template.FuncMap{}
+	var funcMap template.FuncMap
 	if policy == PolicyForceColor {
 		funcMap = template.FuncMap{
 			"green":      color.GreenString,

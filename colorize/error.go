@@ -38,8 +38,7 @@ func (e *Error) AddParts(values ...Part) *Error {
 }
 
 func (e *Error) SetSubError(err error) *Error {
-	e.AddParts(SubError(err))
-	return e
+	return e.AddParts(SubError(err))
 }
 
 func (e *Error) Error() string {
