@@ -14,8 +14,9 @@ type ServiceMock struct {
 	listener          net.Listener
 	mock              *Definition
 	defaultDefinition *Definition
-	sync.RWMutex
-	errors []error
+	mutex             sync.RWMutex
+	errors            []error
+	checkers          []Checker
 
 	ServiceName string
 }
@@ -41,7 +42,10 @@ func (m *ServiceMock) StartServerWithAddr(addr string) error {
 		return err
 	}
 	m.listener = ln
-	m.server = &http.Server{Addr: addr, Handler: m}
+	m.server = &http.Server{
+		Addr:    addr,
+		Handler: m,
+	}
 	go m.server.Serve(ln) // nolint:errcheck
 	return nil
 }
@@ -61,41 +65,69 @@ func (m *ServiceMock) ServerAddr() string {
 }
 
 func (m *ServiceMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	m.Lock()
-	defer m.Unlock()
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 
-	if m.mock != nil {
-		errs := m.mock.Execute(w, r)
+	if m.mock == nil {
+		return
+	}
+
+	body, err := getRequestBodyCopy(r)
+	if err != nil {
+		m.errors = append(m.errors, err)
+		return
+	}
+
+	wrap := createResponseWriterProxy(w)
+	m.errors = append(m.errors, m.mock.Execute(wrap, r)...)
+
+	for _, c := range m.checkers {
+		setRequestBody(r, body)
+		errs := c.Check(m.ServiceName, r, wrap.CreateHttpResponse()) // nolint:bodyclose // we have single copy of data
 		m.errors = append(m.errors, errs...)
+	}
+
+	if err := wrap.Flush(); err != nil {
+		m.errors = append(m.errors, err)
 	}
 }
 
 func (m *ServiceMock) SetDefinition(newDefinition *Definition) {
-	m.Lock()
-	defer m.Unlock()
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	m.mock = newDefinition
 }
 
 func (m *ServiceMock) ResetDefinition() {
-	m.Lock()
-	defer m.Unlock()
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	m.mock = m.defaultDefinition
 }
 
 func (m *ServiceMock) ResetRunningContext() {
-	m.Lock()
-	defer m.Unlock()
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	m.errors = nil
 	m.mock.ResetRunningContext()
 }
 
 func (m *ServiceMock) EndRunningContext() []error {
-	m.RLock()
-	defer m.RUnlock()
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
 
 	errs := append(m.errors, m.mock.EndRunningContext()...)
-	for i, e := range errs {
-		errs[i] = colorize.NewEntityError("mock %s", m.ServiceName).SetSubError(e)
+	for i := range errs {
+		errs[i] = colorize.NewEntityError("mock %s", m.ServiceName).SetSubError(errs[i])
 	}
 	return errs
+}
+
+func (m *ServiceMock) SetCheckers(checkers []Checker) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.checkers = checkers
 }

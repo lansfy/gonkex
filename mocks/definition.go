@@ -2,9 +2,7 @@ package mocks
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
-	"net/http/httputil"
 	"sync"
 
 	"github.com/lansfy/gonkex/colorize"
@@ -73,17 +71,15 @@ func verifyRequestConstraints(requestConstraints []verifier, r *http.Request) []
 		return []error{}
 	}
 
-	requestDump, err := httputil.DumpRequest(r, true)
-	if err != nil {
-		requestDump = []byte(fmt.Sprintf("dump request: %v", err))
-	}
-
+	var dump colorize.Part
 	var errs []error
 	for _, c := range requestConstraints {
 		for _, e := range c.Verify(r) {
+			if dump == nil {
+				dump = colorize.None(dumpRequest(r))
+			}
 			errs = append(errs, colorize.NewEntityError("request constraint %s", c.GetName()).SetSubError(e).AddParts(
-				colorize.None(", request was:\n\n"),
-				colorize.None(string(requestDump)),
+				colorize.None(", request was:\n\n"), dump,
 			))
 		}
 	}

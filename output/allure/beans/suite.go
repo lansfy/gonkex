@@ -46,7 +46,7 @@ func (s *Suite) SetEnd(endTime time.Time) {
 }
 
 // suite has test-cases?
-func (s Suite) HasTests() bool {
+func (s *Suite) HasTests() bool {
 	return len(s.TestCases.Cases) > 0
 }
 

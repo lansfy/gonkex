@@ -53,7 +53,7 @@ func TestNewTestWithCases(t *testing.T) {
 		},
 	}
 
-	tests, err := makeTestFromDefinition("cases/example.yaml", data)
+	tests, err := makeTestFromDefinition("cases/example.yaml", &data)
 	require.NoError(t, err)
 	require.Len(t, tests, 2, "expected 2 tests")
 
