@@ -44,7 +44,7 @@ func (c *bodyMatchesXMLConstraint) GetName() string {
 }
 
 func (c *bodyMatchesXMLConstraint) Verify(r *http.Request) []error {
-	body, err := getBodyCopy(r)
+	body, err := getRequestBodyCopy(r)
 	if err != nil {
 		return []error{err}
 	}

@@ -6,10 +6,14 @@ import (
 	"net/http/httputil"
 )
 
-func unhandledRequestError(r *http.Request) []error {
-	requestContent, err := httputil.DumpRequest(r, true)
+func dumpRequest(r *http.Request) string {
+	requestDump, err := httputil.DumpRequest(r, true)
 	if err != nil {
-		return []error{fmt.Errorf("gonkex internal error during request dump: %s", err)}
+		return fmt.Sprintf("gonkex internal error during request dump: %s", err)
 	}
-	return []error{fmt.Errorf("unhandled request to mock:\n%s", requestContent)}
+	return string(requestDump)
+}
+
+func unhandledRequestError(r *http.Request) []error {
+	return []error{fmt.Errorf("unhandled request to mock:\n%s", dumpRequest(r))}
 }

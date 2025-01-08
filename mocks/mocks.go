@@ -115,3 +115,9 @@ func (m *Mocks) LoadDefinitions(loader Loader, definitions map[string]interface{
 	}
 	return nil
 }
+
+func (m *Mocks) SetCheckers(checkers []Checker) {
+	for _, v := range m.mocks {
+		v.SetCheckers(checkers)
+	}
+}

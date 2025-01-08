@@ -36,7 +36,7 @@ func parseTestDefinitionFile(absPath string) ([]Test, error) {
 	var tests []Test
 
 	for i := range testDefinitions {
-		testCases, err := makeTestFromDefinition(absPath, testDefinitions[i])
+		testCases, err := makeTestFromDefinition(absPath, &testDefinitions[i])
 		if err != nil {
 			return nil, err
 		}
@@ -80,12 +80,15 @@ func substituteArgsToMap(tmpl map[string]string, args map[string]interface{}) (m
 }
 
 // Make tests from the given test definition.
-func makeTestFromDefinition(filePath string, testDefinition TestDefinition) ([]Test, error) {
+func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]Test, error) {
 	var tests []Test
 
 	// test definition has no cases, so using request/response as is
 	if len(testDefinition.Cases) == 0 {
-		test := Test{TestDefinition: testDefinition, Filename: filePath}
+		test := Test{
+			TestDefinition: *testDefinition,
+			Filename:       filePath,
+		}
 		test.Description = testDefinition.Description
 		test.Request = testDefinition.RequestTmpl
 		test.Responses = testDefinition.ResponseTmpls
@@ -128,7 +131,10 @@ func makeTestFromDefinition(filePath string, testDefinition TestDefinition) ([]T
 
 	// produce as many tests as cases defined
 	for caseIdx, testCase := range testDefinition.Cases {
-		test := Test{TestDefinition: testDefinition, Filename: filePath}
+		test := Test{
+			TestDefinition: *testDefinition,
+			Filename:       filePath,
+		}
 		test.Name = fmt.Sprintf("%s #%d", test.Name, caseIdx+1)
 
 		if testCase.Description != "" {

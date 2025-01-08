@@ -125,13 +125,19 @@ func readCompareParams(def map[interface{}]interface{}) (compare.Params, error) 
 	return params, nil
 }
 
-func getBodyCopy(r *http.Request) ([]byte, error) {
+func getRequestBodyCopy(r *http.Request) ([]byte, error) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
 
+	r.Body.Close()
+
 	// write body for future reusing
-	r.Body = io.NopCloser(bytes.NewReader(body))
+	setRequestBody(r, body)
 	return body, nil
+}
+
+func setRequestBody(r *http.Request, body []byte) {
+	r.Body = io.NopCloser(bytes.NewReader(body))
 }
