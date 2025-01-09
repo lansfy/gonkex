@@ -44,6 +44,11 @@ func parseTestDefinitionFile(absPath string) ([]Test, error) {
 		tests = append(tests, testCases...)
 	}
 
+	if len(tests) != 0 {
+		tests[0].FirstTest = true
+		tests[len(tests)-1].LastTest = true
+	}
+
 	return tests, nil
 }
 

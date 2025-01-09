@@ -74,9 +74,8 @@ func TestParseTestsWithCombinedVariables(t *testing.T) {
 func checkOriginal(t *testing.T, test models.TestInterface, combined bool) {
 	t.Helper()
 
-	req, err := test.ToJSON()
-	assert.NoError(t, err)
-	assert.Equal(t, requestOriginal, string(req))
+	req := test.GetRequest()
+	assert.Equal(t, requestOriginal, req)
 
 	assert.Equal(t, "{{ $method }}", test.GetMethod())
 	assert.Equal(t, "/some/path/{{ $pathPart }}", test.Path())
@@ -101,9 +100,8 @@ func checkOriginal(t *testing.T, test models.TestInterface, combined bool) {
 func checkApplied(t *testing.T, test models.TestInterface, combined bool) {
 	t.Helper()
 
-	req, err := test.ToJSON()
-	assert.NoError(t, err)
-	assert.Equal(t, requestApplied, string(req))
+	req := test.GetRequest()
+	assert.Equal(t, requestApplied, req)
 
 	assert.Equal(t, "POST", test.GetMethod())
 	assert.Equal(t, "/some/path/part_of_path", test.Path())

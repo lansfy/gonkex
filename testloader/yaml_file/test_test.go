@@ -57,16 +57,14 @@ func TestNewTestWithCases(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, tests, 2, "expected 2 tests")
 
-	reqData, err := tests[0].ToJSON()
-	require.NoError(t, err)
-	require.JSONEq(t, `{"foo": "bar", "hello": "world" }`, string(reqData), "unexpected request JSON")
+	reqData := tests[0].GetRequest()
+	require.JSONEq(t, `{"foo": "bar", "hello": "world" }`, reqData, "unexpected request JSON")
 
 	filename := tests[0].GetFileName()
 	require.Equal(t, "cases/example.yaml", filename, "unexpected filename")
 
-	reqData, err = tests[1].ToJSON()
-	require.NoError(t, err)
-	require.JSONEq(t, `{"foo": "bar", "hello": "world2" }`, string(reqData), "unexpected request JSON")
+	reqData = tests[1].GetRequest()
+	require.JSONEq(t, `{"foo": "bar", "hello": "world2" }`, reqData, "unexpected request JSON")
 
 	filename = tests[1].GetFileName()
 	require.Equal(t, "cases/example.yaml", filename, "unexpected filename")

@@ -158,7 +158,7 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		fmt.Printf("Sleep %ds before requests\n", pause)
 	}
 
-	req, err := newRequest(r.config.Host, v)
+	req, err := NewRequest(r.config.Host, v)
 	if err != nil {
 		return nil, err
 	}
