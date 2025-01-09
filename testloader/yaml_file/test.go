@@ -53,6 +53,9 @@ type Test struct {
 	CombinedVariables map[string]string
 
 	DbChecks []models.DatabaseCheck
+
+	FirstTest bool
+	LastTest  bool
 }
 
 func (t *Test) ToQuery() string {
@@ -69,10 +72,6 @@ func (t *Test) Path() string {
 
 func (t *Test) GetRequest() string {
 	return t.Request
-}
-
-func (t *Test) ToJSON() ([]byte, error) {
-	return []byte(t.Request), nil
 }
 
 func (t *Test) GetResponses() map[int]string {
@@ -213,4 +212,12 @@ func (t *Test) ApplyVariables(perform func(string) string) {
 	for _, definition := range t.ServiceMocks() {
 		performInterface(definition, perform)
 	}
+}
+
+func (t *Test) FirstTestInFile() bool {
+	return t.FirstTest
+}
+
+func (t *Test) LastTestInFile() bool {
+	return t.LastTest
 }

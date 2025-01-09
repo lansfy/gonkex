@@ -14,37 +14,44 @@ type DatabaseCheck interface {
 
 // Common Test interface
 type TestInterface interface {
-	ToQuery() string
-	GetRequest() string
-	ToJSON() ([]byte, error)
+	GetName() string
+	GetDescription() string
+
 	GetMethod() string
 	Path() string
+	ToQuery() string
+	ContentType() string
+	Headers() map[string]string
+	Cookies() map[string]string
+	GetRequest() string
+	GetForm() *Form
+
+	GetStatus() string
 	GetResponses() map[int]string
 	GetResponse(code int) (string, bool)
 	GetResponseHeaders(code int) (map[string]string, bool)
-	GetName() string
-	GetDescription() string
-	GetStatus() string
-	Fixtures() []string
-	ServiceMocks() map[string]interface{}
-	Pause() int
-	BeforeScriptPath() string
-	BeforeScriptTimeout() int
-	AfterRequestScriptPath() string
-	AfterRequestScriptTimeout() int
-	Cookies() map[string]string
-	Headers() map[string]string
-	ContentType() string
-	GetForm() *Form
 
 	GetDatabaseChecks() []DatabaseCheck
 	GetComparisonParams() ComparisonParams
+
+	Fixtures() []string
+	ServiceMocks() map[string]interface{}
+
+	Pause() int
+
+	BeforeScriptPath() string
+	BeforeScriptTimeout() int
+
+	AfterRequestScriptPath() string
+	AfterRequestScriptTimeout() int
 
 	GetVariables() map[string]string
 	GetCombinedVariables() map[string]string
 	GetVariablesToSet() map[int]map[string]string
 
 	GetFileName() string
+	FirstTestInFile() bool
+	LastTestInFile() bool
 
 	SetStatus(status string)
 

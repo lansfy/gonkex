@@ -29,7 +29,7 @@ func newClient(proxyURL *url.URL) *http.Client {
 	}
 }
 
-func newRequest(host string, test models.TestInterface) (req *http.Request, err error) {
+func NewRequest(host string, test models.TestInterface) (req *http.Request, err error) {
 	if test.GetForm() != nil {
 		req, err = newMultipartRequest(host, test)
 		if err != nil {
@@ -137,12 +137,8 @@ func addFields(params url.Values, w *multipart.Writer) error {
 }
 
 func newCommonRequest(host string, test models.TestInterface) (*http.Request, error) {
-	body, err := test.ToJSON()
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := request(test, bytes.NewBuffer(body), host)
+	body := test.GetRequest()
+	req, err := request(test, bytes.NewBuffer([]byte(body)), host)
 	if err != nil {
 		return nil, err
 	}

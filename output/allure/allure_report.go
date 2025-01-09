@@ -2,6 +2,7 @@ package allure
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -57,7 +58,7 @@ func (o *Output) Process(t models.TestInterface, result *models.Result) error {
 		}
 	}
 
-	status, err := result.AllureStatus()
+	status, err := getAllureStatus(result)
 	o.allure.EndCase(status, err, time.Now())
 
 	return nil
@@ -65,4 +66,50 @@ func (o *Output) Process(t models.TestInterface, result *models.Result) error {
 
 func (o *Output) Finalize() {
 	_ = o.allure.EndSuite(time.Now())
+}
+
+func allureStatus(status string) bool {
+	switch status {
+	case "passed", "failed", "broken", "skipped":
+		return true
+	default:
+		return false
+	}
+}
+
+func notRunnedStatus(status string) bool {
+	switch status {
+	case "broken", "skipped":
+		return true
+	default:
+		return false
+	}
+}
+
+func getAllureStatus(r *models.Result) (string, error) {
+	testStatus := r.Test.GetStatus()
+	if testStatus != "" && allureStatus(testStatus) && notRunnedStatus(testStatus) {
+		return testStatus, nil
+	}
+
+	var (
+		status     = "passed"
+		testErrors []error
+	)
+
+	if len(r.Errors) != 0 {
+		status = "failed"
+		testErrors = r.Errors
+	}
+
+	if len(testErrors) != 0 {
+		errText := ""
+		for _, err := range testErrors {
+			errText = errText + err.Error() + "\n"
+		}
+
+		return status, errors.New(errText)
+	}
+
+	return status, nil
 }
