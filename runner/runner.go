@@ -20,6 +20,10 @@ import (
 	"github.com/lansfy/gonkex/variables"
 )
 
+type Client interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
 type Config struct {
 	Host         string
 	FixturesDir  string
@@ -27,6 +31,7 @@ type Config struct {
 	Mocks        *mocks.Mocks
 	MocksLoader  mocks.Loader
 	Variables    *variables.Variables
+	CustomClient Client
 	HTTPProxyURL *url.URL
 }
 
@@ -38,16 +43,20 @@ type Runner struct {
 	handler  testHandler
 	output   []output.OutputInterface
 	checkers []checker.CheckerInterface
-	client   *http.Client
+	client   Client
 	config   *Config
 }
 
 func New(config *Config, loader testloader.LoaderInterface, handler testHandler) *Runner {
+	client := config.CustomClient
+	if client == nil {
+		client = newClient(config.HTTPProxyURL)
+	}
 	return &Runner{
 		config:  config,
 		loader:  loader,
 		handler: handler,
-		client:  newClient(config.HTTPProxyURL),
+		client:  client,
 	}
 }
 
