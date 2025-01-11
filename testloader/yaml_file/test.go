@@ -1,6 +1,8 @@
 package yaml_file
 
 import (
+	"time"
+
 	"github.com/lansfy/gonkex/compare"
 	"github.com/lansfy/gonkex/models"
 )
@@ -37,6 +39,22 @@ func (c *cmpParams) IgnoreArraysOrdering() bool {
 
 func (c *cmpParams) DisallowExtraFields() bool {
 	return c.params.DisallowExtraFields
+}
+
+type retry struct {
+	params retryParams
+}
+
+func (r *retry) MaxAttempts() int {
+	return r.params.MaxAttempts
+}
+
+func (r *retry) Delay() time.Duration {
+	return r.params.Delay.Duration
+}
+
+func (r *retry) SuccessCount() int {
+	return r.params.SuccessCount
 }
 
 type Test struct {
@@ -80,7 +98,6 @@ func (t *Test) GetResponses() map[int]string {
 
 func (t *Test) GetResponse(code int) (string, bool) {
 	val, ok := t.Responses[code]
-
 	return val, ok
 }
 
@@ -110,24 +127,24 @@ func (t *Test) ServiceMocks() map[string]interface{} {
 	return t.MocksDefinition
 }
 
-func (t *Test) Pause() int {
-	return t.PauseValue
+func (t *Test) Pause() time.Duration {
+	return t.PauseValue.Duration
 }
 
 func (t *Test) BeforeScriptPath() string {
 	return t.BeforeScript
 }
 
-func (t *Test) BeforeScriptTimeout() int {
-	return t.BeforeScriptParams.Timeout
+func (t *Test) BeforeScriptTimeout() time.Duration {
+	return t.BeforeScriptParams.Timeout.Duration
 }
 
 func (t *Test) AfterRequestScriptPath() string {
 	return t.AfterRequestScript
 }
 
-func (t *Test) AfterRequestScriptTimeout() int {
-	return t.AfterRequestScriptParams.Timeout
+func (t *Test) AfterRequestScriptTimeout() time.Duration {
+	return t.AfterRequestScriptParams.Timeout.Duration
 }
 
 func (t *Test) Cookies() map[string]string {
@@ -136,6 +153,10 @@ func (t *Test) Cookies() map[string]string {
 
 func (t *Test) Headers() map[string]string {
 	return t.HeadersVal
+}
+
+func (t *Test) GetRetryParams() models.RetryParams {
+	return &retry{t.RetryParams}
 }
 
 // TODO: it might make sense to do support of case-insensitive checking

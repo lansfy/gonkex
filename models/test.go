@@ -1,5 +1,9 @@
 package models
 
+import (
+	"time"
+)
+
 type ComparisonParams interface {
 	IgnoreValuesChecking() bool
 	IgnoreArraysOrdering() bool
@@ -10,6 +14,12 @@ type DatabaseCheck interface {
 	DbQueryString() string
 	DbResponseJson() []string
 	GetComparisonParams() ComparisonParams
+}
+
+type RetryParams interface {
+	MaxAttempts() int
+	Delay() time.Duration
+	SuccessCount() int
 }
 
 // Common Test interface
@@ -33,17 +43,18 @@ type TestInterface interface {
 
 	GetDatabaseChecks() []DatabaseCheck
 	GetComparisonParams() ComparisonParams
+	GetRetryParams() RetryParams
 
 	Fixtures() []string
 	ServiceMocks() map[string]interface{}
 
-	Pause() int
+	Pause() time.Duration
 
 	BeforeScriptPath() string
-	BeforeScriptTimeout() int
+	BeforeScriptTimeout() time.Duration
 
 	AfterRequestScriptPath() string
-	AfterRequestScriptTimeout() int
+	AfterRequestScriptTimeout() time.Duration
 
 	GetVariables() map[string]string
 	GetCombinedVariables() map[string]string

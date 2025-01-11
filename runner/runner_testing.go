@@ -37,16 +37,8 @@ type RunWithTestingOpts struct {
 	Outputs        []output.OutputInterface
 	Checkers       []checker.CheckerInterface
 
-	CustomClient       Client
+	CustomClient       HTTPClient
 	TemplateReplyFuncs template.FuncMap
-}
-
-func registerMocksEnvironment(m *mocks.Mocks) {
-	names := m.GetNames()
-	for _, n := range names {
-		varName := fmt.Sprintf("GONKEX_MOCK_%s", strings.ToUpper(n))
-		os.Setenv(varName, m.Service(n).ServerAddr())
-	}
 }
 
 // RunWithTesting is a helper function the wraps the common Run and provides simple way
@@ -97,6 +89,14 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 	err := runner.Run()
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func registerMocksEnvironment(m *mocks.Mocks) {
+	names := m.GetNames()
+	for _, n := range names {
+		varName := fmt.Sprintf("GONKEX_MOCK_%s", strings.ToUpper(n))
+		os.Setenv(varName, m.Service(n).ServerAddr())
 	}
 }
 

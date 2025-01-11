@@ -26,10 +26,11 @@ type TestDefinition struct {
 	ComparisonParams         compare.Params            `json:"comparisonParams" yaml:"comparisonParams"`
 	FixtureFiles             []string                  `json:"fixtures" yaml:"fixtures"`
 	MocksDefinition          map[string]interface{}    `json:"mocks" yaml:"mocks"`
-	PauseValue               int                       `json:"pause" yaml:"pause"`
+	PauseValue               Duration                  `json:"pause" yaml:"pause"`
 	DbQueryTmpl              string                    `json:"dbQuery" yaml:"dbQuery"`
 	DbResponseTmpl           []string                  `json:"dbResponse" yaml:"dbResponse"`
 	DatabaseChecks           []DatabaseCheck           `json:"dbChecks" yaml:"dbChecks"`
+	RetryParams              retryParams               `json:"retryParams" yaml:"retryParams"`
 }
 
 type CaseData struct {
@@ -50,9 +51,15 @@ type DatabaseCheck struct {
 	ComparisonParams compare.Params `json:"comparisonParams" yaml:"comparisonParams"`
 }
 
+type retryParams struct {
+	MaxAttempts  int      `json:"maxAttempts" yaml:"maxAttempts"`
+	Delay        Duration `json:"delay" yaml:"delay"`
+	SuccessCount int      `json:"successInRow" yaml:"successInRow"`
+}
+
 type scriptParams struct {
-	PathTmpl string `json:"path" yaml:"path"`
-	Timeout  int    `json:"timeout" yaml:"timeout"`
+	PathTmpl string   `json:"path" yaml:"path"`
+	Timeout  Duration `json:"timeout" yaml:"timeout"`
 }
 
 type VariablesToSet map[int]map[string]string
