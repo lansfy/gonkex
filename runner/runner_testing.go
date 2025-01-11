@@ -37,6 +37,7 @@ type RunWithTestingOpts struct {
 	Outputs        []output.OutputInterface
 	Checkers       []checker.CheckerInterface
 
+	CustomClient       Client
 	TemplateReplyFuncs template.FuncMap
 }
 
