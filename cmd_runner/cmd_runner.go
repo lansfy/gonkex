@@ -14,10 +14,10 @@ import (
 	"time"
 )
 
-func CmdRun(scriptPath string, timeout int) error {
+func CmdRun(scriptPath string, timeout time.Duration) error {
 	// by default timeout should be 3s
 	if timeout <= 0 {
-		timeout = 3
+		timeout = 3 * time.Second
 	}
 	cmd := exec.Command(strings.TrimRight(scriptPath, "\n"))
 	cmd.Env = os.Environ()
@@ -40,7 +40,7 @@ func CmdRun(scriptPath string, timeout int) error {
 	}()
 
 	select {
-	case <-time.After(time.Duration(timeout) * time.Second):
+	case <-time.After(timeout):
 
 		// Get process group which we want to kill
 		pgid, err := syscall.Getpgid(cmd.Process.Pid)
@@ -51,7 +51,7 @@ func CmdRun(scriptPath string, timeout int) error {
 		if err := syscall.Kill(-pgid, 15); err != nil {
 			return err
 		}
-		fmt.Printf("Process killed as timeout(%d) reached\n", timeout)
+		fmt.Printf("Process killed as timeout (%s) reached\n", timeout)
 	case err := <-done:
 		if err != nil {
 			return fmt.Errorf("process finished with error = %v", err)

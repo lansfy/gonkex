@@ -20,7 +20,7 @@ import (
 	"github.com/lansfy/gonkex/variables"
 )
 
-type Client interface {
+type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
@@ -31,7 +31,7 @@ type Config struct {
 	Mocks        *mocks.Mocks
 	MocksLoader  mocks.Loader
 	Variables    *variables.Variables
-	CustomClient Client
+	CustomClient HTTPClient
 	HTTPProxyURL *url.URL
 }
 
@@ -43,7 +43,7 @@ type Runner struct {
 	handler  testHandler
 	output   []output.OutputInterface
 	checkers []checker.CheckerInterface
-	client   Client
+	client   HTTPClient
 	config   *Config
 }
 
@@ -90,21 +90,7 @@ func (r *Runner) Run() error {
 			}
 		}
 
-		testExecutor := func(testInterface models.TestInterface) (*models.Result, error) {
-			testResult, err := r.executeTest(test)
-			if err != nil {
-				return nil, err
-			}
-
-			for _, o := range r.output {
-				if err := o.Process(test, testResult); err != nil {
-					return nil, err
-				}
-			}
-
-			return testResult, nil
-		}
-		err := r.handler(test, testExecutor)
+		err := r.handler(test, r.executeTestWithRetry)
 		if err != nil {
 			return colorize.NewEntityError("test %s error", test.GetName()).SetSubError(err)
 		}
@@ -117,6 +103,49 @@ var (
 	errTestSkipped = errors.New("test was skipped")
 	errTestBroken  = errors.New("test was broken")
 )
+
+func (r *Runner) executeTestWithRetry(v models.TestInterface) (*models.Result, error) {
+	var testResult *models.Result
+	var err error
+
+	retryCount := v.GetRetryParams().MaxAttempts()
+	if retryCount < 0 {
+		retryCount = 0
+	}
+	retryCount++
+
+	successRequired := v.GetRetryParams().SuccessCount()
+	if successRequired <= 0 {
+		successRequired = 1
+	}
+
+	successCount := 0
+	for i := 0; i < retryCount; i++ {
+		if i != 0 {
+			time.Sleep(v.GetRetryParams().Delay())
+		}
+		testResult, err = r.executeTest(v)
+		if err != nil {
+			return nil, err
+		}
+		if !testResult.Passed() {
+			successCount = 0
+		} else {
+			successCount++
+		}
+		if successCount >= successRequired {
+			break
+		}
+	}
+
+	for _, o := range r.output {
+		if err = o.Process(v, testResult); err != nil {
+			return nil, err
+		}
+	}
+
+	return testResult, nil
+}
 
 func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	if v.GetStatus() != "" {
@@ -163,8 +192,8 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	// make pause
 	pause := v.Pause()
 	if pause > 0 {
-		time.Sleep(time.Duration(pause) * time.Second)
-		fmt.Printf("Sleep %ds before requests\n", pause)
+		time.Sleep(pause)
+		fmt.Printf("Sleep %s before requests\n", pause)
 	}
 
 	req, err := NewRequest(r.config.Host, v)
@@ -247,11 +276,9 @@ func (r *Runner) setVariablesFromResponse(t models.TestInterface, contentType, b
 		return err
 	}
 
-	if vars == nil {
-		return nil
+	if vars != nil {
+		r.config.Variables.Merge(vars)
 	}
-
-	r.config.Variables.Merge(vars)
 
 	return nil
 }
