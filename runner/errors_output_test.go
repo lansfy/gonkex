@@ -10,9 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lansfy/gonkex/checker/response_body"
-	"github.com/lansfy/gonkex/checker/response_db"
-	"github.com/lansfy/gonkex/checker/response_header"
 	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/output/terminal"
 	"github.com/lansfy/gonkex/testloader/yaml_file"
@@ -80,6 +77,7 @@ func Test_Error_Examples(t *testing.T) {
 					Variables:   variables.New(),
 					Mocks:       m,
 					MocksLoader: mocks.NewYamlLoader(nil),
+					DB:          &fakeStorage{},
 				},
 				yamlLoader,
 				testHandler.HandleTest,
@@ -94,9 +92,6 @@ func Test_Error_Examples(t *testing.T) {
 
 			output := terminal.NewOutput(opts)
 			r.AddOutput(output)
-			r.AddCheckers(response_body.NewChecker())
-			r.AddCheckers(response_header.NewChecker())
-			r.AddCheckers(response_db.NewChecker(&fakeStorage{}))
 
 			err = r.Run()
 			require.NoError(t, err)

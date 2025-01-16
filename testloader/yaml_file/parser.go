@@ -30,7 +30,7 @@ func parseTestDefinitionFile(absPath string) ([]Test, error) {
 
 	// reading the test source file
 	if err := yaml.Unmarshal(data, &testDefinitions); err != nil {
-		return nil, fmt.Errorf("failed to unmarshall %s:\n%s", absPath, err)
+		return nil, fmt.Errorf("failed to unmarshal %s:\n%s", absPath, err)
 	}
 
 	var tests []Test
@@ -214,7 +214,11 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 		}
 
 		for key, value := range testCase.Variables {
-			combinedVariables[key] = value.(string)
+			var ok bool
+			combinedVariables[key], ok = value.(string)
+			if !ok {
+				return nil, fmt.Errorf("variable %q has non-string value %v", key, value)
+			}
 		}
 		test.CombinedVariables = combinedVariables
 

@@ -16,8 +16,8 @@ type DatabaseCheck interface {
 	GetComparisonParams() ComparisonParams
 }
 
-type RetryParams interface {
-	MaxAttempts() int
+type RetryPolicy interface {
+	Attempts() int
 	Delay() time.Duration
 	SuccessCount() int
 }
@@ -43,7 +43,7 @@ type TestInterface interface {
 
 	GetDatabaseChecks() []DatabaseCheck
 	GetComparisonParams() ComparisonParams
-	GetRetryParams() RetryParams
+	GetRetryPolicy() RetryPolicy
 
 	Fixtures() []string
 	ServiceMocks() map[string]interface{}

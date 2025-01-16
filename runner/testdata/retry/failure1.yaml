@@ -1,0 +1,15 @@
+# all test in this file has next structure
+# /test.run/rrrrrrr
+# where r is result of N-th call (1 - success, 0 - fail).
+# so in test we check that we execute all calls
+
+- name: do several retry and fail before success
+  description: "error: at path '$.error' values do not match:\n     expected: \n       actual: fake error"
+  method: GET
+  path: /test.run/0000001
+  response:
+    204: ""
+    400: >
+      {"error":""}
+  retryPolicy:
+    attempts: 5
