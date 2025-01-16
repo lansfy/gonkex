@@ -10,8 +10,12 @@ import (
 	"time"
 
 	"github.com/lansfy/gonkex/checker"
+	"github.com/lansfy/gonkex/checker/response_body"
+	"github.com/lansfy/gonkex/checker/response_db"
+	"github.com/lansfy/gonkex/checker/response_header"
 	"github.com/lansfy/gonkex/cmd_runner"
 	"github.com/lansfy/gonkex/colorize"
+	"github.com/lansfy/gonkex/endpoint"
 	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/output"
@@ -25,14 +29,15 @@ type HTTPClient interface {
 }
 
 type Config struct {
-	Host         string
-	FixturesDir  string
-	DB           storage.StorageInterface
-	Mocks        *mocks.Mocks
-	MocksLoader  mocks.Loader
-	Variables    *variables.Variables
-	CustomClient HTTPClient
-	HTTPProxyURL *url.URL
+	Host            string
+	FixturesDir     string
+	DB              storage.StorageInterface
+	Mocks           *mocks.Mocks
+	MocksLoader     mocks.Loader
+	Variables       *variables.Variables
+	CustomClient    HTTPClient
+	HTTPProxyURL    *url.URL
+	HelperEndpoints endpoint.EndpointMap
 }
 
 type testExecutor func(models.TestInterface) (*models.Result, error)
@@ -52,12 +57,19 @@ func New(config *Config, loader testloader.LoaderInterface, handler testHandler)
 	if client == nil {
 		client = newClient(config.HTTPProxyURL)
 	}
-	return &Runner{
+	runner := &Runner{
 		config:  config,
 		loader:  loader,
 		handler: handler,
 		client:  client,
 	}
+
+	runner.AddCheckers(response_body.NewChecker())
+	runner.AddCheckers(response_header.NewChecker())
+	if config.DB != nil {
+		runner.AddCheckers(response_db.NewChecker(config.DB))
+	}
+	return runner
 }
 
 func (r *Runner) AddOutput(o ...output.OutputInterface) {
@@ -90,7 +102,7 @@ func (r *Runner) Run() error {
 			}
 		}
 
-		err := r.handler(test, r.executeTestWithRetry)
+		err := r.handler(test, r.executeTestWithRetryPolicy)
 		if err != nil {
 			return colorize.NewEntityError("test %s error", test.GetName()).SetSubError(err)
 		}
@@ -104,25 +116,29 @@ var (
 	errTestBroken  = errors.New("test was broken")
 )
 
-func (r *Runner) executeTestWithRetry(v models.TestInterface) (*models.Result, error) {
+func (r *Runner) executeTestWithRetryPolicy(v models.TestInterface) (*models.Result, error) {
 	var testResult *models.Result
 	var err error
 
-	retryCount := v.GetRetryParams().MaxAttempts()
-	if retryCount < 0 {
-		retryCount = 0
-	}
-	retryCount++
+	retryPolicy := v.GetRetryPolicy()
 
-	successRequired := v.GetRetryParams().SuccessCount()
-	if successRequired <= 0 {
+	retryCount := retryPolicy.Attempts()
+	if retryCount < 0 {
+		return nil, colorize.NewEntityError("section %s: attempts count must be non-negative", "retryPolicy")
+	}
+
+	successRequired := retryPolicy.SuccessCount()
+	if successRequired < 0 {
+		return nil, colorize.NewEntityError("section %s: 'successInRow' count must be positive", "retryPolicy")
+	}
+	if successRequired == 0 {
 		successRequired = 1
 	}
 
 	successCount := 0
-	for i := 0; i < retryCount; i++ {
+	for i := 0; i < retryCount+1; i++ {
 		if i != 0 {
-			time.Sleep(v.GetRetryParams().Delay())
+			time.Sleep(retryPolicy.Delay())
 		}
 		testResult, err = r.executeTest(v)
 		if err != nil {
@@ -136,6 +152,12 @@ func (r *Runner) executeTestWithRetry(v models.TestInterface) (*models.Result, e
 		if successCount >= successRequired {
 			break
 		}
+	}
+
+	if testResult.Passed() && successCount < successRequired {
+		testResult.Errors = append(testResult.Errors,
+			fmt.Errorf("last run was successful %d times, but %d success at row required", successCount, successRequired),
+		)
 	}
 
 	for _, o := range r.output {
@@ -192,8 +214,8 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	// make pause
 	pause := v.Pause()
 	if pause > 0 {
-		time.Sleep(pause)
 		fmt.Printf("Sleep %s before requests\n", pause)
+		time.Sleep(pause)
 	}
 
 	req, err := NewRequest(r.config.Host, v)
@@ -201,7 +223,12 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		return nil, err
 	}
 
-	resp, err := r.client.Do(req)
+	var resp *http.Response
+	if strings.HasPrefix(req.URL.Path, endpoint.Prefix) {
+		resp, err = endpoint.SelectEndpoint(r.config.Mocks, r.config.HelperEndpoints, req.URL.Path, req) //nolint:bodyclose // false positive
+	} else {
+		resp, err = r.client.Do(req) //nolint:bodyclose // false positive
+	}
 	if err != nil {
 		return nil, err
 	}

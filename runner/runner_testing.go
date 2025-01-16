@@ -10,9 +10,7 @@ import (
 	"text/template"
 
 	"github.com/lansfy/gonkex/checker"
-	"github.com/lansfy/gonkex/checker/response_body"
-	"github.com/lansfy/gonkex/checker/response_db"
-	"github.com/lansfy/gonkex/checker/response_header"
+	"github.com/lansfy/gonkex/endpoint"
 	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/output"
@@ -38,6 +36,7 @@ type RunWithTestingOpts struct {
 	Checkers       []checker.CheckerInterface
 
 	CustomClient       HTTPClient
+	HelperEndpoints    endpoint.EndpointMap
 	TemplateReplyFuncs template.FuncMap
 }
 
@@ -74,17 +73,18 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 			MocksLoader: mocks.NewYamlLoader(&mocks.YamlLoaderOpts{
 				TemplateReplyFuncs: opts.TemplateReplyFuncs,
 			}),
-			FixturesDir:  opts.FixturesDir,
-			DB:           opts.DB,
-			Variables:    variables.New(),
-			HTTPProxyURL: proxyURL,
+			FixturesDir:     opts.FixturesDir,
+			DB:              opts.DB,
+			Variables:       variables.New(),
+			HTTPProxyURL:    proxyURL,
+			HelperEndpoints: opts.HelperEndpoints,
 		},
 		yamlLoader,
 		handler.HandleTest,
 	)
 
 	addOutputs(runner, opts)
-	addCheckers(runner, opts)
+	runner.AddCheckers(opts.Checkers...)
 
 	err := runner.Run()
 	if err != nil {
@@ -110,15 +110,6 @@ func addOutputs(runner *Runner, opts *RunWithTestingOpts) {
 	for _, o := range opts.Outputs {
 		runner.AddOutput(o)
 	}
-}
-
-func addCheckers(runner *Runner, opts *RunWithTestingOpts) {
-	runner.AddCheckers(response_body.NewChecker())
-	runner.AddCheckers(response_header.NewChecker())
-	if opts.DB != nil {
-		runner.AddCheckers(response_db.NewChecker(opts.DB))
-	}
-	runner.AddCheckers(opts.Checkers...)
 }
 
 type testingHandler struct {

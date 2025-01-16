@@ -1,0 +1,10 @@
+- name: check error for wrong success count
+  description: "error: section 'retryPolicy': 'successInRow' count must be positive"
+  method: GET
+  path: /test.run/01
+  response:
+    204: ""
+    400: >
+      {"error":""}
+  retryPolicy:
+    successInRow: -5

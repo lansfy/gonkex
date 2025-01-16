@@ -1,0 +1,11 @@
+- name: we got success on last test but not two success at row
+  description: "error: last run was successful 1 times, but 2 success at row required"
+  method: GET
+  path: /test.run/010101010101
+  response:
+    204: ""
+    400: >
+      {"error":""}
+  retryPolicy:
+    attempts: 5
+    successInRow: 2

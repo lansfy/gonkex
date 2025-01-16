@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -15,11 +16,15 @@ func (l *loaderImpl) loadMethodVaryStrategy(path string, def map[interface{}]int
 		}
 		methods = make(map[string]*Definition, len(methodsMap))
 		for method, v := range methodsMap {
-			def, err := l.loadDefinition(path+"."+method.(string), v)
+			methodStr, ok := method.(string)
+			if !ok {
+				return nil, fmt.Errorf("under path %s method %v has non-string name", path, method)
+			}
+			def, err := l.loadDefinition(path+"."+methodStr, v)
 			if err != nil {
 				return nil, err
 			}
-			methods[method.(string)] = def
+			methods[methodStr] = def
 		}
 	}
 	return NewMethodVaryReply(methods), nil

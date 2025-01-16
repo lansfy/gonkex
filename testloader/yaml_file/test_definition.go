@@ -30,7 +30,7 @@ type TestDefinition struct {
 	DbQueryTmpl              string                    `json:"dbQuery" yaml:"dbQuery"`
 	DbResponseTmpl           []string                  `json:"dbResponse" yaml:"dbResponse"`
 	DatabaseChecks           []DatabaseCheck           `json:"dbChecks" yaml:"dbChecks"`
-	RetryParams              retryParams               `json:"retryParams" yaml:"retryParams"`
+	RetryPolicy              retryPolicy               `json:"retryPolicy" yaml:"retryPolicy"`
 }
 
 type CaseData struct {
@@ -51,8 +51,8 @@ type DatabaseCheck struct {
 	ComparisonParams compare.Params `json:"comparisonParams" yaml:"comparisonParams"`
 }
 
-type retryParams struct {
-	MaxAttempts  int      `json:"maxAttempts" yaml:"maxAttempts"`
+type retryPolicy struct {
+	Attempts     int      `json:"attempts" yaml:"attempts"`
 	Delay        Duration `json:"delay" yaml:"delay"`
 	SuccessCount int      `json:"successInRow" yaml:"successInRow"`
 }

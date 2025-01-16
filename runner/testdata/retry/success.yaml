@@ -1,0 +1,30 @@
+# all test in this file has next structure
+# /test.run/rrrrrrr
+# where r is result of N-th call (1 - success, 0 - fail).
+# so in test we check that we execute all calls
+
+- name: simple retry policy with one required success
+  method: GET
+  path: /test.run/01
+  response:
+    204: ""
+  retryPolicy:
+    attempts: 100
+
+- name: retry policy with two required success
+  method: GET
+  path: /test.run/0101011
+  response:
+    204: ""
+  retryPolicy:
+    attempts: 100
+    successInRow: 2
+
+- name: retry policy with four required success
+  method: GET
+  path: /test.run/01010110011100001111
+  response:
+    204: ""
+  retryPolicy:
+    attempts: 100
+    successInRow: 4

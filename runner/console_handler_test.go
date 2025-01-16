@@ -4,9 +4,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/lansfy/gonkex/models"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestConsoleHandler_HandleTest_Summary(t *testing.T) {

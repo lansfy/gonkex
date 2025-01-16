@@ -42,11 +42,11 @@ func (c *cmpParams) DisallowExtraFields() bool {
 }
 
 type retry struct {
-	params retryParams
+	params retryPolicy
 }
 
-func (r *retry) MaxAttempts() int {
-	return r.params.MaxAttempts
+func (r *retry) Attempts() int {
+	return r.params.Attempts
 }
 
 func (r *retry) Delay() time.Duration {
@@ -155,8 +155,8 @@ func (t *Test) Headers() map[string]string {
 	return t.HeadersVal
 }
 
-func (t *Test) GetRetryParams() models.RetryParams {
-	return &retry{t.RetryParams}
+func (t *Test) GetRetryPolicy() models.RetryPolicy {
+	return &retry{t.RetryPolicy}
 }
 
 // TODO: it might make sense to do support of case-insensitive checking

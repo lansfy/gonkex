@@ -1,0 +1,11 @@
+- name: we have several success but not in row
+  description: "error: at path '$.error' values do not match:\n     expected: \n       actual: fake error"
+  method: GET
+  path: /test.run/010101010101
+  response:
+    204: ""
+    400: >
+      {"error":""}
+  retryPolicy:
+    attempts: 6
+    successInRow: 2

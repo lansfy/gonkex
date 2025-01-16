@@ -1,0 +1,11 @@
+- name: check error for wrong attempts count
+  description: "error: section 'retryPolicy': attempts count must be non-negative"
+  method: GET
+  path: /test.run/01
+  response:
+    204: ""
+    400: >
+      {"error":""}
+  retryPolicy:
+    attempts: -5
+    successInRow: 2

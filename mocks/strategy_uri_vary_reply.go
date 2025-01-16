@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -20,11 +21,15 @@ func (l *loaderImpl) loadUriVaryReplyStrategy(path string, def map[interface{}]i
 		}
 		uris = make(map[string]*Definition, len(urisMap))
 		for uri, v := range urisMap {
-			def, err := l.loadDefinition(path+"."+uri.(string), v)
+			uriStr, ok := uri.(string)
+			if !ok {
+				return nil, fmt.Errorf("under path %s uri %v has non-string name", path, uri)
+			}
+			def, err := l.loadDefinition(path+"."+uriStr, v)
 			if err != nil {
 				return nil, err
 			}
-			uris[uri.(string)] = def
+			uris[uriStr] = def
 		}
 	}
 	return NewUriVaryReplyStrategy(basePath, uris), nil
