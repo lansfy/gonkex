@@ -29,7 +29,7 @@ func parseTestDefinitionFile(absPath string) ([]Test, error) {
 	var testDefinitions []TestDefinition
 
 	// reading the test source file
-	if err := yaml.Unmarshal(data, &testDefinitions); err != nil {
+	if err := yaml.UnmarshalStrict(data, &testDefinitions); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal %s:\n%s", absPath, err)
 	}
 

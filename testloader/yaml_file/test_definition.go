@@ -96,7 +96,6 @@ func (v *VariablesToSet) UnmarshalYAML(unmarshal func(interface{}) error) error 
 		}
 
 		*v = res
-
 		return nil
 	}
 
@@ -106,6 +105,5 @@ func (v *VariablesToSet) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	}
 
 	*v = res
-
 	return nil
 }
