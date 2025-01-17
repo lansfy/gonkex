@@ -17,7 +17,7 @@ func NewConsoleHandler() *ConsoleHandler {
 	return &ConsoleHandler{}
 }
 
-func (h *ConsoleHandler) HandleTest(test models.TestInterface, executeTest testExecutor) error {
+func (h *ConsoleHandler) HandleTest(test models.TestInterface, executeTest TestExecutor) error {
 	testResult, err := executeTest(test)
 	switch {
 	case err != nil && errors.Is(err, errTestSkipped):

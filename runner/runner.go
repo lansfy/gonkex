@@ -28,7 +28,7 @@ type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
-type Config struct {
+type RunnerOpts struct {
 	Host            string
 	FixturesDir     string
 	DB              storage.StorageInterface
@@ -38,38 +38,39 @@ type Config struct {
 	CustomClient    HTTPClient
 	HTTPProxyURL    *url.URL
 	HelperEndpoints endpoint.EndpointMap
+	TestHandler     func(models.TestInterface, TestExecutor) error
 }
 
-type testExecutor func(models.TestInterface) (*models.Result, error)
-type testHandler func(models.TestInterface, testExecutor) error
+type TestExecutor func(models.TestInterface) (*models.Result, error)
 
 type Runner struct {
 	loader   testloader.LoaderInterface
-	handler  testHandler
 	output   []output.OutputInterface
 	checkers []checker.CheckerInterface
-	client   HTTPClient
-	config   *Config
+	config   RunnerOpts
 }
 
-func New(config *Config, loader testloader.LoaderInterface, handler testHandler) *Runner {
-	client := config.CustomClient
-	if client == nil {
-		client = newClient(config.HTTPProxyURL)
+func New(loader testloader.LoaderInterface, opts *RunnerOpts) *Runner {
+	r := &Runner{
+		loader: loader,
 	}
-	runner := &Runner{
-		config:  config,
-		loader:  loader,
-		handler: handler,
-		client:  client,
+	if opts != nil {
+		r.config = *opts
 	}
 
-	runner.AddCheckers(response_body.NewChecker())
-	runner.AddCheckers(response_header.NewChecker())
-	if config.DB != nil {
-		runner.AddCheckers(response_db.NewChecker(config.DB))
+	if r.config.CustomClient == nil {
+		r.config.CustomClient = newClient(r.config.HTTPProxyURL)
 	}
-	return runner
+	if r.config.TestHandler == nil {
+		r.config.TestHandler = defaultTestHandler
+	}
+
+	r.AddCheckers(response_body.NewChecker())
+	r.AddCheckers(response_header.NewChecker())
+	if r.config.DB != nil {
+		r.AddCheckers(response_db.NewChecker(r.config.DB))
+	}
+	return r
 }
 
 func (r *Runner) AddOutput(o ...output.OutputInterface) {
@@ -102,7 +103,7 @@ func (r *Runner) Run() error {
 			}
 		}
 
-		err := r.handler(test, r.executeTestWithRetryPolicy)
+		err := r.config.TestHandler(test, r.executeTestWithRetryPolicy)
 		if err != nil {
 			return colorize.NewEntityError("test %s error", test.GetName()).SetSubError(err)
 		}
@@ -227,7 +228,7 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	if strings.HasPrefix(req.URL.Path, endpoint.Prefix) {
 		resp, err = endpoint.SelectEndpoint(r.config.Mocks, r.config.HelperEndpoints, req.URL.Path, req) //nolint:bodyclose // false positive
 	} else {
-		resp, err = r.client.Do(req) //nolint:bodyclose // false positive
+		resp, err = r.config.CustomClient.Do(req) //nolint:bodyclose // false positive
 	}
 	if err != nil {
 		return nil, err
@@ -318,4 +319,15 @@ func checkHasFocused(tests []models.TestInterface) bool {
 	}
 
 	return false
+}
+
+func defaultTestHandler(t models.TestInterface, f TestExecutor) error {
+	result, err := f(t)
+	if err != nil {
+		return err
+	}
+	if len(result.Errors) != 0 {
+		return result.Errors[0]
+	}
+	return nil
 }
