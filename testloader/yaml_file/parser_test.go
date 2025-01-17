@@ -2,14 +2,12 @@ package yaml_file
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseTestsWithCases(t *testing.T) {
 	tests, err := parseTestDefinitionFile("testdata/parser.yaml")
-	if err != nil {
-		t.Error(err)
-	}
-	if len(tests) != 2 {
-		t.Errorf("wait len(tests) == 2, got len(tests) == %d", len(tests))
-	}
+	require.NoError(t, err)
+	require.Equal(t, 2, len(tests))
 }

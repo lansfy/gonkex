@@ -3,12 +3,12 @@ package yaml_file
 import (
 	"testing"
 
+	"github.com/lansfy/gonkex/models"
+	"github.com/lansfy/gonkex/variables"
+
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/lansfy/gonkex/models"
-	"github.com/lansfy/gonkex/variables"
 )
 
 const requestOriginal = `{"reqParam": "{{ $reqParam }}"}`
