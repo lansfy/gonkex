@@ -119,7 +119,7 @@ func (h *TestingHandler) HandleTest(test models.TestInterface, executor TestExec
 	h.t.Run(test.GetName(), func(t *testing.T) {
 		result, err := executor(test)
 		if err != nil {
-			if errors.Is(err, errTestSkipped) || errors.Is(err, errTestBroken) {
+			if errors.Is(err, checker.ErrTestSkipped) || errors.Is(err, checker.ErrTestBroken) {
 				t.Skip()
 			} else {
 				returnErr = err

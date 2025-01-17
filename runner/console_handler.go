@@ -3,6 +3,7 @@ package runner
 import (
 	"errors"
 
+	"github.com/lansfy/gonkex/checker"
 	"github.com/lansfy/gonkex/models"
 )
 
@@ -20,9 +21,9 @@ func NewConsoleHandler() *ConsoleHandler {
 func (h *ConsoleHandler) HandleTest(test models.TestInterface, executeTest TestExecutor) error {
 	testResult, err := executeTest(test)
 	switch {
-	case err != nil && errors.Is(err, errTestSkipped):
+	case err != nil && errors.Is(err, checker.ErrTestSkipped):
 		h.skippedTests++
-	case err != nil && errors.Is(err, errTestBroken):
+	case err != nil && errors.Is(err, checker.ErrTestBroken):
 		h.brokenTests++
 	case err != nil:
 		return err
