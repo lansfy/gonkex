@@ -46,7 +46,7 @@ type TestExecutor func(models.TestInterface) (*models.Result, error)
 type Runner struct {
 	loader   testloader.LoaderInterface
 	output   []output.OutputInterface
-	checkers []checker.CheckerInterface
+	checkers checkersList
 	config   RunnerOpts
 }
 
@@ -78,7 +78,7 @@ func (r *Runner) AddOutput(o ...output.OutputInterface) {
 }
 
 func (r *Runner) AddCheckers(c ...checker.CheckerInterface) {
-	r.checkers = append(r.checkers, c...)
+	r.checkers.AddCheckers(c...)
 }
 
 func (r *Runner) Run() error {
@@ -111,11 +111,6 @@ func (r *Runner) Run() error {
 
 	return nil
 }
-
-var (
-	errTestSkipped = errors.New("test was skipped")
-	errTestBroken  = errors.New("test was broken")
-)
 
 func (r *Runner) executeTestWithRetryPolicy(v models.TestInterface) (*models.Result, error) {
 	var testResult *models.Result
@@ -173,19 +168,27 @@ func (r *Runner) executeTestWithRetryPolicy(v models.TestInterface) (*models.Res
 func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	if v.GetStatus() != "" {
 		if v.GetStatus() == "broken" {
-			return &models.Result{Test: v}, errTestBroken
+			return &models.Result{Test: v}, checker.ErrTestBroken
 		}
 
 		if v.GetStatus() == "skipped" {
-			return &models.Result{Test: v}, errTestSkipped
+			return &models.Result{Test: v}, checker.ErrTestSkipped
 		}
+	}
+
+	err := r.checkers.OnTestStart(v)
+	if err != nil {
+		if errors.Is(err, checker.ErrTestSkipped) || errors.Is(err, checker.ErrTestBroken) {
+			return &models.Result{Test: v}, err
+		}
+		return nil, err
 	}
 
 	r.config.Variables.Load(v.GetCombinedVariables())
 	v = r.config.Variables.Apply(v)
 
 	if r.config.DB != nil && len(v.Fixtures()) != 0 {
-		err := r.config.DB.LoadFixtures(r.config.FixturesDir, v.Fixtures())
+		err = r.config.DB.LoadFixtures(r.config.FixturesDir, v.Fixtures())
 		if err != nil {
 			return nil, fmt.Errorf("load fixtures %v: %w", v.Fixtures(), err)
 		}
@@ -200,14 +203,14 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 
 	// load mocks
 	if v.ServiceMocks() != nil {
-		if err := r.config.Mocks.LoadDefinitions(r.config.MocksLoader, v.ServiceMocks()); err != nil {
+		if err = r.config.Mocks.LoadDefinitions(r.config.MocksLoader, v.ServiceMocks()); err != nil {
 			return nil, err
 		}
 	}
 
 	// launch script in cmd interface
 	if v.BeforeScriptPath() != "" {
-		if err := cmd_runner.CmdRun(v.BeforeScriptPath(), v.BeforeScriptTimeout()); err != nil {
+		if err = cmd_runner.CmdRun(v.BeforeScriptPath(), v.BeforeScriptTimeout()); err != nil {
 			return nil, err
 		}
 	}
@@ -244,7 +247,7 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 
 	bodyStr := string(body)
 
-	result := models.Result{
+	result := &models.Result{
 		Path:                req.URL.Path,
 		Query:               req.URL.RawQuery,
 		RequestBody:         actualRequestBody(req),
@@ -263,7 +266,7 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 
 	// launch script in cmd interface
 	if v.AfterRequestScriptPath() != "" {
-		if err := cmd_runner.CmdRun(v.AfterRequestScriptPath(), v.AfterRequestScriptTimeout()); err != nil {
+		if err = cmd_runner.CmdRun(v.AfterRequestScriptPath(), v.AfterRequestScriptTimeout()); err != nil {
 			return nil, err
 		}
 	}
@@ -273,22 +276,21 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		result.Errors = append(result.Errors, errs...)
 	}
 
-	if err := r.setVariablesFromResponse(v, result.ResponseContentType, bodyStr, resp.StatusCode); err != nil {
+	if err = r.setVariablesFromResponse(v, result.ResponseContentType, bodyStr, resp.StatusCode); err != nil {
 		return nil, err
 	}
 
 	r.config.Variables.Load(v.GetCombinedVariables())
 	v = r.config.Variables.Apply(v)
 
-	for _, c := range r.checkers {
-		errs, err := c.Check(v, &result)
-		if err != nil {
-			return nil, err
-		}
-		result.Errors = append(result.Errors, errs...)
+	errs, err := r.checkers.Check(v, result)
+	if err != nil {
+		return nil, err
 	}
 
-	return &result, nil
+	result.Errors = append(result.Errors, errs...)
+
+	return result, nil
 }
 
 func (r *Runner) setVariablesFromResponse(t models.TestInterface, contentType, body string, statusCode int) error {

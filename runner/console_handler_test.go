@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/lansfy/gonkex/checker"
 	"github.com/lansfy/gonkex/models"
 
 	"github.com/stretchr/testify/require"
@@ -33,7 +34,7 @@ func TestConsoleHandler_HandleTest_Summary(t *testing.T) {
 			name: "1 successful test, 1 broken test",
 			testExecResults: []result{
 				{result: &models.Result{}, err: nil},
-				{result: &models.Result{}, err: errTestBroken},
+				{result: &models.Result{}, err: checker.ErrTestBroken},
 			},
 			expectedSummary: &models.Summary{
 				Success: true,
@@ -46,7 +47,7 @@ func TestConsoleHandler_HandleTest_Summary(t *testing.T) {
 			name: "1 successful test, 1 skipped test",
 			testExecResults: []result{
 				{result: &models.Result{}, err: nil},
-				{result: &models.Result{}, err: errTestSkipped},
+				{result: &models.Result{}, err: checker.ErrTestSkipped},
 			},
 			expectedSummary: &models.Summary{
 				Success: true,
