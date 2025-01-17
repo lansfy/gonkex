@@ -72,15 +72,15 @@ func Test_Error_Examples(t *testing.T) {
 			testHandler := NewConsoleHandler()
 			yamlLoader := yaml_file.NewLoader(fmt.Sprintf("testdata/errors-example/case%d.yaml", caseID))
 			r := New(
-				&Config{
+				yamlLoader,
+				&RunnerOpts{
 					Host:        server.URL,
 					Variables:   variables.New(),
 					Mocks:       m,
 					MocksLoader: mocks.NewYamlLoader(nil),
 					DB:          &fakeStorage{},
+					TestHandler: testHandler.HandleTest,
 				},
-				yamlLoader,
-				testHandler.HandleTest,
 			)
 
 			buf := &strings.Builder{}

@@ -51,16 +51,9 @@ func (e *failEndpoint) Run(h endpoint.Helper) error {
 	return fmt.Errorf("fake error")
 }
 
-func (e *failEndpoint) Handler(t models.TestInterface, f testExecutor) error {
+func (e *failEndpoint) Handler(t models.TestInterface, f TestExecutor) error {
 	e.expectedError = t.GetDescription()
-	result, err := f(t)
-	if err != nil {
-		return err
-	}
-	if len(result.Errors) != 0 {
-		return result.Errors[0]
-	}
-	return nil
+	return defaultTestHandler(t, f)
 }
 
 func Test_retries(t *testing.T) {
@@ -80,13 +73,15 @@ func Test_retries(t *testing.T) {
 
 			e := &failEndpoint{}
 
-			config := &Config{
-				HelperEndpoints: endpoint.EndpointMap{
-					"run/*": e.Run,
+			runner := New(
+				yamlLoader,
+				&RunnerOpts{
+					HelperEndpoints: endpoint.EndpointMap{
+						"run/*": e.Run,
+					},
+					TestHandler: e.Handler,
 				},
-			}
-
-			runner := New(config, yamlLoader, e.Handler)
+			)
 			err := runner.Run()
 			if e.expectedError != "" {
 				require.Error(t, err)

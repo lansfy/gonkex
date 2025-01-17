@@ -22,8 +22,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var DefaultOutput = terminal.NewOutput(nil)
-
 type RunWithTestingOpts struct {
 	TestsDir    string
 	FixturesDir string
@@ -65,9 +63,10 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 	yamlLoader := yaml_file.NewLoader(opts.TestsDir)
 	yamlLoader.SetFileFilter(os.Getenv("GONKEX_FILE_FILTER"))
 
-	handler := testingHandler{t}
+	handler := &TestingHandler{t}
 	runner := New(
-		&Config{
+		yamlLoader,
+		&RunnerOpts{
 			Host:  serverURL,
 			Mocks: opts.Mocks,
 			MocksLoader: mocks.NewYamlLoader(&mocks.YamlLoaderOpts{
@@ -78,9 +77,8 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 			Variables:       variables.New(),
 			HTTPProxyURL:    proxyURL,
 			HelperEndpoints: opts.HelperEndpoints,
+			TestHandler:     handler.HandleTest,
 		},
-		yamlLoader,
-		handler.HandleTest,
 	)
 
 	addOutputs(runner, opts)
@@ -104,7 +102,7 @@ func addOutputs(runner *Runner, opts *RunWithTestingOpts) {
 	if opts.MainOutputFunc != nil {
 		runner.AddOutput(opts.MainOutputFunc)
 	} else {
-		runner.AddOutput(DefaultOutput)
+		runner.AddOutput(terminal.NewOutput(nil))
 	}
 
 	for _, o := range opts.Outputs {
@@ -112,14 +110,14 @@ func addOutputs(runner *Runner, opts *RunWithTestingOpts) {
 	}
 }
 
-type testingHandler struct {
+type TestingHandler struct {
 	t *testing.T
 }
 
-func (h testingHandler) HandleTest(test models.TestInterface, executeTest testExecutor) error {
+func (h *TestingHandler) HandleTest(test models.TestInterface, executor TestExecutor) error {
 	var returnErr error
 	h.t.Run(test.GetName(), func(t *testing.T) {
-		result, err := executeTest(test)
+		result, err := executor(test)
 		if err != nil {
 			if errors.Is(err, errTestSkipped) || errors.Is(err, errTestBroken) {
 				t.Skip()
