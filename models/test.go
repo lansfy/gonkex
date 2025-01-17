@@ -36,6 +36,8 @@ type TestInterface interface {
 	GetRequest() string
 	GetForm() *Form
 
+	GetMeta() map[string]interface{}
+
 	GetStatus() string
 	GetResponses() map[int]string
 	GetResponse(code int) (string, bool)

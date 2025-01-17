@@ -123,6 +123,10 @@ func (t *Test) Fixtures() []string {
 	return t.FixtureFiles
 }
 
+func (t *Test) GetMeta() map[string]interface{} {
+	return t.Meta
+}
+
 func (t *Test) ServiceMocks() map[string]interface{} {
 	return t.MocksDefinition
 }
