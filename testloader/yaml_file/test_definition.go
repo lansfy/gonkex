@@ -31,6 +31,7 @@ type TestDefinition struct {
 	DbResponseTmpl           []string                  `json:"dbResponse" yaml:"dbResponse"`
 	DatabaseChecks           []DatabaseCheck           `json:"dbChecks" yaml:"dbChecks"`
 	RetryPolicy              retryPolicy               `json:"retryPolicy" yaml:"retryPolicy"`
+	Meta                     map[string]interface{}    `json:"meta" yaml:"meta"`
 }
 
 type CaseData struct {
