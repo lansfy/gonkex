@@ -33,6 +33,7 @@ type loadedTable struct {
 }
 
 type loadContext struct {
+	location       string
 	files          map[string]bool
 	tables         []loadedTable
 	refsDefinition map[string]tableRow
@@ -41,6 +42,7 @@ type loadContext struct {
 
 func LoadFixtures(dialect SQLType, db *sql.DB, location string, names []string) error {
 	ctx := &loadContext{
+		location:       location,
 		files:          map[string]bool{},
 		refsDefinition: map[string]tableRow{},
 		refsInserted:   map[string]tableRow{},
@@ -48,7 +50,7 @@ func LoadFixtures(dialect SQLType, db *sql.DB, location string, names []string) 
 
 	// gather data from files
 	for _, name := range names {
-		err := ctx.loadFile(location, name)
+		err := ctx.loadFile(name)
 		if err != nil {
 			return fmt.Errorf("parse file for fixture %q: %w", name, err)
 		}
@@ -93,8 +95,8 @@ func findFixturePath(location, name string) (string, error) {
 	return "", err
 }
 
-func (ctx *loadContext) loadFile(location, name string) error {
-	file, err := findFixturePath(location, name)
+func (ctx *loadContext) loadFile(name string) error {
+	file, err := findFixturePath(ctx.location, name)
 	if err != nil {
 		return err
 	}
@@ -110,10 +112,10 @@ func (ctx *loadContext) loadFile(location, name string) error {
 		return err
 	}
 
-	return ctx.loadYml(location, data)
+	return ctx.loadYml(data)
 }
 
-func (ctx *loadContext) loadYml(location string, data []byte) error {
+func (ctx *loadContext) loadYml(data []byte) error {
 	// read yml into struct
 	var loadedFixture fixture
 	if err := yaml.Unmarshal(data, &loadedFixture); err != nil {
@@ -122,7 +124,7 @@ func (ctx *loadContext) loadYml(location string, data []byte) error {
 
 	// load inherits
 	for _, inheritFile := range loadedFixture.Inherits {
-		if err := ctx.loadFile(location, inheritFile); err != nil {
+		if err := ctx.loadFile(inheritFile); err != nil {
 			return err
 		}
 	}
