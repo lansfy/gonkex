@@ -9,13 +9,13 @@ type checkersList struct {
 	children []checker.CheckerInterface
 }
 
-func (l *checkersList) OnTestStart(v models.TestInterface) error {
+func (l *checkersList) BeforeTest(v models.TestInterface) error {
 	for _, child := range l.children {
 		ex, ok := child.(checker.ExtendedCheckerInterface)
 		if !ok {
 			continue
 		}
-		err := ex.OnTestStart(v)
+		err := ex.BeforeTest(v)
 		if err != nil {
 			return err
 		}

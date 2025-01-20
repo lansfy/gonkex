@@ -16,6 +16,6 @@ type CheckerInterface interface {
 }
 
 type ExtendedCheckerInterface interface {
-	OnTestStart(models.TestInterface) error
+	BeforeTest(models.TestInterface) error
 	Check(models.TestInterface, *models.Result) ([]error, error)
 }
