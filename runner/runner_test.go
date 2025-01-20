@@ -1,7 +1,10 @@
 package runner
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,17 +14,18 @@ import (
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/testloader/yaml_file"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func testServerRedirect() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/redirect-url", http.StatusFound)
-	}))
+type serverWithRedirect struct{}
+
+func (s *serverWithRedirect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/redirect-url", http.StatusFound)
 }
 
 func Test_dontFollowRedirects(t *testing.T) {
-	srv := testServerRedirect()
+	srv := httptest.NewServer(&serverWithRedirect{})
 	defer srv.Close()
 
 	RunWithTesting(t, srv.URL, &RunWithTestingOpts{
@@ -92,4 +96,53 @@ func Test_retries(t *testing.T) {
 			}
 		})
 	}
+}
+
+type variablesServer struct {
+	t       *testing.T
+	counter int
+}
+
+func (s *variablesServer) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	s.counter++
+	requestBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		assert.NoError(s.t, err)
+		return
+	}
+
+	_ = r.Body.Close()
+
+	var data struct {
+		Counter     int `json:"counter"`
+		EvenCounter int `json:"even_counter"`
+	}
+
+	decoder := json.NewDecoder(bytes.NewBuffer(requestBytes))
+	decoder.DisallowUnknownFields()
+	err = decoder.Decode(&data)
+	if err != nil {
+		assert.NoError(s.t, err)
+		return
+	}
+
+	assert.Equal(s.t, s.counter, data.Counter)
+	assert.Equal(s.t, 100+s.counter/2, data.EvenCounter)
+
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusOK)
+	content := fmt.Sprintf(`{"counter":%d, "even_counter":%d}`, s.counter, 100+s.counter/2)
+	_, err = rw.Write([]byte(content))
+	assert.NoError(s.t, err)
+}
+
+func Test_variablesSubstitution(t *testing.T) {
+	srv := httptest.NewServer(&variablesServer{
+		t: t,
+	})
+	defer srv.Close()
+
+	RunWithTesting(t, srv.URL, &RunWithTestingOpts{
+		TestsDir: "testdata/variables/case-substitution.yaml",
+	})
 }

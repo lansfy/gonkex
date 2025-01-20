@@ -1,0 +1,28 @@
+- name: test case variables
+  method: POST
+  comparisonParams:
+    disallowExtraFields: true
+  request: |
+    {
+      "counter": {{ $counter_value }},
+      "even_counter": {{ $var1_value }}
+    }
+  response:
+    200: |
+      {
+        "counter": {{ $counter_value }},
+        "even_counter": {{ $var1_value }}
+      }
+  variables:
+    var1_value: "100"
+  cases:
+    - variables:
+        counter_value: "1"
+    - variables:
+        counter_value: "2"
+        var1_value: "101"
+    - variables:
+        counter_value: "3"
+    - variables:
+        counter_value: "4"
+        var1_value: "102"

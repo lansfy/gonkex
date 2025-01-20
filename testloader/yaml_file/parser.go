@@ -120,14 +120,6 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 
 	var err error
 
-	requestTmpl := testDefinition.RequestTmpl
-	beforeScriptPathTmpl := testDefinition.BeforeScriptParams.PathTmpl
-	afterRequestScriptPathTmpl := testDefinition.AfterRequestScriptParams.PathTmpl
-	requestURLTmpl := testDefinition.RequestURL
-	queryParamsTmpl := testDefinition.QueryParams
-	headersValTmpl := testDefinition.HeadersVal
-	cookiesValTmpl := testDefinition.CookiesVal
-	responseHeadersTmpl := testDefinition.ResponseHeaders
 	combinedVariables := map[string]string{}
 
 	if testDefinition.Variables != nil {
@@ -147,27 +139,27 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 		}
 
 		// substitute RequestArgs to different parts of request
-		test.RequestURL, err = substituteArgs(requestURLTmpl, testCase.RequestArgs)
+		test.RequestURL, err = substituteArgs(testDefinition.RequestURL, testCase.RequestArgs)
 		if err != nil {
 			return nil, err
 		}
 
-		test.Request, err = substituteArgs(requestTmpl, testCase.RequestArgs)
+		test.Request, err = substituteArgs(testDefinition.RequestTmpl, testCase.RequestArgs)
 		if err != nil {
 			return nil, err
 		}
 
-		test.QueryParams, err = substituteArgs(queryParamsTmpl, testCase.RequestArgs)
+		test.QueryParams, err = substituteArgs(testDefinition.QueryParams, testCase.RequestArgs)
 		if err != nil {
 			return nil, err
 		}
 
-		test.HeadersVal, err = substituteArgsToMap(headersValTmpl, testCase.RequestArgs)
+		test.HeadersVal, err = substituteArgsToMap(testDefinition.HeadersVal, testCase.RequestArgs)
 		if err != nil {
 			return nil, err
 		}
 
-		test.CookiesVal, err = substituteArgsToMap(cookiesValTmpl, testCase.RequestArgs)
+		test.CookiesVal, err = substituteArgsToMap(testDefinition.CookiesVal, testCase.RequestArgs)
 		if err != nil {
 			return nil, err
 		}
@@ -189,7 +181,7 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 		}
 
 		test.ResponseHeaders = make(map[int]map[string]string)
-		for status, respHeaders := range responseHeadersTmpl {
+		for status, respHeaders := range testDefinition.ResponseHeaders {
 			args, ok := testCase.ResponseArgs[status]
 			if ok {
 				// found args for response status
@@ -203,12 +195,12 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 			}
 		}
 
-		test.BeforeScript, err = substituteArgs(beforeScriptPathTmpl, testCase.BeforeScriptArgs)
+		test.BeforeScript, err = substituteArgs(testDefinition.BeforeScriptParams.PathTmpl, testCase.BeforeScriptArgs)
 		if err != nil {
 			return nil, err
 		}
 
-		test.AfterRequestScript, err = substituteArgs(afterRequestScriptPathTmpl, testCase.AfterRequestScriptArgs)
+		test.AfterRequestScript, err = substituteArgs(testDefinition.AfterRequestScriptParams.PathTmpl, testCase.AfterRequestScriptArgs)
 		if err != nil {
 			return nil, err
 		}
@@ -220,7 +212,7 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 				return nil, fmt.Errorf("variable %q has non-string value %v", key, value)
 			}
 		}
-		test.CombinedVariables = combinedVariables
+		test.CombinedVariables = cloneVariables(combinedVariables)
 
 		var tmpDbQuery string
 		var tmpDbResponse []string
@@ -285,4 +277,12 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 	}
 
 	return tests, nil
+}
+
+func cloneVariables(s map[string]string) map[string]string {
+	clone := map[string]string{}
+	for k, v := range s {
+		clone[k] = v
+	}
+	return clone
 }
