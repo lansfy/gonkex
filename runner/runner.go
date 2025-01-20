@@ -113,9 +113,6 @@ func (r *Runner) Run() error {
 }
 
 func (r *Runner) executeTestWithRetryPolicy(v models.TestInterface) (*models.Result, error) {
-	var testResult *models.Result
-	var err error
-
 	retryPolicy := v.GetRetryPolicy()
 
 	retryCount := retryPolicy.Attempts()
@@ -131,7 +128,17 @@ func (r *Runner) executeTestWithRetryPolicy(v models.TestInterface) (*models.Res
 		successRequired = 1
 	}
 
-	successCount := 0
+	for _, o := range r.output {
+		if exo, ok := o.(output.ExtendedOutputInterface); ok {
+			if err := exo.BeforeTest(v); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	var testResult *models.Result
+	var err error
+	var successCount int
 	for i := 0; i < retryCount+1; i++ {
 		if i != 0 {
 			time.Sleep(retryPolicy.Delay())
