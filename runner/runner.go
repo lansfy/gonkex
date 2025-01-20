@@ -176,7 +176,7 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		}
 	}
 
-	err := r.checkers.OnTestStart(v)
+	err := r.checkers.BeforeTest(v)
 	if err != nil {
 		if errors.Is(err, checker.ErrTestSkipped) || errors.Is(err, checker.ErrTestBroken) {
 			return &models.Result{Test: v}, err
