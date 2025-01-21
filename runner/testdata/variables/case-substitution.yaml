@@ -13,6 +13,11 @@
         "counter": {{ $counter_value }},
         "even_counter": {{ $var1_value }}
       }
+  mocks:
+    subservice:
+      strategy: constant
+      body: "{{ $counter_value }}"
+      statusCode: 200
   variables:
     var1_value: "100"
   cases:

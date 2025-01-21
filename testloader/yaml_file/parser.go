@@ -133,6 +133,7 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 			Filename:       filePath,
 		}
 		test.Name = fmt.Sprintf("%s #%d", test.Name, caseIdx+1)
+		test.IsPartOfCase = true
 
 		if testCase.Description != "" {
 			test.Description = testCase.Description
@@ -285,4 +286,23 @@ func cloneVariables(s map[string]string) map[string]string {
 		clone[k] = v
 	}
 	return clone
+}
+
+func deepClone(src interface{}) interface{} {
+	switch v := src.(type) {
+	case map[interface{}]interface{}:
+		clone := map[interface{}]interface{}{}
+		for key, value := range v {
+			clone[key] = deepClone(value)
+		}
+		return clone
+	case []interface{}:
+		clone := []interface{}{}
+		for idx := range v {
+			clone = append(clone, deepClone(v[idx]))
+		}
+		return clone
+	default:
+		return src
+	}
 }
