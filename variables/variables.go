@@ -7,33 +7,27 @@ import (
 )
 
 type Variables struct {
-	variables variables
+	variables map[string]*Variable
 }
-
-type variables map[string]*Variable
 
 var variableRx = regexp.MustCompile(`{{\s*\$(\w+)\s*}}`)
 
 func New() *Variables {
 	return &Variables{
-		variables: make(variables),
+		variables: make(map[string]*Variable),
 	}
 }
 
 // Load adds new variables and replaces values of existing
 func (vs *Variables) Load(variables map[string]string) {
 	for n, v := range variables {
-		variable := NewVariable(n, v)
-
-		vs.variables[n] = variable
+		vs.variables[n] = NewVariable(n, v)
 	}
 }
 
 // Load adds new variables and replaces values of existing
 func (vs *Variables) Set(name, value string) {
-	v := NewVariable(name, value)
-
-	vs.variables[name] = v
+	vs.variables[name] = NewVariable(name, value)
 }
 
 func (vs *Variables) Apply(t models.TestInterface) models.TestInterface {
@@ -79,16 +73,13 @@ func (vs *Variables) perform(str string) string {
 }
 
 func (vs *Variables) get(name string) *Variable {
-	v := vs.variables[name]
-	if v == nil {
-		v = NewFromEnvironment(name)
+	if v := vs.variables[name]; v != nil {
+		return v
 	}
-
-	return v
+	return NewFromEnvironment(name)
 }
 
 func (vs *Variables) Add(v *Variable) *Variables {
 	vs.variables[v.name] = v
-
 	return vs
 }

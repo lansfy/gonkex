@@ -101,6 +101,9 @@ func (m *Mocks) GetNames() []string {
 }
 
 func (m *Mocks) LoadDefinitions(loader Loader, definitions map[string]interface{}) error {
+	if m == nil && len(definitions) != 0 {
+		return fmt.Errorf("object Mocks has nil value, but mock required for test")
+	}
 	for serviceName, definition := range definitions {
 		service := m.Service(serviceName)
 		if service == nil {

@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/lansfy/gonkex/endpoint"
+	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/testloader/yaml_file"
 
@@ -99,8 +100,9 @@ func Test_retries(t *testing.T) {
 }
 
 type variablesServer struct {
-	t       *testing.T
-	counter int
+	t          *testing.T
+	counter    int
+	subservice string
 }
 
 func (s *variablesServer) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
@@ -129,6 +131,20 @@ func (s *variablesServer) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	assert.Equal(s.t, s.counter, data.Counter)
 	assert.Equal(s.t, 100+s.counter/2, data.EvenCounter)
 
+	resp, err := http.Get(fmt.Sprintf("http://%s/", s.subservice))
+	if err != nil {
+		assert.NoError(s.t, err)
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		assert.NoError(s.t, err)
+		return
+	}
+
+	assert.Equal(s.t, fmt.Sprintf("%d", s.counter), string(body))
+
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 	content := fmt.Sprintf(`{"counter":%d, "even_counter":%d}`, s.counter, 100+s.counter/2)
@@ -137,12 +153,19 @@ func (s *variablesServer) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 }
 
 func Test_variablesSubstitution(t *testing.T) {
+	m := mocks.NewNop("subservice")
+	err := m.Start()
+	require.NoError(t, err)
+	defer m.Shutdown()
+
 	srv := httptest.NewServer(&variablesServer{
-		t: t,
+		subservice: m.Service("subservice").ServerAddr(),
+		t:          t,
 	})
 	defer srv.Close()
 
 	RunWithTesting(t, srv.URL, &RunWithTestingOpts{
 		TestsDir: "testdata/variables/case-substitution.yaml",
+		Mocks:    m,
 	})
 }

@@ -283,16 +283,15 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		result.Errors = append(result.Errors, errs...)
 	}
 
-	if err = r.setVariablesFromResponse(v, result.ResponseContentType, bodyStr, resp.StatusCode); err != nil {
-		return nil, err
-	}
-
-	r.config.Variables.Load(v.GetCombinedVariables())
-	v = r.config.Variables.Apply(v)
-
 	errs, err := r.checkers.Check(v, result)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(errs) == 0 {
+		if err = r.setVariablesFromResponse(v, result.ResponseContentType, bodyStr, resp.StatusCode); err != nil {
+			return nil, err
+		}
 	}
 
 	result.Errors = append(result.Errors, errs...)

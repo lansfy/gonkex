@@ -72,8 +72,9 @@ type Test struct {
 
 	DbChecks []models.DatabaseCheck
 
-	FirstTest bool
-	LastTest  bool
+	FirstTest    bool
+	LastTest     bool
+	IsPartOfCase bool
 }
 
 func (t *Test) ToQuery() string {
@@ -198,6 +199,12 @@ func (t *Test) GetFileName() string {
 
 func (t *Test) Clone() models.TestInterface {
 	res := *t
+	if t.MocksDefinition != nil {
+		res.MocksDefinition = map[string]interface{}{}
+		for s := range t.MocksDefinition {
+			res.MocksDefinition[s] = deepClone(t.MocksDefinition[s])
+		}
+	}
 	return &res
 }
 
@@ -245,4 +252,8 @@ func (t *Test) FirstTestInFile() bool {
 
 func (t *Test) LastTestInFile() bool {
 	return t.LastTest
+}
+
+func (t *Test) PartOfCase() bool {
+	return t.IsPartOfCase
 }
