@@ -23,7 +23,7 @@ type ServiceMock struct {
 
 func NewServiceMock(serviceName string, mock *Definition) *ServiceMock {
 	if mock == nil {
-		mock = NewDefinition("$", nil, NewFailReply(), CallsNoConstraint)
+		mock = NewDefinition("$", nil, NewFailReply(), CallsNoConstraint, OrderNoValue)
 	}
 	return &ServiceMock{
 		mock:              mock,

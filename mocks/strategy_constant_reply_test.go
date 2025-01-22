@@ -89,7 +89,7 @@ body: "Multi-header test"`,
 
 func Test_ConstantReplyStrategy(t *testing.T) {
 	strategy := NewConstantReplyWithCode([]byte("somebodycontent"), 200, nil)
-	m := NewServiceMock("mytest", NewDefinition("$", nil, strategy, CallsNoConstraint))
+	m := NewServiceMock("mytest", NewDefinition("$", nil, strategy, CallsNoConstraint, OrderNoValue))
 	err := m.StartServer()
 	require.NoError(t, err)
 

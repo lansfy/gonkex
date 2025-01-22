@@ -22,12 +22,14 @@ func NewYamlLoader(opts *YamlLoaderOpts) Loader {
 		funcs = opts.TemplateReplyFuncs
 	}
 	return &loaderImpl{
-		TemplateReplyFuncs: funcs,
+		templateReplyFuncs: funcs,
+		order:              newOrderChecker(),
 	}
 }
 
 type loaderImpl struct {
-	TemplateReplyFuncs template.FuncMap
+	templateReplyFuncs template.FuncMap
+	order              *orderChecker
 }
 
 func (l *loaderImpl) LoadDefinition(rawDef interface{}) (*Definition, error) {
@@ -69,6 +71,7 @@ func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definitio
 		"requestConstraints",
 		"strategy",
 		"calls",
+		"order",
 	}
 
 	// load reply strategy
@@ -89,11 +92,17 @@ func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definitio
 	if err != nil {
 		return nil, wrap(err)
 	}
+	orderValue, err := getOptionalIntKey(def, "order", OrderNoValue)
+	if err != nil {
+		return nil, wrap(err)
+	}
 	if err := validateMapKeys(def, ak); err != nil {
 		return nil, wrap(err)
 	}
 
-	return NewDefinition(path, requestConstraints, replyStrategy, callsConstraint), nil
+	res := NewDefinition(path, requestConstraints, replyStrategy, callsConstraint, orderValue)
+	res.order = l.order
+	return res, nil
 }
 
 func (l *loaderImpl) loadStrategy(path, strategyName string, definition map[interface{}]interface{},
