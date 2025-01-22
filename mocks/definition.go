@@ -19,25 +19,37 @@ type Definition struct {
 	mutex              sync.Mutex
 	calls              int
 	callsConstraint    int
+	order              *orderChecker
+	orderValue         int
 }
 
-func NewDefinition(path string, constraints []verifier, strategy ReplyStrategy, callsConstraint int) *Definition {
+func NewDefinition(path string, constraints []verifier, strategy ReplyStrategy, callsConstraint int, orderValue int) *Definition {
 	return &Definition{
 		path:               path,
 		requestConstraints: constraints,
 		replyStrategy:      strategy,
 		callsConstraint:    callsConstraint,
+		orderValue:         orderValue,
 	}
 }
 
 func (d *Definition) Execute(w http.ResponseWriter, r *http.Request) []error {
+	var err error
+
 	d.mutex.Lock()
 	d.calls++
 	d.mutex.Unlock()
 
+	if d.order != nil {
+		err = d.order.Update(d.orderValue)
+	}
+
 	errs := verifyRequestConstraints(d.requestConstraints, r)
 	if d.replyStrategy != nil {
 		errs = append(errs, d.replyStrategy.HandleRequest(w, r)...)
+	}
+	if err != nil {
+		errs = append(errs, err)
 	}
 	return errs
 }
@@ -45,6 +57,9 @@ func (d *Definition) Execute(w http.ResponseWriter, r *http.Request) []error {
 func (d *Definition) ResetRunningContext() {
 	if s, ok := d.replyStrategy.(contextAwareStrategy); ok {
 		s.ResetRunningContext()
+	}
+	if d.order != nil {
+		d.order.Reset()
 	}
 	d.mutex.Lock()
 	d.calls = 0
@@ -54,6 +69,9 @@ func (d *Definition) ResetRunningContext() {
 func (d *Definition) EndRunningContext() []error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
+	if d.order != nil {
+		d.order.Reset()
+	}
 	var errs []error
 	if s, ok := d.replyStrategy.(contextAwareStrategy); ok {
 		errs = s.EndRunningContext()

@@ -51,6 +51,9 @@ func getOptionalIntKey(def map[interface{}]interface{}, name string, defaultValu
 		if !ok {
 			return 0, wrongTypeError(name, "integer")
 		}
+		if value < 0 {
+			return 0, fmt.Errorf("value for the key '%s' cannot be negative", name)
+		}
 		return value, nil
 	}
 	return defaultValue, nil

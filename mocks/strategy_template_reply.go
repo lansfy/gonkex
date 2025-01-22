@@ -22,7 +22,7 @@ func (l *loaderImpl) loadTemplateReplyStrategy(def map[interface{}]interface{}) 
 	if err != nil {
 		return nil, err
 	}
-	return NewTemplateReply(body, statusCode, headers, l.TemplateReplyFuncs)
+	return NewTemplateReply(body, statusCode, headers, l.templateReplyFuncs)
 }
 
 func NewTemplateReply(content string, statusCode int, headers map[string]string,

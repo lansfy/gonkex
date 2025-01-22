@@ -102,10 +102,3 @@ func NewNotEqualError(pattern, entity string, expected, actual interface{}) *Err
 	pattern += "\n     expected: %s\n       actual: %s"
 	return NewError(pattern, Cyan(entity), Green(expected), Red(actual))
 }
-
-func NewNotEqualError2(before, entity, after string, expected, actual interface{}) *Error {
-	parts := []Part{
-		None(before), Cyan(entity), None(after + "\n     expected: "), Green(expected), None("\n       actual: "), Red(actual),
-	}
-	return NewError("", parts...)
-}
