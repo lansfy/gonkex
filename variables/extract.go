@@ -28,30 +28,29 @@ func FromResponse(varsToSet map[string]string, body string, isJSON bool) (vars *
 func fromJSON(names, paths []string, body string) (*Variables, error) {
 	vars := New()
 
-	results := gjson.GetMany(body, paths...)
-
-	for n, res := range results {
+	for n, res := range gjson.GetMany(body, paths...) {
 		if !res.Exists() {
 			return nil,
 				fmt.Errorf("path '%s' does not exist in given json", paths[n])
 		}
-
-		vars.Add(NewVariable(names[n], res.String()))
+		vars.Set(names[n], res.String())
 	}
 
 	return vars, nil
 }
 
 func fromPlainText(names []string, body string) (*Variables, error) {
-	if len(names) != 1 {
-		return nil,
-			fmt.Errorf(
-				"count of variables for plain-text response should be 1, %d given",
-				len(names),
-			)
+	if len(names) == 1 {
+		vars := New()
+		vars.Set(names[0], body)
+		return vars, nil
 	}
 
-	return New().Add(NewVariable(names[0], body)), nil
+	return nil,
+		fmt.Errorf(
+			"count of variables for plain-text response should be 1, %d given",
+			len(names),
+		)
 }
 
 // split returns keys and values of given map as separate slices

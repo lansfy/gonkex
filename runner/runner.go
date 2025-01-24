@@ -192,7 +192,11 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	}
 
 	r.config.Variables.Load(v.GetCombinedVariables())
-	v = r.config.Variables.Apply(v)
+
+	v = v.Clone()
+	if r.config.Variables != nil {
+		v.ApplyVariables(r.config.Variables.Substitute)
+	}
 
 	if r.config.DB != nil && len(v.Fixtures()) != 0 {
 		err = r.config.DB.LoadFixtures(r.config.FixturesDir, v.Fixtures())

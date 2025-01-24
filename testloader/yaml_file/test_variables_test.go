@@ -26,7 +26,8 @@ func TestParse_EniromentVariables(t *testing.T) {
 	testOriginal := &tests[0]
 
 	vars := variables.New()
-	testApplied := vars.Apply(testOriginal)
+	testApplied := testOriginal.Clone()
+	testApplied.ApplyVariables(vars.Substitute)
 
 	assert.Equal(t, "/some/path/path_value", testApplied.Path())
 
@@ -45,7 +46,8 @@ func TestParseTestsWithVariables(t *testing.T) {
 	vars.Load(testOriginal.GetVariables())
 	assert.NoError(t, err)
 
-	testApplied := vars.Apply(testOriginal)
+	testApplied := testOriginal.Clone()
+	testApplied.ApplyVariables(vars.Substitute)
 
 	// check that original test is not changed
 	checkOriginal(t, testOriginal, false)
@@ -63,7 +65,8 @@ func TestParseTestsWithCombinedVariables(t *testing.T) {
 	vars.Load(testOriginal.GetCombinedVariables())
 	assert.NoError(t, err)
 
-	testApplied := vars.Apply(testOriginal)
+	testApplied := testOriginal.Clone()
+	testApplied.ApplyVariables(vars.Substitute)
 
 	// check that original test is not changed
 	checkOriginal(t, testOriginal, true)

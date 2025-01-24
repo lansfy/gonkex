@@ -1,85 +1,70 @@
 package variables
 
 import (
+	"os"
 	"regexp"
-
-	"github.com/lansfy/gonkex/models"
+	"strings"
 )
-
-type Variables struct {
-	variables map[string]*Variable
-}
 
 var variableRx = regexp.MustCompile(`{{\s*\$(\w+)\s*}}`)
 
+type Variables struct {
+	variables map[string]string
+}
+
 func New() *Variables {
 	return &Variables{
-		variables: make(map[string]*Variable),
+		variables: make(map[string]string),
 	}
+}
+
+// Set adds new variable (or replace existing)
+func (vs *Variables) Set(name, value string) {
+	vs.variables[name] = value
 }
 
 // Load adds new variables and replaces values of existing
 func (vs *Variables) Load(variables map[string]string) {
 	for n, v := range variables {
-		vs.variables[n] = NewVariable(n, v)
+		vs.variables[n] = v
 	}
-}
-
-// Load adds new variables and replaces values of existing
-func (vs *Variables) Set(name, value string) {
-	vs.variables[name] = NewVariable(name, value)
-}
-
-func (vs *Variables) Apply(t models.TestInterface) models.TestInterface {
-	newTest := t.Clone()
-	if vs != nil {
-		newTest.ApplyVariables(vs.perform)
-	}
-	return newTest
 }
 
 // Merge adds given variables to set or overrides existed
 func (vs *Variables) Merge(vars *Variables) {
-	for k, v := range vars.variables {
-		vs.variables[k] = v
-	}
+	vs.Load(vars.variables)
 }
 
+// Len returns number of variables in storage
 func (vs *Variables) Len() int {
 	return len(vs.variables)
 }
 
-func usedVariables(str string) (res []string) {
-	matches := variableRx.FindAllStringSubmatch(str, -1)
-	for _, match := range matches {
-		res = append(res, match[1])
-	}
-
-	return res
-}
-
-// perform replaces all variables in str to their values
-// and returns result string
-func (vs *Variables) perform(str string) string {
-	varNames := usedVariables(str)
-
-	for _, k := range varNames {
-		if v := vs.get(k); v != nil {
-			str = v.Perform(str)
+// Substitute replaces all variables in str to their values and returns result string
+func (vs *Variables) Substitute(s string) string {
+	return variableRx.ReplaceAllStringFunc(s, func(found string) string {
+		name := getVarName(found)
+		if name == "" {
+			return found
 		}
-	}
-
-	return str
+		if val, ok := vs.get(name); ok {
+			return val
+		}
+		return found
+	})
 }
 
-func (vs *Variables) get(name string) *Variable {
-	if v := vs.variables[name]; v != nil {
-		return v
+func (vs *Variables) get(name string) (string, bool) {
+	val, ok := vs.variables[name]
+	if ok {
+		return val, ok
 	}
-	return NewFromEnvironment(name)
+
+	return os.LookupEnv(name)
 }
 
-func (vs *Variables) Add(v *Variable) *Variables {
-	vs.variables[v.name] = v
-	return vs
+func getVarName(part string) string {
+	part = strings.TrimSpace(part[2 : len(part)-2])
+	part = part[1:]
+	return part
 }
