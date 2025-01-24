@@ -55,7 +55,7 @@ func BackendPost(originBody string) error {
 		return err
 	}
 
-	url := fmt.Sprintf("http://%s/process", os.Getenv("BACKEND_ADDR"))
+	url := fmt.Sprintf("http://%s/process", os.Getenv("GONKEX_MOCK_BACKEND"))
 	res, err := http.Post(url, "application/json", bytes.NewReader(jsonParams))
 	if err != nil {
 		return err

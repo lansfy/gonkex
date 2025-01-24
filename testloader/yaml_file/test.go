@@ -72,9 +72,9 @@ type Test struct {
 
 	DbChecks []models.DatabaseCheck
 
-	FirstTest    bool
-	LastTest     bool
-	IsPartOfCase bool
+	FirstTest   bool
+	LastTest    bool
+	IsOneOfCase bool
 }
 
 func (t *Test) ToQuery() string {
@@ -254,6 +254,6 @@ func (t *Test) LastTestInFile() bool {
 	return t.LastTest
 }
 
-func (t *Test) PartOfCase() bool {
-	return t.IsPartOfCase
+func (t *Test) OneOfCase() bool {
+	return t.IsOneOfCase
 }

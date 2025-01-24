@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http/httptest"
-	"os"
 	"testing"
 	"text/template"
 
@@ -28,7 +27,6 @@ func TestProxy(t *testing.T) {
 	}
 	defer m.Shutdown()
 
-	os.Setenv("BACKEND_ADDR", m.Service("backend").ServerAddr())
 	initServer()
 	srv := httptest.NewServer(nil)
 

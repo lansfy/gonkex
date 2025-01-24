@@ -133,7 +133,7 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 			Filename:       filePath,
 		}
 		test.Name = fmt.Sprintf("%s #%d", test.Name, caseIdx+1)
-		test.IsPartOfCase = true
+		test.IsOneOfCase = true
 
 		if testCase.Description != "" {
 			test.Description = testCase.Description
