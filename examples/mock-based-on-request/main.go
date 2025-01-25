@@ -30,7 +30,7 @@ func Do(w http.ResponseWriter, r *http.Request) {
 	params4 := url.Values{"value": []string{"4"}}.Encode()
 
 	doRequest := func(params string, method string, reqBody []byte) (int64, error) {
-		link := fmt.Sprintf("http://%s/request?%s", os.Getenv("BACKEND_ADDR"), params)
+		link := fmt.Sprintf("http://%s/request?%s", os.Getenv("GONKEX_MOCK_BACKEND"), params)
 
 		req, err := http.NewRequest(method, link, bytes.NewReader(reqBody))
 		if err != nil {

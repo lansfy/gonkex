@@ -40,7 +40,7 @@ func BackendPost() error {
         }
       }
     }`
-	url := fmt.Sprintf("http://%s/process", os.Getenv("BACKEND_ADDR"))
+	url := fmt.Sprintf("http://%s/process", os.Getenv("GONKEX_MOCK_BACKEND"))
 	res, err := http.Post(url, "application/json", strings.NewReader(body))
 	if err != nil {
 		return err

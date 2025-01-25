@@ -65,7 +65,7 @@ type TestInterface interface {
 	GetFileName() string
 	FirstTestInFile() bool
 	LastTestInFile() bool
-	PartOfCase() bool
+	OneOfCase() bool
 
 	SetStatus(status string)
 

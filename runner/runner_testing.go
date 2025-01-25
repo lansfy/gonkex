@@ -23,23 +23,37 @@ import (
 )
 
 type RunWithTestingOpts struct {
-	TestsDir    string
+	// TestsDir is the directory where test definitions or files are located.
+	TestsDir string
+	// FixturesDir is the directory where database or data fixtures are stored for loading during tests.
 	FixturesDir string
+	// EnvFilePath is the path to the environment configuration file used during tests.
 	EnvFilePath string
 
-	Mocks          *mocks.Mocks
-	DB             storage.StorageInterface
+	// Mocks contains the mock implementations for dependencies to be used during testing.
+	Mocks *mocks.Mocks
+	// DB is the storage interface used for interacting with the database during tests.
+	DB storage.StorageInterface
+	// MainOutputFunc is the primary output handler for the testing run.
 	MainOutputFunc output.OutputInterface
-	Outputs        []output.OutputInterface
-	Checkers       []checker.CheckerInterface
+	// Outputs is a collection of additional output handlers to process test results.
+	Outputs []output.OutputInterface
+	// Checkers is a list of custom checker interfaces for validating test results or conditions.
+	Checkers []checker.CheckerInterface
 
-	CustomClient       HTTPClient
-	HelperEndpoints    endpoint.EndpointMap
+	// CustomClient is a custom HTTP client used for making requests to the server during tests.
+	CustomClient HTTPClient
+	// HelperEndpoints is a map of helper endpoints available for facilitating tests.
+	HelperEndpoints endpoint.EndpointMap
+	// TemplateReplyFuncs contains a set of template functions for processing or customizing replies in tests.
 	TemplateReplyFuncs template.FuncMap
 }
 
-// RunWithTesting is a helper function the wraps the common Run and provides simple way
-// to configure Gonkex by filling the params structure.
+// RunWithTesting is a helper function that wraps the common Run function and provides a simple way
+// to configure Gonkex by populating the RunWithTestingOpts structure.
+// t: The testing object used for managing test cases.
+// serverURL: The URL of the server being tested.
+// opts: The configuration options for the test run.
 func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 	if opts.Mocks != nil {
 		registerMocksEnvironment(opts.Mocks)
@@ -63,7 +77,7 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 	yamlLoader := yaml_file.NewLoader(opts.TestsDir)
 	yamlLoader.SetFileFilter(os.Getenv("GONKEX_FILE_FILTER"))
 
-	handler := &TestingHandler{t}
+	handler := &testingHandler{t}
 	runner := New(
 		yamlLoader,
 		&RunnerOpts{
@@ -110,11 +124,11 @@ func addOutputs(runner *Runner, opts *RunWithTestingOpts) {
 	}
 }
 
-type TestingHandler struct {
+type testingHandler struct {
 	t *testing.T
 }
 
-func (h *TestingHandler) HandleTest(test models.TestInterface, executor TestExecutor) error {
+func (h *testingHandler) HandleTest(test models.TestInterface, executor TestExecutor) error {
 	var returnErr error
 	h.t.Run(test.GetName(), func(t *testing.T) {
 		result, err := executor(test)
