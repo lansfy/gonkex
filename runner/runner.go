@@ -275,6 +275,12 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		result.ResponseHeaders[name] = value
 	}
 
+	// make pause after request
+	pause = v.AfterRequestPause()
+	if pause > 0 {
+		time.Sleep(pause)
+	}
+
 	// launch script in cmd interface
 	if v.AfterRequestScriptPath() != "" {
 		if err = cmd_runner.CmdRun(v.AfterRequestScriptPath(), v.AfterRequestScriptTimeout()); err != nil {
