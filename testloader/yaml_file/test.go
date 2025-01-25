@@ -136,6 +136,10 @@ func (t *Test) Pause() time.Duration {
 	return t.PauseValue.Duration
 }
 
+func (t *Test) AfterRequestPause() time.Duration {
+	return t.AfterRequestPauseValue.Duration
+}
+
 func (t *Test) BeforeScriptPath() string {
 	return t.BeforeScript
 }

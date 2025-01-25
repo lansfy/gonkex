@@ -27,6 +27,7 @@ type TestDefinition struct {
 	FixtureFiles             []string                  `json:"fixtures" yaml:"fixtures"`
 	MocksDefinition          map[string]interface{}    `json:"mocks" yaml:"mocks"`
 	PauseValue               Duration                  `json:"pause" yaml:"pause"`
+	AfterRequestPauseValue   Duration                  `json:"afterRequestPause" yaml:"afterRequestPause"`
 	DbQueryTmpl              string                    `json:"dbQuery" yaml:"dbQuery"`
 	DbResponseTmpl           []string                  `json:"dbResponse" yaml:"dbResponse"`
 	DatabaseChecks           []DatabaseCheck           `json:"dbChecks" yaml:"dbChecks"`

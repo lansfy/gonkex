@@ -51,6 +51,7 @@ type TestInterface interface {
 	ServiceMocks() map[string]interface{}
 
 	Pause() time.Duration
+	AfterRequestPause() time.Duration
 
 	BeforeScriptPath() string
 	BeforeScriptTimeout() time.Duration
