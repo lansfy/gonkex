@@ -1,6 +1,6 @@
 ### Aerospike
 
-Fixtures for Aerospike are also supported. Add `DbType: fixtures.Aerospike` to runner's configuration if gonkey is used as library.
+Fixtures for Aerospike are also supported. Add `DbType: fixtures.Aerospike` to runner's configuration if gonkex is used as library.
 
 Fixtures files format is a bit different, yet the same basic principles applies:
 

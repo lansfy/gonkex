@@ -1,4 +1,4 @@
-package variables
+package runner
 
 import (
 	"testing"
@@ -63,16 +63,14 @@ func TestFromResponse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
-			got, err := FromResponse(tt.varsToSet, tt.body, tt.isJSON)
+			got, err := ExtractVariablesFromResponse(tt.varsToSet, tt.body, tt.isJSON)
 
 			if tt.wantErr != "" {
 				require.Error(t, err)
 				require.EqualError(t, err, tt.wantErr)
 			} else {
 				require.NoError(t, err)
-				wantVars := New()
-				wantVars.Load(tt.want)
-				require.Equal(t, wantVars, got)
+				require.Equal(t, tt.want, got)
 			}
 		})
 	}

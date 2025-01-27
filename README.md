@@ -107,18 +107,18 @@ func TestFuncCases(t *testing.T) {
 ```
 
 Externally written storage may be used for loading test data, if gonkex used as a library.
-To start using the custom loader, you need to import the custom module, that contains implementation of storage.StorageInterface interface.
+To start using the custom storage, you need to import the custom module, that contains implementation of storage.StorageInterface interface.
 
 The tests can be now ran with `go test`, for example: `go test ./...`.
 
 ## Test scenario example
 
 ```yaml
-- name: WHEN the list of orders is requested MUST successfully response
+- name: WHEN the list of orders is requested service MUST return selected order
   method: GET
   status: ""
   path: /jsonrpc/v2/order.getBriefList
-  query: ?id=550e8400-e29b-41d4-a716-446655440000&jsonrpc=2.0&user_id=00001
+  query: ?id=11111111-1111-1111-1111-aaaaaaaaaaaa&jsonrpc=2.0&user_id=00001
 
   fixtures:
     - order_0001
@@ -127,7 +127,7 @@ The tests can be now ran with `go test`, for example: `go test ./...`.
   response:
     200: |
       {
-        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "id": "11111111-1111-1111-1111-aaaaaaaaaaaa",
         "jsonrpc": "2.0",
         "result": {
           "data": [
@@ -143,7 +143,7 @@ The tests can be now ran with `go test`, for example: `go test ./...`.
         }
       }
 
-- name: WHEN one order is requested MUST response with user and sum
+- name: WHEN one order is requested service MUST response with user and order sum
   method: POST
   path: /jsonrpc/v2/order.getOrder
 
@@ -155,15 +155,10 @@ The tests can be now ran with `go test`, for example: `go test ./...`.
     sid: ZmEwZDkwYzgwMmQzMGIzOGIxODM3ZmFiOTGJhMzU=
     lid: AAAEAFu/TdhHBg7UAgA=
 
-  comparisonParams:
-    ignoreValues: false
-    ignoreArraysOrdering: false
-    disallowExtraFields: false
-
   request: |
     {
       "jsonrpc": "2.0",
-      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "id": "11111111-1111-1111-1111-aaaaaaaaaaaa",
       "method": "order.getOrder",
       "params": [
         {
@@ -172,10 +167,15 @@ The tests can be now ran with `go test`, for example: `go test ./...`.
       ]
     }
 
+  comparisonParams:
+    ignoreValues: false
+    ignoreArraysOrdering: false
+    disallowExtraFields: false
+
   response:
     200: |
       {
-        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "id": "11111111-1111-1111-1111-aaaaaaaaaaaa",
         "jsonrpc": "2.0",
         "result": {
           "user_id": {{ .userId }},
@@ -206,8 +206,10 @@ The tests can be now ran with `go test`, for example: `go test ./...`.
           amount: 72000
 ```
 
+Prefix "?" in query field is optional.
+
 As you can see in this example, you can use Regexp for checking response body.
-It can be used for all body (if it's plaint text):
+It can be used for whole body (if it's plain text):
 
 ```yaml
     response:
@@ -217,33 +219,23 @@ It can be used for all body (if it's plaint text):
 or for elements of map/array (if it's JSON):
 
 ```yaml
-    response:
-        200: |
-          {
-            "id": "$matchRegexp([\\w-]+)",
-            "jsonrpc": "$matchRegexp([12].0)",
-            "result": [
-              "data": [
-                  "$matchRegexp(ORDER[0]{3}[0-9])",
-                  "$matchRegexp(ORDER[0]{3}[0-9])"
-              ],
-            ]
-          }
+  response:
+    200: >
+      {
+        "id": "$matchRegexp([\\w-]+)",
+        "jsonrpc": "$matchRegexp([12].0)",
+        "result": [
+          "data": [
+              "$matchRegexp(ORDER[0]{3}[0-9])",
+              "$matchRegexp(ORDER[0]{3}[0-9])"
+          ]
+        ]
+      }
 ```
-
-Also, "?" in query is optional
-
-## Test status
-
-`status` - a parameter, for specially mark tests, can have following values:
-
-- `broken` - do not run test, only mark it as broken
-- `skipped` - do not run test, skip it
-- `focus` - run only this specific test, and mark all other tests with unset status as `skipped`
 
 ## HTTP-request
 
-`method` - a parameter for HTTP request type, the format is in the example above.
+`method` - a parameter for HTTP request type (e.g. "GET", "POST", "DELETE" and so on)
 
 `path` - a parameter for URL path, the format is in the example above.
 
@@ -256,6 +248,14 @@ Also, "?" in query is optional
 `response` - the HTTP response body for the specified HTTP status codes.
 
 `responseHeaders` - all HTTP response headers for the specified HTTP status codes.
+
+## Test status
+
+`status` - a parameter, for specially mark tests, can have following values:
+
+- `broken` - do not run test, only mark it as broken
+- `skipped` - do not run test, skip it
+- `focus` - run only this specific test, and mark all other tests with unset status as `skipped`
 
 ## Variables
 
@@ -294,10 +294,10 @@ Example:
           "message": "{{ $mockParam }}"
         }
       statusCode: 200
-  dbQuery: >
-    SELECT id, name FROM testing_tools WHERE id={{ $sqlQueryParam }}
-  dbResponse:
-    - '{"id": {{ $sqlResultParam }}, "name": "gonkex"}'
+  dbChecks:
+    - dbQuery: "SELECT id, name FROM testing_tools WHERE id={{ $sqlQueryParam }}"
+      dbResponse:
+        - '{"id": {{ $sqlResultParam }}, "name": "test"}'
 ```
 
 You can assign values to variables in the following ways (priorities are from top to bottom):
@@ -314,21 +314,16 @@ You can assign values to variables in the following ways (priorities are from to
 Example:
 
 ```yaml
-- method: "{{ $method }}"
-  path: "/some/path/{{ $pathPart }}"
-  variables:
-    reqParam: "reqParam_value"
-    method: "POST"
-    pathPart: "part_of_path"
-    query: "query_val"
-    header: "header_val"
-    resp: "resp_val"
-  query: "{{ $query }}"
+- method: "{{ $someVar }}"
+  path: "/some/path/{{ $someVar }}"
+  query: "{{ $someVar }}"
   headers:
-    header1: "{{ $header }}"
-  request: '{"reqParam": "{{ $reqParam }}"}'
+    header1: "{{ $someVar }}"
+  request: '{"reqParam": "{{ $someVar }}"}'
   response:
-    200: "{{ $resp }}"
+    200: "{{ $someVar }}"
+  variables:
+    someVar: "someValue"
 ```
 
 #### From the response of the previous test
@@ -340,18 +335,18 @@ Example:
 - name: "get_last_post_id"
   ...
   variables_to_set:
-          200: "id"
+    200: "id"
 
 # if the response is JSON
 - name: "get_last_post_info"
   variables_to_set:
-          200:
-            id: "id"
-            title: "title"
-            authorId: "author_info.id"
+    200:
+      id: "id"
+      title: "title"
+      authorId: "author_info.id"
 ```
 
-You can access nested fields like this:
+You can access nested json fields like this:
 > "author_info.id"
 
 Any nesting levels are supported.
@@ -363,16 +358,16 @@ Example:
 ```yaml
 - name: Get info with database
   method: GET
-  path: "/info/1"
+  path: /info/1
   variables_to_set:
     200:
-      golang_id: query_result.0.0
+      golang_id: "query_result.0.0"
   response:
-    200: '{"result_id": "1", "query_result": [[ {{ $golang_id }} , "golang"], [2, "gonkex"]]}'
-  dbQuery: >
-    SELECT id, name FROM testing_tools WHERE id={{ $golang_id }}
-  dbResponse:
-    - '{"id": {{ $golang_id}}, "name": "golang"}'
+    200: '{"result_id": "1", "query_result": [[ {{ $golang_id }}, "golang"], [2, "gonkex"]]}'
+  dbChecks:
+    - dbQuery: "SELECT id, name FROM testing_tools WHERE id={{ $golang_id }}"
+      dbResponse:
+        - '{"id": {{ $golang_id}}, "name": "golang"}'
 ```
 
 #### From environment variables or from env-file
@@ -389,7 +384,7 @@ secret=my_secret
 password=private_password
 ```
 
-env-file can be convenient to hide sensitive information from a test (passwords, keys, etc.)
+env-file can be convenient to hide sensitive information from a test (passwords, keys, etc.) or specify common used values here.
 
 #### From cases
 
@@ -400,7 +395,7 @@ Example:
 ```yaml
 - name: Get user info
   method: GET
-  path: "/user/1"
+  path: /user/1
   response:
     200: '{ "user_id": "1", "name": "{{ $name }}", "surname": "{{ $surname }}" }'
   cases:

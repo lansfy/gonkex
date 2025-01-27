@@ -43,7 +43,7 @@ func TestParseTestsWithVariables(t *testing.T) {
 	testOriginal := &tests[0]
 
 	vars := variables.New()
-	vars.Load(testOriginal.GetVariables())
+	vars.Merge(testOriginal.GetVariables())
 	assert.NoError(t, err)
 
 	testApplied := testOriginal.Clone()
@@ -62,7 +62,7 @@ func TestParseTestsWithCombinedVariables(t *testing.T) {
 	testOriginal := &tests[0]
 
 	vars := variables.New()
-	vars.Load(testOriginal.GetCombinedVariables())
+	vars.Merge(testOriginal.GetCombinedVariables())
 	assert.NoError(t, err)
 
 	testApplied := testOriginal.Clone()

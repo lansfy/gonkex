@@ -191,7 +191,7 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		return nil, err
 	}
 
-	r.config.Variables.Load(v.GetCombinedVariables())
+	r.config.Variables.Merge(v.GetCombinedVariables())
 
 	v = v.Clone()
 	if r.config.Variables != nil {
@@ -317,15 +317,12 @@ func (r *Runner) setVariablesFromResponse(t models.TestInterface, contentType, b
 
 	isJSON := strings.Contains(contentType, "json") && body != ""
 
-	vars, err := variables.FromResponse(varTemplates[statusCode], body, isJSON)
+	vars, err := ExtractVariablesFromResponse(varTemplates[statusCode], body, isJSON)
 	if err != nil {
 		return err
 	}
 
-	if vars != nil {
-		r.config.Variables.Merge(vars)
-	}
-
+	r.config.Variables.Merge(vars)
 	return nil
 }
 
