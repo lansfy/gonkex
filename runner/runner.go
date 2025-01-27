@@ -293,15 +293,23 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		result.Errors = append(result.Errors, errs...)
 	}
 
+	var changed bool
+	changed, err = r.setVariablesFromResponse(v, result.ResponseContentType, bodyStr, resp.StatusCode)
+	if err != nil {
+		// we should show response in output, so better to add this error as result error
+		// and skip all checkers
+		result.Errors = append(result.Errors, err)
+		return result, nil
+	}
+
+	if changed {
+		// if new variable assigned we will apply them to model
+		v.ApplyVariables(r.config.Variables.Substitute)
+	}
+
 	errs, err := r.checkers.Check(v, result)
 	if err != nil {
 		return nil, err
-	}
-
-	if len(errs) == 0 {
-		if err = r.setVariablesFromResponse(v, result.ResponseContentType, bodyStr, resp.StatusCode); err != nil {
-			return nil, err
-		}
 	}
 
 	result.Errors = append(result.Errors, errs...)
@@ -309,21 +317,25 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	return result, nil
 }
 
-func (r *Runner) setVariablesFromResponse(t models.TestInterface, contentType, body string, statusCode int) error {
+func (r *Runner) setVariablesFromResponse(t models.TestInterface, contentType, body string, statusCode int) (bool, error) {
 	varTemplates := t.GetVariablesToSet()
 	if varTemplates == nil {
-		return nil
+		return false, nil
 	}
 
 	isJSON := strings.Contains(contentType, "json") && body != ""
 
-	vars, err := ExtractVariablesFromResponse(varTemplates[statusCode], body, isJSON)
+	vars, err := extractVariablesFromResponse(varTemplates[statusCode], body, isJSON)
 	if err != nil {
-		return err
+		return false, colorize.NewEntityError("%s", "variables_to_set").SetSubError(err)
+	}
+
+	if len(vars) == 0 {
+		return false, nil
 	}
 
 	r.config.Variables.Merge(vars)
-	return nil
+	return true, nil
 }
 
 func checkHasFocused(tests []models.TestInterface) bool {
