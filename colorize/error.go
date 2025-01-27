@@ -1,7 +1,6 @@
 package colorize
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -79,8 +78,7 @@ func alternateJoin(list1, list2 []Part) []Part {
 }
 
 func GetColoredValue(err error) string {
-	var pErr *Error
-	if errors.As(err, &pErr) {
+	if pErr, ok := err.(*Error); ok {
 		return pErr.ColorError()
 	}
 	return err.Error()

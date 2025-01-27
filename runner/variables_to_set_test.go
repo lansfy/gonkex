@@ -36,7 +36,7 @@ func TestFromResponse(t *testing.T) {
 			},
 			body:    `{"key1": "value1"}`,
 			isJSON:  true,
-			wantErr: "path 'missingKey' does not exist in given json",
+			wantErr: "variable 'var2': path missingKey does not exist in service response",
 		},
 		{
 			description: "plain text body with valid variable",
@@ -63,7 +63,7 @@ func TestFromResponse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
-			got, err := ExtractVariablesFromResponse(tt.varsToSet, tt.body, tt.isJSON)
+			got, err := extractVariablesFromResponse(tt.varsToSet, tt.body, tt.isJSON)
 
 			if tt.wantErr != "" {
 				require.Error(t, err)

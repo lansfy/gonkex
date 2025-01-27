@@ -3,10 +3,12 @@ package runner
 import (
 	"fmt"
 
+	"github.com/lansfy/gonkex/colorize"
+
 	"github.com/tidwall/gjson"
 )
 
-func ExtractVariablesFromResponse(varsToSet map[string]string, body string, isJSON bool) (map[string]string, error) {
+func extractVariablesFromResponse(varsToSet map[string]string, body string, isJSON bool) (map[string]string, error) {
 	vars := map[string]string{}
 	names, paths := split(varsToSet)
 	var err error
@@ -25,7 +27,9 @@ func ExtractVariablesFromResponse(varsToSet map[string]string, body string, isJS
 func fromJSON(vars map[string]string, names, paths []string, body string) error {
 	for n, res := range gjson.GetMany(body, paths...) {
 		if !res.Exists() {
-			return fmt.Errorf("path '%s' does not exist in given json", paths[n])
+			return colorize.NewEntityError("variable %s", names[n]).SetSubError(
+				colorize.NewError("path %s does not exist in service response", colorize.Green(paths[n])),
+			)
 		}
 		vars[names[n]] = res.String()
 	}
