@@ -94,16 +94,20 @@ func Test_Len(t *testing.T) {
 func Test_Merge(t *testing.T) {
 	vs1 := New()
 	vs1.Set("key1", "value1")
+	vs1.Set("key3", "value3")
 
-	vs2 := New()
-	vs2.Set("key2", "value2")
-	vs2.Set("key1", "overridden")
+	vs2 := map[string]string{
+		"key1": "overridden",
+		"key2": "value2",
+	}
 
 	vs1.Merge(vs2)
 
 	key1Value, _ := vs1.get("key1")
 	key2Value, _ := vs1.get("key2")
+	key3Value, _ := vs1.get("key3")
 
 	require.Equal(t, "overridden", key1Value)
 	require.Equal(t, "value2", key2Value)
+	require.Equal(t, "value3", key3Value)
 }

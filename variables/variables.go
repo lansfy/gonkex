@@ -24,15 +24,10 @@ func (vs *Variables) Set(name, value string) {
 }
 
 // Load adds new variables and replaces values of existing
-func (vs *Variables) Load(variables map[string]string) {
+func (vs *Variables) Merge(variables map[string]string) {
 	for n, v := range variables {
 		vs.variables[n] = v
 	}
-}
-
-// Merge adds given variables to set or overrides existed
-func (vs *Variables) Merge(vars *Variables) {
-	vs.Load(vars.variables)
 }
 
 // Len returns number of variables in storage

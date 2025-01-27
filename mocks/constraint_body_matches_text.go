@@ -27,11 +27,10 @@ func newBodyMatchesTextConstraint(body, re string) (verifier, error) {
 			return nil, err
 		}
 	}
-	res := &bodyMatchesTextConstraint{
+	return &bodyMatchesTextConstraint{
 		body:   body,
 		regexp: reCompiled,
-	}
-	return res, nil
+	}, nil
 }
 
 type bodyMatchesTextConstraint struct {

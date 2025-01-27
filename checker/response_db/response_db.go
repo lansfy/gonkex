@@ -28,7 +28,7 @@ type responseDbChecker struct {
 func (c *responseDbChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
 	var errors []error
 	for _, dbCheck := range t.GetDatabaseChecks() {
-		errs, err := c.check(t.GetName(), dbCheck, result)
+		errs, err := c.check(dbCheck, result)
 		if err != nil {
 			return nil, err
 		}
@@ -38,20 +38,15 @@ func (c *responseDbChecker) Check(t models.TestInterface, result *models.Result)
 	return errors, nil
 }
 
-func (c *responseDbChecker) check(
-	testName string,
-	t models.DatabaseCheck,
-	result *models.Result,
-) ([]error, error) {
-	var errors []error
+func (c *responseDbChecker) check(t models.DatabaseCheck, result *models.Result) ([]error, error) {
 	// check expected db query exist
 	if t.DbQueryString() == "" {
-		return nil, fmt.Errorf("DB query not found for test \"%s\"", testName)
+		return nil, fmt.Errorf("dbQuery not found in the test declaration")
 	}
 
 	// check expected response exist
 	if t.DbResponseJson() == nil {
-		return nil, fmt.Errorf("expected DB response not found for test \"%s\"", testName)
+		return nil, fmt.Errorf("dbResponse not found in the test declaration")
 	}
 
 	// get DB response
@@ -68,43 +63,35 @@ func (c *responseDbChecker) check(
 	// compare responses length
 	err = compareDbResponseLength(t.DbResponseJson(), actualDbResponse, t.DbQueryString())
 	if err != nil {
-		return append(errors, err), nil
+		return []error{err}, nil
 	}
 	// compare responses as json lists
-	expectedItems, err := toJSONArray(t.DbResponseJson(), "expected", testName)
+	expectedItems, err := toJSONArray(t.DbResponseJson(), "dbResponse in the test declaration")
 	if err != nil {
 		return nil, err
 	}
-	actualItems, err := toJSONArray(actualDbResponse, "actual", testName)
+	actualItems, err := toJSONArray(actualDbResponse, "database response")
 	if err != nil {
 		return nil, err
 	}
 
 	cmpOptions := t.GetComparisonParams()
 
-	errs := compare.Compare(expectedItems, actualItems, compare.Params{
+	return compare.Compare(expectedItems, actualItems, compare.Params{
 		IgnoreValues:         cmpOptions.IgnoreValuesChecking(),
 		IgnoreArraysOrdering: cmpOptions.IgnoreArraysOrdering(),
 		DisallowExtraFields:  cmpOptions.DisallowExtraFields(),
-	})
-
-	errors = append(errors, errs...)
-
-	return errors, nil
+	}), nil
 }
 
-func toJSONArray(items []string, qual, testName string) ([]interface{}, error) {
+func toJSONArray(items []string, qual string) ([]interface{}, error) {
 	itemJSONs := make([]interface{}, 0, len(items))
 	for i, row := range items {
 		var itemJSON interface{}
 		if err := json.Unmarshal([]byte(row), &itemJSON); err != nil {
 			return nil, fmt.Errorf(
-				"invalid JSON in the %s DB response for test %s:\n row #%d:\n %s\n error:\n%s",
-				qual,
-				testName,
-				i,
-				row,
-				err.Error(),
+				"invalid JSON in the %s:\n row #%d:\n %s\n error:\n%w",
+				qual, i, row, err,
 			)
 		}
 		itemJSONs = append(itemJSONs, itemJSON)
@@ -120,7 +107,10 @@ func compareDbResponseLength(expected, actual []string, query interface{}) error
 
 	diffCfg := *pretty.DefaultConfig
 	diffCfg.Diffable = true
-	chunks := diff.DiffChunks(strings.Split(diffCfg.Sprint(expected), "\n"), strings.Split(diffCfg.Sprint(actual), "\n"))
+	chunks := diff.DiffChunks(
+		strings.Split(diffCfg.Sprint(expected), "\n"),
+		strings.Split(diffCfg.Sprint(actual), "\n"),
+	)
 
 	tail := []colorize.Part{
 		colorize.None("\n\n   query: "),

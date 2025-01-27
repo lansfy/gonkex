@@ -27,11 +27,10 @@ func newBodyMatchesXMLConstraint(expected string, params compare.Params) (verifi
 		return nil, err
 	}
 
-	res := &bodyMatchesXMLConstraint{
+	return &bodyMatchesXMLConstraint{
 		expectedBody:  expectedBody,
 		compareParams: params,
-	}
-	return res, nil
+	}, nil
 }
 
 type bodyMatchesXMLConstraint struct {
