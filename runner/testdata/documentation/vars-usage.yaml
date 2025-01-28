@@ -14,5 +14,70 @@
         "data": "{{ $someVar }}"
       }
   variables:
-    methodVar: GET
+    methodVar: POST
     someVar: "some-value"
+
+  mocks:
+    testservice:
+      requestConstraints:
+        - kind: methodIs
+          method: POST
+        - kind: pathMatches
+          path: /test/vars-usage/some-value
+        - kind: queryMatches
+          expectedQuery: param=some-value
+        - kind: bodyMatchesJSON
+          body: >
+            {
+              "reqParam": "some-value"
+            }
+      strategy: constant
+      headers:
+        Content-Type: application/json
+      body: >
+        {
+          "data": "some-value"
+        }
+      statusCode: 200
+
+- name: variables MUST be substituted to all parts of mocks
+  method: POST
+  path: "/test/vars-usage/some-value"
+  query: "?param=some-value"
+  headers:
+    Header1: "some-value"
+  request: >
+    {
+      "reqParam": "some-value"
+    }
+  response:
+    200: >
+      {
+        "data": "some-value"
+      }
+  variables:
+    methodVar: POST
+    someVar: "some-value"
+
+  mocks:
+    testservice:
+      requestConstraints:
+        - kind: methodIs
+          method: "{{ $methodVar }}"
+        - kind: pathMatches
+          path: "/test/vars-usage/{{ $someVar }}"
+        - kind: queryMatches
+          expectedQuery: "param={{ $someVar }}"
+        - kind: bodyMatchesJSON
+          body: >
+            {
+              "reqParam": "{{ $someVar }}"
+            }
+      strategy: constant
+      headers:
+        Content-Type: application/json
+      body: >
+        {
+          "data": "{{ $someVar }}"
+        }
+      statusCode: 200

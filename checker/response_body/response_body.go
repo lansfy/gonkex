@@ -35,7 +35,7 @@ func (c *responseBodyChecker) Check(t models.TestInterface, result *models.Resul
 		return compareXmlBody(t, expectedBody, result)
 	default:
 		// compare bodies as leaf nodes
-		return compare.Compare(expectedBody, result.ResponseBody, compare.Params{}), nil
+		return addMainError(compare.Compare(expectedBody, result.ResponseBody, compare.Params{})), nil
 	}
 }
 
@@ -45,6 +45,14 @@ func createWrongStatusError(statusCode int, known map[int]string) error {
 		knownCodes = append(knownCodes, strconv.Itoa(code))
 	}
 	return colorize.NewNotEqualError("server responded with unexpected %s:", "status", strings.Join(knownCodes, " / "), statusCode)
+}
+
+func addMainError(source []error) []error {
+	var errs []error
+	for _, err := range source {
+		errs = append(errs, colorize.NewEntityError("service %s comparison", "response body").SetSubError(err))
+	}
+	return errs
 }
 
 func compareJsonBody(t models.TestInterface, expectedBody string, result *models.Result) ([]error, error) {
@@ -60,7 +68,7 @@ func compareJsonBody(t models.TestInterface, expectedBody string, result *models
 		return []error{errors.New("could not parse service response as JSON")}, nil
 	}
 
-	return compare.Compare(expected, actual, getCompareParams(t)), nil
+	return addMainError(compare.Compare(expected, actual, getCompareParams(t))), nil
 }
 
 func compareXmlBody(t models.TestInterface, expectedBody string, result *models.Result) ([]error, error) {
@@ -76,7 +84,7 @@ func compareXmlBody(t models.TestInterface, expectedBody string, result *models.
 		return []error{errors.New("could not parse service response as XML")}, nil
 	}
 
-	return compare.Compare(expected, actual, getCompareParams(t)), nil
+	return addMainError(compare.Compare(expected, actual, getCompareParams(t))), nil
 }
 
 func getCompareParams(t models.TestInterface) compare.Params {

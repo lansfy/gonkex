@@ -5,8 +5,21 @@
     200:
       golang_id: "query_result.0.0"
   response:
-    200: '{"result_id": "1", "query_result": [[ {{ $golang_id }}, "golang"], [2, "gonkex"]]}'
+    200: '{"result_id": "1", "query_result": [[{{ $golang_id }}, "golang"], [2, "gonkex"]]}'
   dbChecks:
     - dbQuery: "SELECT id, name FROM testing_tools WHERE id={{ $golang_id }}"
       dbResponse:
         - '{"id": {{ $golang_id}}, "name": "golang"}'
+
+  mocks:
+    testservice:
+      requestConstraints:
+        - kind: methodIs
+          method: GET
+        - kind: pathMatches
+          path: /test/vars-from-response-currently-running-test
+      strategy: constant
+      headers:
+        Content-Type: application/json
+      body: '{"result_id": "1", "query_result": [[42, "golang"], [2, "gonkex"]]}'
+      statusCode: 200

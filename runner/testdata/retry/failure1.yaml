@@ -4,7 +4,7 @@
 # so in test we check that we execute all calls
 
 - name: do several retry and fail before success
-  description: "error: at path '$.error' values do not match:\n     expected: \n       actual: fake error"
+  description: "service 'response body' comparison: at path '$.error' values do not match:\n     expected: \n       actual: fake error"
   method: GET
   path: /test.run/0000001
   response:

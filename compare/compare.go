@@ -236,7 +236,7 @@ func makeValueCompareError(path, msg string, expected, actual interface{}) error
 		colorize.Cyan(path),
 	}
 
-	parts = append(parts, diffStrings(actualStr, expectedStr)...)
+	parts = append(parts, diffStrings(expectedStr, actualStr)...)
 	return colorize.NewError("at path %s "+msg+":\n     diff (--- expected vs +++ actual):\n", parts...)
 }
 
