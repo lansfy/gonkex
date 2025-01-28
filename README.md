@@ -273,6 +273,7 @@ You can use variables in the description of the test, the following fields are s
 - mocks body
 - mocks headers
 - mocks requestConstraints
+- form for multipart/form-data
 
 Example:
 
@@ -406,12 +407,41 @@ Example:
 
 Variables like these will be available through another cases if not redefined.
 
-## Files uploading
+## multipart/form-data requests
+You must specify the type of request:
+- POST
 
-You can upload files in test request. For this you must specify the type of request - POST and header:
-
+Header (optional):
 > Content-Type: multipart/form-data
 
+with _boundary_ (optional):
+> Content-Type: multipart/form-data; boundary=--some-boundary
+
+
+### Form
+Example:
+
+```yaml
+ - name: "upload-form"
+   method: POST
+   form:
+     fields:
+       field_name1: "field_name1 value"
+       field_name2: "field_name2 value"
+       "custom_struct_field[0]": "custom_struct_field 0"
+       "custom_struct_field[1]": "custom_struct_field 1"
+       "custom_struct_field[inner_obj][field]": "inner_obj field value"
+   headers:
+     Content-Type: multipart/form-data # case-sensitive, can be omitted
+   response:
+     200: |
+       {
+         "status": "OK"
+       }
+```
+
+### File upload
+You can upload files in test request.
 Example:
 
 ```yaml
@@ -422,9 +452,28 @@ Example:
        file1: "testdata/upload-files/file1.txt"
        file2: "testdata/upload-files/file2.log"
    headers:
-     Content-Type: multipart/form-data # case-sensitive, can be omitted
+     Content-Type: multipart/form-data
    response:
-     200: |
+     200: >
+       {
+         "status": "OK"
+       }
+```
+
+with form:
+```yaml
+ - name: "upload-multipart-form-data"
+   method: POST
+   form:
+     fields:
+       field_name1: "field_name1 value"
+     files:
+       file1: "testdata/upload-files/file1.txt"
+       file2: "testdata/upload-files/file2.log"
+   headers:
+     Content-Type: multipart/form-data
+   response:
+     200: >
        {
          "status": "OK"
        }
