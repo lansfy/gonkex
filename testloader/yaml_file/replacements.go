@@ -38,24 +38,23 @@ func performInterface(value interface{}, perform func(string) string) {
 	}
 }
 
-func performForm(form *models.Form, perform func(string) string) *models.Form {
-	files := make(map[string]string, len(form.Files))
-
-	for k, v := range form.Files {
-		files[k] = perform(v)
+func performStringMap(src map[string]string, perform func(string) string) map[string]string {
+	dst := make(map[string]string, len(src))
+	for k, v := range src {
+		dst[k] = perform(v)
 	}
+	return dst
+}
 
-	return &models.Form{Files: files}
+func performForm(form *models.Form, perform func(string) string) *models.Form {
+	return &models.Form{
+		Files:  performStringMap(form.Files, perform),
+		Fields: performStringMap(form.Fields, perform),
+	}
 }
 
 func performHeaders(headers map[string]string, perform func(string) string) map[string]string {
-	res := make(map[string]string)
-
-	for k, v := range headers {
-		res[k] = perform(v)
-	}
-
-	return res
+	return performStringMap(headers, perform)
 }
 
 func performResponses(responses map[int]string, perform func(string) string) map[int]string {
