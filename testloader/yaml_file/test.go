@@ -1,6 +1,7 @@
 package yaml_file
 
 import (
+	"strings"
 	"time"
 
 	"github.com/lansfy/gonkex/compare"
@@ -168,9 +169,13 @@ func (t *Test) GetRetryPolicy() models.RetryPolicy {
 	return &retry{t.RetryPolicy}
 }
 
-// TODO: it might make sense to do support of case-insensitive checking
 func (t *Test) ContentType() string {
-	return t.HeadersVal["Content-Type"]
+	for key, val := range t.HeadersVal {
+		if strings.ToLower(key) == "content-type" {
+			return val
+		}
+	}
+	return ""
 }
 
 func (t *Test) GetComparisonParams() models.ComparisonParams {
