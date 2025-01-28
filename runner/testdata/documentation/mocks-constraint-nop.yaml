@@ -1,0 +1,14 @@
+- name: nop constraint
+  method: POST
+  path: /test/case
+  request: ""
+  response:
+    200: ""
+
+  mocks:
+    testservice:
+      requestConstraints:
+        - kind: nop
+      strategy: constant
+      body: ""
+      statusCode: 200

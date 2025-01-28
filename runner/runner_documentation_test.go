@@ -3,11 +3,11 @@ package runner
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"net/http/httptest"
-	"strings"
 	"testing"
+
+	"github.com/lansfy/gonkex/mocks"
+
+	"github.com/stretchr/testify/require"
 )
 
 type docStorage struct{}
@@ -29,51 +29,15 @@ func (f *docStorage) ExecuteQuery(query string) ([]json.RawMessage, error) {
 	return nil, fmt.Errorf("wrong request to DB received: %q", query)
 }
 
-func docServer() {
-	http.HandleFunc("/test/vars-from-response-currently-running-test", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Add("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"result_id": "1", "query_result": [[42, "golang"], [2, "gonkex"]]}`))
-	})
-	http.HandleFunc("/test/vars-usage/some-value", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Content-Type", "application/json")
+func Test_Documentation2_Examples(t *testing.T) {
+	m := mocks.NewNop("testservice")
+	err := m.Start()
+	require.NoError(t, err)
+	defer m.Shutdown()
 
-		if r.Method != "GET" {
-			_, _ = w.Write([]byte("wrong Method received"))
-			return
-		}
-
-		if r.URL.Query()["param"][0] != "some-value" {
-			_, _ = w.Write([]byte("wrong query received"))
-		}
-
-		if r.Header.Get("Header1") != "some-value" {
-			_, _ = w.Write([]byte("wrong header received"))
-		}
-
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			_, _ = w.Write([]byte(err.Error()))
-			return
-		}
-
-		bodyStr := strings.ReplaceAll(strings.ReplaceAll(string(body), " ", ""), "\n", "")
-		if bodyStr != `{"reqParam":"some-value"}` {
-			_, _ = w.Write([]byte(fmt.Sprintf("received wrong body: %s", string(body))))
-			return
-		}
-
-		_, _ = w.Write([]byte(`{"data":"some-value"}`))
-	})
-}
-
-func Test_Documentation_Examples(t *testing.T) {
-	docServer()
-
-	srv := httptest.NewServer(nil)
-	defer srv.Close()
-
-	RunWithTesting(t, srv.URL, &RunWithTestingOpts{
+	RunWithTesting(t, "http://"+m.Service("testservice").ServerAddr(), &RunWithTestingOpts{
 		TestsDir: "testdata/documentation",
 		DB:       &docStorage{},
+		Mocks:    m,
 	})
 }
