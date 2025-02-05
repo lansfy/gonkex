@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,7 +17,7 @@ func TestMultipartFormData(t *testing.T) {
 
 	// TODO: refactor RunWithTesting() for testing negative scenario (when tests has expected errors)
 	RunWithTesting(t, srv.URL, &RunWithTestingOpts{
-		TestsDir: filepath.Join("testdata", "multipart", "form-data"),
+		TestsDir: "testdata/multipart/form-data",
 	})
 }
 

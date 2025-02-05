@@ -175,11 +175,11 @@ func (r *Runner) executeTestWithRetryPolicy(v models.TestInterface) (*models.Res
 func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	if v.GetStatus() != "" {
 		if v.GetStatus() == "broken" {
-			return &models.Result{Test: v}, checker.ErrTestBroken
+			return nil, checker.ErrTestBroken
 		}
 
 		if v.GetStatus() == "skipped" {
-			return &models.Result{Test: v}, checker.ErrTestSkipped
+			return nil, checker.ErrTestSkipped
 		}
 	}
 
