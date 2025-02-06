@@ -189,6 +189,7 @@ func Test_status(t *testing.T) {
 		"focus_many.yaml",
 		"skipped_one.yaml",
 		"skipped_many.yaml",
+		"skipped_with_retry.yaml",
 	}
 
 	for _, file := range testCases {
