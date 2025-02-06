@@ -1,0 +1,6 @@
+- name: this test fails, but it has skipped status, so it is skipped
+  method: GET
+  status: skipped
+  path: /endpoint
+  response:
+    400: "{}"
