@@ -169,3 +169,36 @@ func Test_variablesSubstitution(t *testing.T) {
 		Mocks:    m,
 	})
 }
+
+type statusServer struct {
+	counter int
+}
+
+func (s *statusServer) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusOK)
+	s.counter++
+	_, _ = rw.Write([]byte(fmt.Sprintf(`{"calls":%d}`, s.counter)))
+}
+
+func Test_status(t *testing.T) {
+	testCases := []string{
+		"broken_one.yaml",
+		"broken_many.yaml",
+		"focus_one.yaml",
+		"focus_many.yaml",
+		"skipped_one.yaml",
+		"skipped_many.yaml",
+	}
+
+	for _, file := range testCases {
+		t.Run(file, func(t *testing.T) {
+			srv := httptest.NewServer(&statusServer{})
+			defer srv.Close()
+
+			RunWithTesting(t, srv.URL, &RunWithTestingOpts{
+				TestsDir: "testdata/status/" + file,
+			})
+		})
+	}
+}

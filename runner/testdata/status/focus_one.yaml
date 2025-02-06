@@ -1,0 +1,6 @@
+- name: this test successed
+  method: GET
+  status: focus
+  path: /endpoint
+  response:
+    200: "{}"

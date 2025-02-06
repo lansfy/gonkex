@@ -15,9 +15,8 @@ func TestMultipartFormData(t *testing.T) {
 	srv := testServerMultipartFormData(t)
 	defer srv.Close()
 
-	// TODO: refactor RunWithTesting() for testing negative scenario (when tests has expected errors)
 	RunWithTesting(t, srv.URL, &RunWithTestingOpts{
-		TestsDir: "testdata/multipart/form-data",
+		TestsDir: "testdata/multipart/form-data.yaml",
 	})
 }
 

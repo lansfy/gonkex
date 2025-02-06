@@ -1,0 +1,33 @@
+- name: test ignored
+  method: GET
+  path: /endpoint
+  response:
+    200: "{}"
+
+- name: test ignored
+  method: GET
+  path: /endpoint
+  response:
+    200: "{}"
+
+- name: test ignored
+  method: GET
+  path: /endpoint
+  response:
+    400: "{}"
+
+- name: only this test executed because test has focus status
+  method: GET
+  status: focus
+  path: /endpoint
+  response:
+    200: >
+     {
+       "calls": 1
+     }
+
+- name: test ignored
+  method: GET
+  path: /endpoint
+  response:
+    400: "{}"

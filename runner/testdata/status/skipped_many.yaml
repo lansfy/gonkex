@@ -1,0 +1,38 @@
+- name: this test successful, but it has skipped status, so it is skipped
+  method: GET
+  status: skipped
+  path: /endpoint
+  response:
+    200: "{}"
+
+- name: success test
+  method: GET
+  path: /endpoint
+  response:
+    200: >
+     {
+       "calls": 1
+     }
+
+- name: this test fails, but it has skipped status, so it is skipped
+  method: GET
+  status: skipped
+  path: /endpoint
+  response:
+    400: "{}"
+
+- name: success test
+  method: GET
+  path: /endpoint
+  response:
+    200: >
+     {
+       "calls": 2
+     }
+
+- name: this test fails, but it has skipped status, so it is skipped
+  method: GET
+  status: skipped
+  path: /endpoint
+  response:
+    400: "{}"
