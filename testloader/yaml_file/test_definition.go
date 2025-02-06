@@ -8,7 +8,7 @@ import (
 type TestDefinition struct {
 	Name                     string                    `json:"name" yaml:"name"`
 	Description              string                    `json:"description" yaml:"description"`
-	Status                   string                    `json:"status" yaml:"status"`
+	Status                   StatusEnum                `json:"status" yaml:"status"`
 	Variables                map[string]string         `json:"variables" yaml:"variables"`
 	VariablesToSet           VariablesToSet            `json:"variables_to_set" yaml:"variables_to_set"`
 	Form                     *models.Form              `json:"form" yaml:"form"`

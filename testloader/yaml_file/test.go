@@ -117,8 +117,8 @@ func (t *Test) GetDescription() string {
 	return t.Description
 }
 
-func (t *Test) GetStatus() string {
-	return t.Status
+func (t *Test) GetStatus() models.Status {
+	return t.Status.value
 }
 
 func (t *Test) Fixtures() []string {
@@ -217,8 +217,8 @@ func (t *Test) Clone() models.TestInterface {
 	return &res
 }
 
-func (t *Test) SetStatus(status string) {
-	t.Status = status
+func (t *Test) SetStatus(status models.Status) {
+	t.Status.value = status
 }
 
 func (t *Test) ApplyVariables(perform func(string) string) {

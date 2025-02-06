@@ -68,18 +68,9 @@ func (o *Output) Finalize() {
 	_ = o.allure.EndSuite(time.Now())
 }
 
-func allureStatus(status string) bool {
+func notRunnedStatus(status models.Status) bool {
 	switch status {
-	case "passed", "failed", "broken", "skipped":
-		return true
-	default:
-		return false
-	}
-}
-
-func notRunnedStatus(status string) bool {
-	switch status {
-	case "broken", "skipped":
+	case models.StatusBroken, models.StatusSkipped:
 		return true
 	default:
 		return false
@@ -88,8 +79,8 @@ func notRunnedStatus(status string) bool {
 
 func getAllureStatus(r *models.Result) (string, error) {
 	testStatus := r.Test.GetStatus()
-	if testStatus != "" && allureStatus(testStatus) && notRunnedStatus(testStatus) {
-		return testStatus, nil
+	if testStatus != models.StatusNone && notRunnedStatus(testStatus) {
+		return string(testStatus), nil
 	}
 
 	var (

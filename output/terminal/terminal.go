@@ -86,18 +86,6 @@ func renderResult(result *models.Result, policy ColorPolicy) (string, error) {
 	return buffer.String(), nil
 }
 
-func (o *Output) ShowSummary(summary *models.Summary) {
-	_, _ = o.fprintf(
-		o.opts.CustomWriter,
-		"\nsuccess %d, failed %d, skipped %d, broken %d, total %d\n",
-		summary.Total-summary.Broken-summary.Failed-summary.Skipped,
-		summary.Failed,
-		summary.Skipped,
-		summary.Broken,
-		summary.Total,
-	)
-}
-
 func getTemplateFuncMap(policy ColorPolicy, showHeaders bool) template.FuncMap {
 	var funcMap template.FuncMap
 	if policy == PolicyForceColor {
