@@ -2,6 +2,7 @@ package runner
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -10,7 +11,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/lansfy/gonkex/checker"
 	"github.com/lansfy/gonkex/mocks"
+	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/output/terminal"
 	"github.com/lansfy/gonkex/testloader/yaml_file"
 	"github.com/lansfy/gonkex/variables"
@@ -55,6 +58,17 @@ func normalize(s string) string {
 	return s
 }
 
+func testHandler(test models.TestInterface, executeTest TestExecutor) error {
+	_, err := executeTest(test)
+	if err != nil {
+		if errors.Is(err, checker.ErrTestSkipped) || errors.Is(err, checker.ErrTestBroken) {
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
 func Test_Error_Examples(t *testing.T) {
 	initErrorServer()
 	server := httptest.NewServer(nil)
@@ -69,7 +83,6 @@ func Test_Error_Examples(t *testing.T) {
 			require.NoError(t, err)
 			defer m.Shutdown()
 
-			testHandler := NewConsoleHandler()
 			yamlLoader := yaml_file.NewLoader(fmt.Sprintf("testdata/errors-example/case%d.yaml", caseID))
 			r := New(
 				yamlLoader,
@@ -79,7 +92,7 @@ func Test_Error_Examples(t *testing.T) {
 					Mocks:       m,
 					MocksLoader: mocks.NewYamlLoader(nil),
 					DB:          &fakeStorage{},
-					TestHandler: testHandler.HandleTest,
+					TestHandler: testHandler,
 				},
 			)
 

@@ -93,12 +93,12 @@ func (r *Runner) Run() error {
 		test := t
 		if hasFocused {
 			switch test.GetStatus() {
-			case "focus":
-				test.SetStatus("")
-			case "broken":
+			case models.StatusFocus:
+				test.SetStatus(models.StatusNone)
+			case models.StatusBroken:
 				// do nothing
 			default:
-				test.SetStatus("skipped")
+				test.SetStatus(models.StatusSkipped)
 			}
 		}
 
@@ -133,6 +133,13 @@ func (r *Runner) executeTestWithRetryPolicy(v models.TestInterface) (*models.Res
 				return nil, err
 			}
 		}
+	}
+
+	switch v.GetStatus() {
+	case models.StatusBroken:
+		return nil, checker.ErrTestBroken
+	case models.StatusSkipped:
+		return nil, checker.ErrTestSkipped
 	}
 
 	var testResult *models.Result
@@ -172,16 +179,6 @@ func (r *Runner) executeTestWithRetryPolicy(v models.TestInterface) (*models.Res
 }
 
 func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
-	if v.GetStatus() != "" {
-		if v.GetStatus() == "broken" {
-			return nil, checker.ErrTestBroken
-		}
-
-		if v.GetStatus() == "skipped" {
-			return nil, checker.ErrTestSkipped
-		}
-	}
-
 	err := r.checkers.BeforeTest(v)
 	if err != nil {
 		return nil, err
@@ -336,7 +333,7 @@ func (r *Runner) setVariablesFromResponse(t models.TestInterface, contentType, b
 
 func checkHasFocused(tests []models.TestInterface) bool {
 	for _, test := range tests {
-		if test.GetStatus() == "focus" {
+		if test.GetStatus() == models.StatusFocus {
 			return true
 		}
 	}

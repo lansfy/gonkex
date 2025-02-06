@@ -13,6 +13,7 @@ import (
 	"github.com/lansfy/gonkex/endpoint"
 	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/models"
+	"github.com/lansfy/gonkex/output"
 	"github.com/lansfy/gonkex/testloader/yaml_file"
 
 	"github.com/stretchr/testify/assert"
@@ -171,14 +172,38 @@ func Test_variablesSubstitution(t *testing.T) {
 }
 
 type statusServer struct {
-	counter int
+	counter      int
+	totalTests   int
+	skippedTests int
+	brokenTests  int
 }
 
 func (s *statusServer) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 	s.counter++
-	_, _ = rw.Write([]byte(fmt.Sprintf(`{"calls":%d}`, s.counter)))
+	_, _ = rw.Write([]byte(fmt.Sprintf(
+		`{"calls":%d,"total":%d,"broken":%d,"skipped":%d}`,
+		s.counter,
+		s.totalTests,
+		s.brokenTests,
+		s.skippedTests,
+	)))
+}
+
+func (s *statusServer) BeforeTest(v models.TestInterface) error {
+	s.totalTests++
+	if v.GetStatus() == models.StatusBroken {
+		s.brokenTests++
+	}
+	if v.GetStatus() == models.StatusSkipped {
+		s.skippedTests++
+	}
+	return nil
+}
+
+func (s *statusServer) Process(models.TestInterface, *models.Result) error {
+	return nil
 }
 
 func Test_status(t *testing.T) {
@@ -194,11 +219,13 @@ func Test_status(t *testing.T) {
 
 	for _, file := range testCases {
 		t.Run(file, func(t *testing.T) {
-			srv := httptest.NewServer(&statusServer{})
+			obj := &statusServer{}
+			srv := httptest.NewServer(obj)
 			defer srv.Close()
 
 			RunWithTesting(t, srv.URL, &RunWithTestingOpts{
 				TestsDir: "testdata/status/" + file,
+				Outputs:  []output.OutputInterface{obj},
 			})
 		})
 	}

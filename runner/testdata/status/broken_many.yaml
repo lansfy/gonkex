@@ -36,3 +36,15 @@
   path: /endpoint
   response:
     400: "{}"
+
+- name: check summary
+  method: GET
+  path: /endpoint
+  response:
+    200: >
+     {
+       "calls":   3,
+       "total":   6,
+       "broken":  3,
+       "skipped": 0
+     }

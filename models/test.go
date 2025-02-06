@@ -4,6 +4,15 @@ import (
 	"time"
 )
 
+type Status string
+
+const (
+	StatusNone    Status = ""
+	StatusFocus   Status = "focus"
+	StatusBroken  Status = "broken"
+	StatusSkipped Status = "skipped"
+)
+
 type ComparisonParams interface {
 	IgnoreValuesChecking() bool
 	IgnoreArraysOrdering() bool
@@ -38,7 +47,7 @@ type TestInterface interface {
 
 	GetMeta() map[string]interface{}
 
-	GetStatus() string
+	GetStatus() Status
 	GetResponses() map[int]string
 	GetResponse(code int) (string, bool)
 	GetResponseHeaders(code int) (map[string]string, bool)
@@ -68,7 +77,7 @@ type TestInterface interface {
 	LastTestInFile() bool
 	OneOfCase() bool
 
-	SetStatus(status string)
+	SetStatus(status Status)
 
 	// ApplyVariables run specified function for every string in object
 	ApplyVariables(func(string) string)
@@ -79,12 +88,4 @@ type TestInterface interface {
 type Form struct {
 	Files  map[string]string `json:"files" yaml:"files"`
 	Fields map[string]string `json:"fields" yaml:"fields"`
-}
-
-type Summary struct {
-	Success bool
-	Failed  int
-	Skipped int
-	Broken  int
-	Total   int
 }
