@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -185,9 +184,6 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 
 	err := r.checkers.BeforeTest(v)
 	if err != nil {
-		if errors.Is(err, checker.ErrTestSkipped) || errors.Is(err, checker.ErrTestBroken) {
-			return &models.Result{Test: v}, err
-		}
 		return nil, err
 	}
 
