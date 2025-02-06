@@ -58,6 +58,18 @@ func (r *retry) SuccessCount() int {
 	return r.params.SuccessCount
 }
 
+type formValues struct {
+	values *Form
+}
+
+func (f *formValues) GetFiles() map[string]string {
+	return f.values.Files
+}
+
+func (f *formValues) GetFields() map[string]string {
+	return f.values.Fields
+}
+
 type Test struct {
 	TestDefinition
 
@@ -194,8 +206,11 @@ func (t *Test) GetCombinedVariables() map[string]string {
 	return t.CombinedVariables
 }
 
-func (t *Test) GetForm() *models.Form {
-	return t.Form
+func (t *Test) GetForm() models.Form {
+	if t.Form == nil {
+		return nil
+	}
+	return &formValues{t.Form}
 }
 
 func (t *Test) GetVariablesToSet() map[int]map[string]string {

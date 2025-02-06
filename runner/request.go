@@ -80,12 +80,14 @@ func newMultipartRequest(host string, test models.TestInterface) (*http.Request,
 		}
 	}
 
-	err := addFormFields(test.GetForm().Fields, w)
+	form := test.GetForm()
+
+	err := addFormFields(form.GetFields(), w)
 	if err != nil {
 		return nil, err
 	}
 
-	err = addFiles(test.GetForm().Files, w)
+	err = addFiles(form.GetFiles(), w)
 	if err != nil {
 		return nil, err
 	}

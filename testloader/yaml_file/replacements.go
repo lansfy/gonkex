@@ -2,8 +2,6 @@ package yaml_file
 
 import (
 	"strings"
-
-	"github.com/lansfy/gonkex/models"
 )
 
 func performQuery(val string, perform func(string) string) string {
@@ -46,8 +44,8 @@ func performStringMap(src map[string]string, perform func(string) string) map[st
 	return dst
 }
 
-func performForm(form *models.Form, perform func(string) string) *models.Form {
-	return &models.Form{
+func performForm(form *Form, perform func(string) string) *Form {
+	return &Form{
 		Files:  performStringMap(form.Files, perform),
 		Fields: performStringMap(form.Fields, perform),
 	}

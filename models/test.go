@@ -31,6 +31,11 @@ type RetryPolicy interface {
 	SuccessCount() int
 }
 
+type Form interface {
+	GetFiles() map[string]string
+	GetFields() map[string]string
+}
+
 // Common Test interface
 type TestInterface interface {
 	GetName() string
@@ -43,7 +48,7 @@ type TestInterface interface {
 	Headers() map[string]string
 	Cookies() map[string]string
 	GetRequest() string
-	GetForm() *Form
+	GetForm() Form
 
 	GetMeta() map[string]interface{}
 
@@ -83,9 +88,4 @@ type TestInterface interface {
 	ApplyVariables(func(string) string)
 	// Clone returns copy of current object
 	Clone() TestInterface
-}
-
-type Form struct {
-	Files  map[string]string `json:"files" yaml:"files"`
-	Fields map[string]string `json:"fields" yaml:"fields"`
 }
