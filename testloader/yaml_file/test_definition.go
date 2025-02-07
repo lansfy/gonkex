@@ -92,7 +92,7 @@ There can be two types of data in yaml-file:
 func (v *VariablesToSet) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	res := make(map[int]map[string]string)
 
-	// try to unmarshall as plaint text
+	// try to unmarshall as plain text
 	var plain map[int]string
 	if err := unmarshal(&plain); err == nil {
 		for code, varName := range plain {

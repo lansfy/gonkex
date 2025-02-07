@@ -182,13 +182,7 @@ func (s *statusServer) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 	s.counter++
-	_, _ = rw.Write([]byte(fmt.Sprintf(
-		`{"calls":%d,"total":%d,"broken":%d,"skipped":%d}`,
-		s.counter,
-		s.totalTests,
-		s.brokenTests,
-		s.skippedTests,
-	)))
+	_, _ = rw.Write([]byte(fmt.Sprintf(`{"calls":%d}`, s.counter)))
 }
 
 func (s *statusServer) BeforeTest(v models.TestInterface) error {
@@ -207,26 +201,34 @@ func (s *statusServer) Process(models.TestInterface, *models.Result) error {
 }
 
 func Test_status(t *testing.T) {
-	testCases := []string{
-		"broken_one.yaml",
-		"broken_many.yaml",
-		"focus_one.yaml",
-		"focus_many.yaml",
-		"skipped_one.yaml",
-		"skipped_many.yaml",
-		"skipped_with_retry.yaml",
+	testCases := []struct {
+		name    string
+		total   int
+		skipped int
+		broken  int
+	}{
+		{"broken_one.yaml", 1, 0, 1},
+		{"broken_many.yaml", 5, 0, 3},
+		{"focus_one.yaml", 1, 0, 0},
+		{"focus_many.yaml", 5, 4, 0},
+		{"skipped_one.yaml", 1, 1, 0},
+		{"skipped_many.yaml", 5, 3, 0},
+		{"skipped_with_retry.yaml", 1, 1, 0},
 	}
 
-	for _, file := range testCases {
-		t.Run(file, func(t *testing.T) {
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
 			obj := &statusServer{}
 			srv := httptest.NewServer(obj)
 			defer srv.Close()
 
 			RunWithTesting(t, srv.URL, &RunWithTestingOpts{
-				TestsDir: "testdata/status/" + file,
+				TestsDir: "testdata/status/" + tt.name,
 				Outputs:  []output.OutputInterface{obj},
 			})
+			require.Equal(t, tt.total, obj.totalTests)
+			require.Equal(t, tt.skipped, obj.skippedTests)
+			require.Equal(t, tt.broken, obj.brokenTests)
 		})
 	}
 }

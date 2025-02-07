@@ -7,15 +7,3 @@
   retryPolicy:
     attempts: 5
     delay: 1s
-
-- name: check summary
-  method: GET
-  path: /endpoint
-  response:
-    200: >
-     {
-       "calls":   1,
-       "total":   2,
-       "broken":  0,
-       "skipped": 1
-     }
