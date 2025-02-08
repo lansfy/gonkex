@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -341,9 +342,16 @@ func checkHasFocused(tests []models.TestInterface) bool {
 	return false
 }
 
+func isTestWasSkipped(err error) bool {
+	return err != nil && (errors.Is(err, checker.ErrTestSkipped) || errors.Is(err, checker.ErrTestBroken))
+}
+
 func defaultTestHandler(t models.TestInterface, f TestExecutor) error {
 	result, err := f(t)
 	if err != nil {
+		if isTestWasSkipped(err) {
+			return nil
+		}
 		return err
 	}
 	if len(result.Errors) != 0 {

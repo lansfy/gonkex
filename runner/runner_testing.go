@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -133,7 +132,7 @@ func (h *testingHandler) HandleTest(test models.TestInterface, executor TestExec
 	h.t.Run(test.GetName(), func(t *testing.T) {
 		result, err := executor(test)
 		if err != nil {
-			if errors.Is(err, checker.ErrTestSkipped) || errors.Is(err, checker.ErrTestBroken) {
+			if isTestWasSkipped(err) {
 				t.Skip()
 			} else {
 				returnErr = err
