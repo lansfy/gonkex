@@ -2,7 +2,6 @@ package runner
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -11,7 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lansfy/gonkex/checker"
 	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/output/terminal"
@@ -60,10 +58,7 @@ func normalize(s string) string {
 
 func testHandler(test models.TestInterface, executeTest TestExecutor) error {
 	_, err := executeTest(test)
-	if err != nil {
-		if errors.Is(err, checker.ErrTestSkipped) || errors.Is(err, checker.ErrTestBroken) {
-			return nil
-		}
+	if err != nil && !isTestWasSkipped(err) {
 		return err
 	}
 	return nil
