@@ -54,13 +54,10 @@ func Compare(expected, actual interface{}, params Params) []error {
 func compareBranch(path string, expected, actual interface{}, params *Params) []error {
 	expectedType := getType(expected)
 	actualType := getType(actual)
-	var errors []error
 
 	// compare types
 	if leafMatchType(expected) != regex && expectedType != actualType {
-		errors = append(errors, makeError(path, "types do not match", expectedType, actualType))
-
-		return errors
+		return []error{makeError(path, "types do not match", expectedType, actualType)}
 	}
 
 	// compare scalars
@@ -69,13 +66,13 @@ func compareBranch(path string, expected, actual interface{}, params *Params) []
 	}
 
 	// compare arrays
+	var errors []error
 	if actualType == arrayType {
 		expectedArray := convertToArray(expected)
 		actualArray := convertToArray(actual)
 
 		if len(expectedArray) != len(actualArray) {
 			errors = append(errors, makeError(path, "array lengths do not match", len(expectedArray), len(actualArray)))
-
 			return errors
 		}
 
@@ -86,8 +83,7 @@ func compareBranch(path string, expected, actual interface{}, params *Params) []
 		// iterate over children
 		for i, item := range expectedArray {
 			subPath := fmt.Sprintf("%s[%d]", path, i)
-			res := compareBranch(subPath, item, actualArray[i], params)
-			errors = append(errors, res...)
+			errors = append(errors, compareBranch(subPath, item, actualArray[i], params)...)
 			if params.failFast && len(errors) != 0 {
 				return errors
 			}
@@ -101,7 +97,6 @@ func compareBranch(path string, expected, actual interface{}, params *Params) []
 
 		if params.DisallowExtraFields && expectedRef.Len() != actualRef.Len() {
 			errors = append(errors, makeError(path, "map lengths do not match", expectedRef.Len(), actualRef.Len()))
-
 			return errors
 		}
 
@@ -112,7 +107,6 @@ func compareBranch(path string, expected, actual interface{}, params *Params) []
 				if params.failFast {
 					return errors
 				}
-
 				continue
 			}
 
@@ -155,52 +149,40 @@ func isScalarType(t string) bool {
 }
 
 func compareLeafs(path string, expected, actual interface{}) []error {
-	var errors []error
-
 	switch leafMatchType(expected) {
 	case pure:
-		errors = append(errors, comparePure(path, expected, actual)...)
-
+		return comparePure(path, expected, actual)
 	case regex:
-		errors = append(errors, compareRegex(path, expected, actual)...)
-
+		return compareRegex(path, expected, actual)
 	default:
-		errors = append(errors, fmt.Errorf("unknown compare type %q", expected))
+		return []error{fmt.Errorf("unknown compare type %q", expected)}
 	}
-
-	return errors
 }
 
-func comparePure(path string, expected, actual interface{}) (errors []error) {
+func comparePure(path string, expected, actual interface{}) []error {
 	if expected != actual {
-		errors = append(errors, makeValueCompareError(path, "values do not match", expected, actual))
+		return []error{makeValueCompareError(path, "values do not match", expected, actual)}
 	}
-
-	return errors
+	return nil
 }
 
-func compareRegex(path string, expected, actual interface{}) (errors []error) {
-	regexExpr, ok := expected.(string)
-	if !ok {
-		errors = append(errors, makeError(path, "type mismatch", "string", reflect.TypeOf(expected)))
-
-		return errors
+func compareRegex(path string, expected, actual interface{}) []error {
+	if !isScalarType(getType(actual)) {
+		return []error{makeError(path, "type mismatch", "string", reflect.TypeOf(expected))}
 	}
 
-	regexExpr, _ = StringAsRegexp(regexExpr)
+	regexExpr, _ := StringAsRegexp(expected.(string))
 
 	rx, err := regexp.Compile(regexExpr)
 	if err != nil {
-		errors = append(errors, makeError(path, "can not compile regex", nil, "error"))
-
-		return errors
+		// simplify error text
+		errorText := strings.TrimPrefix(err.Error(), "error parsing regexp: ")
+		return []error{makeError(path, "cannot compile regexp", nil, errorText)}
 	}
 
 	value := fmt.Sprintf("%v", actual)
 	if !rx.MatchString(value) {
-		errors = append(errors, makeError(path, "value does not match regex", expected, actual))
-
-		return errors
+		return []error{makeError(path, "value does not match regexp", expected, actual)}
 	}
 
 	return nil
