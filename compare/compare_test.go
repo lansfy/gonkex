@@ -160,6 +160,11 @@ func TestCompareJson(t *testing.T) {
 			actual:   `["1", "2"]`,
 		},
 		{
+			name:     "empty arrays MUST be equal",
+			expected: `[]`,
+			actual:   `[]`,
+		},
+		{
 			name:     "array of string with same element, but different order MUST be equal IF compare with IgnoreArraysOrdering",
 			expected: `["1", "2"]`,
 			actual:   `["2", "1"]`,
@@ -205,6 +210,23 @@ func TestCompareJson(t *testing.T) {
 			expected: `["2", "$matchRegexp(x.+z)"]`,
 			actual:   `["2", "ayyyb"]`,
 			wantErr:  makeErrorString("$[1]", "value does not match regexp", "$matchRegexp(x.+z)", "ayyyb"),
+		},
+		{
+			name:     "WHEN first element in array is $matchArrayByPattern next element MUST treat as template for all elements in this array",
+			expected: `["$matchArrayByPattern()", ["$matchRegexp(^[0-4]+$)", "a"]]`,
+			actual:   `[["12", "a"], ["34", "a"], ["03", "a"]]`,
+		},
+		{
+			name:     "WHEN use $matchArrayByPattern and one element of array does not match the pattern, the check MUST fail",
+			expected: `["$matchArrayByPattern()", ["$matchRegexp(^[0-4]+$)", "a"]]`,
+			actual:   `[["12", "a"], ["34", "a"], ["45", "a"]]`,
+			wantErr:  makeErrorString("$[2][0]", "value does not match regexp", "$matchRegexp(^[0-4]+$)", "45"),
+		},
+		{
+			name:     "WHEN use $matchArrayByPattern and didn't provide pattern, the check MUST fail",
+			expected: `["$matchArrayByPattern()"]`,
+			actual:   `[["12", "a"], ["34", "a"]]`,
+			wantErr:  makeErrorString("$", "$matchArrayByPattern() require only one additional element in array", 1, 0),
 		},
 		{
 			name:     "equal maps MUST be equal",

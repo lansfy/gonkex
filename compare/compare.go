@@ -71,6 +71,11 @@ func compareBranch(path string, expected, actual interface{}, params *Params) []
 		expectedArray := convertToArray(expected)
 		actualArray := convertToArray(actual)
 
+		expectedArray, err := processMatchArrayByPattern(path, expectedArray, len(actualArray))
+		if err != nil {
+			return append(errors, err)
+		}
+
 		if len(expectedArray) != len(actualArray) {
 			errors = append(errors, makeError(path, "array lengths do not match", len(expectedArray), len(actualArray)))
 			return errors
@@ -229,7 +234,7 @@ func makeError(path, msg string, expected, actual interface{}) error {
 func convertToArray(array interface{}) []interface{} {
 	ref := reflect.ValueOf(array)
 
-	interfaceSlice := make([]interface{}, 0)
+	interfaceSlice := make([]interface{}, 0, ref.Len())
 	for i := 0; i < ref.Len(); i++ {
 		interfaceSlice = append(interfaceSlice, ref.Index(i).Interface())
 	}
@@ -268,4 +273,27 @@ func getUnmatchedArrays(expected, actual []interface{}, params *Params) (expecte
 	}
 
 	return expectedError, actual
+}
+
+func processMatchArrayByPattern(path string, expectedArray []interface{}, actualLen int) ([]interface{}, error) {
+	expectedLen := len(expectedArray)
+	if expectedLen == 0 {
+		return expectedArray, nil
+	}
+
+	val, ok := expectedArray[0].(string)
+	if !ok || val != "$matchArrayByPattern()" {
+		return expectedArray, nil
+	}
+
+	if expectedLen != 2 {
+		return expectedArray, makeError(path, "$matchArrayByPattern() require only one additional element in array", 1, expectedLen-1)
+	}
+
+	res := make([]interface{}, 0, actualLen)
+	for i := 0; i < actualLen; i++ {
+		res = append(res, expectedArray[1])
+	}
+
+	return res, nil
 }
