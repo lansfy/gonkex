@@ -16,7 +16,7 @@ type ServiceMock struct {
 	defaultDefinition *Definition
 	mutex             sync.RWMutex
 	errors            []error
-	checkers          []Checker
+	checkers          []CheckerInterface
 
 	ServiceName string
 }
@@ -83,7 +83,7 @@ func (m *ServiceMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	for _, c := range m.checkers {
 		setRequestBody(r, body)
-		errs := c.Check(m.ServiceName, r, wrap.CreateHttpResponse()) // nolint:bodyclose // we have single copy of data
+		errs := c.CheckRequest(m.ServiceName, r, wrap.CreateHttpResponse()) // nolint:bodyclose // we have single copy of data
 		m.errors = append(m.errors, errs...)
 	}
 
@@ -125,7 +125,7 @@ func (m *ServiceMock) EndRunningContext() []error {
 	return errs
 }
 
-func (m *ServiceMock) SetCheckers(checkers []Checker) {
+func (m *ServiceMock) SetCheckers(checkers []CheckerInterface) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
