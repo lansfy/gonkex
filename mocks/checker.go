@@ -4,6 +4,6 @@ import (
 	"net/http"
 )
 
-type Checker interface {
-	Check(serviceName string, req *http.Request, resp *http.Response) []error
+type CheckerInterface interface {
+	CheckRequest(mockName string, req *http.Request, resp *http.Response) []error
 }

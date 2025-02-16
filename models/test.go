@@ -50,7 +50,7 @@ type TestInterface interface {
 	GetRequest() string
 	GetForm() Form
 
-	GetMeta() map[string]interface{}
+	GetMeta(key string) interface{}
 
 	GetStatus() Status
 	GetResponses() map[int]string
