@@ -56,7 +56,7 @@ To integrate functional and native Go tests and run them together, use gonkex as
 
 Create a test file, for example `func_test.go`.
 
-Import gonkex as a dependency to your project in this file.
+Import gonkex as a dependency to your project in this file:
 
 ```go
 import (
@@ -108,6 +108,10 @@ func TestFuncCases(t *testing.T) {
 
 Externally written storage may be used for loading test data, if gonkex used as a library.
 To start using the custom storage, you need to import the custom module, that contains implementation of storage.StorageInterface interface.
+For example, the following NoSQL databases are currently supported as custom modules:
+- Aerospike (github.com/lansfy/gonkex/storage/addons/aerospike)
+- MongoDB (github.com/lansfy/gonkex/storage/addons/mongo)
+- Redis (github.com/lansfy/gonkex/storage/addons/redis)
 
 The tests can be now ran with `go test`, for example: `go test ./...`.
 
@@ -226,8 +230,8 @@ or for elements of map/array (if it's JSON):
         "jsonrpc": "$matchRegexp([12].0)",
         "result": [
           "data": [
-              "$matchRegexp(ORDER[0]{3}[0-9])",
-              "$matchRegexp(ORDER[0]{3}[0-9])"
+              "$matchRegexp(^ORDER[0]{3}[0-9]$)",
+              "$matchRegexp(^ORDER[0]{3}[0-9]$)"
           ]
         ]
       }
@@ -254,8 +258,33 @@ or for elements of map/array (if it's JSON):
 `status` - a parameter, for specially mark tests, can have following values:
 
 - `broken` - do not run test, only mark it as broken
-- `skipped` - do not run test, skip it
+- `skipped` - do not run test, only mark it as skipped
 - `focus` - run only this specific test, and mark all other tests with unset status as `skipped`
+
+## Retry policy
+
+If you expect a test to succeed after only a few attempts (for example, one testcase has run some asynchronous operation and the second testcase is trying to wait for the results after that),
+then you need to do several test retry. You can define the number of retries required using the `retryPolicy` field.
+
+Example:
+
+```yaml
+ - name: wait for operation result
+   method: GET
+   ...
+   retryPolicy:
+     attempts: 6         # retry failed test 6 times
+     delay: 5s           # with 5 second delay between retries
+     successInRow: 2     # it takes 2 successful test runs to recognize the test as successful
+```
+
+Next fields supported:
+
+`attempts` - an integer indicating the number of times that gonkex will retry the test request in the event assertions fail.
+
+`delay` - string containing the waiting time after unsuccessful completion of the test.
+
+`successInRow` - parameter defines the required number of successful test passes for the test to be recognized as successful. And all these successful runs must be consecutive. Default value is 1.
 
 ## Variables
 
@@ -340,6 +369,7 @@ Example:
 
 # if the response is JSON
 - name: "get_last_post_info"
+  ...
   variables_to_set:
     200:
       id: "id"
@@ -419,6 +449,7 @@ with _boundary_ (optional):
 
 
 ### Form
+
 Example:
 
 ```yaml
@@ -441,6 +472,7 @@ Example:
 ```
 
 ### File upload
+
 You can upload files in test request.
 Example:
 
@@ -461,6 +493,7 @@ Example:
 ```
 
 with form:
+
 ```yaml
  - name: "upload-multipart-form-data"
    method: POST
@@ -482,8 +515,6 @@ with form:
 ## Fixtures
 
 To seed the DB before the test, gonkex uses fixture files.
-
-- You can use schema in PostreSQL: schema.table_name
 
 File example:
 
@@ -545,7 +576,8 @@ tables:
 
 ### Record templates
 
-Usually, to insert a record to a DB, it's necessary to list all the fields without default values. Oftentimes, many of those fields are not important for the test, and their values repeat from one fixture to another, creating unnecessary visual garbage and making the maintenance harder.
+Usually, to insert a record to a DB, it's necessary to list all the fields without default values.
+Oftentimes, many of those fields are not important for the test, and their values repeat from one fixture to another, creating unnecessary visual garbage and making the maintenance harder.
 
 With templates you can inherit the fields from template record redefining only the fields that are important for the test.
 
@@ -614,11 +646,14 @@ tables:
 
 Don't forget to declare the dependency between files in `inherits`, to make sure that one file is always loaded together with the other one.
 
-It's important to note that record inheritance only works with different fixture files. It's not possible to declare inheritance within one file.
+It's important to note that record inheritance only works with different fixture files.
+It's not possible to declare inheritance within one file.
 
 ### Expressions
 
-When you need to write an expression execution result to the DB and not a static value, you can use `$eval()` construct. Everything inside the brackets will be inserted into the DB as raw, non-escaped data. This way, within `$eval()` you can write everything you would in a regular query.
+When you need to write an expression execution result to the DB and not a static value, you can use `$eval()` construct.
+Everything inside the brackets will be inserted into the DB as raw, non-escaped data.
+This way, within `$eval()` you can write everything you would in a regular query.
 
 For instance, this construct allows the insertion of current date and time as a field value:
 
@@ -631,11 +666,13 @@ tables:
 
 In order to imitate responses from external services, use mocks.
 
-A mock is a web server that is running on-the-fly, and is populated with certain logic before the execution of each test. The logic defines what the server responses to a certain request. It's defined in the test file.
+A mock is a web server that is running on-the-fly, and is populated with certain logic before the execution of each test.
+The logic defines what the server responses to a certain request. It's defined in the test file.
 
 ### Running mocks while using gonkex as a library
 
-Before running tests, all planned mocks are started. It means that gonkex spins up the given number of servers and each one of them gets a random port assigned.
+Before running tests, all planned mocks are started.
+It means that gonkex spins up the given number of servers and each one of them gets a random port assigned.
 
 ```go
 // create empty server mocks
@@ -654,7 +691,8 @@ if err != nil {
 defer m.Shutdown()
 ```
 
-After spinning up the mock web-servers, we can get their addresses (host and port). Using those addresses, you can configure your service to send their requests to mocked servers instead of real ones.
+After spinning up the mock web-servers, we can get their addresses (host and port).
+Using those addresses, you can configure your service to send their requests to mocked servers instead of real ones.
 
 ```go
 // configuring and running the service
@@ -667,6 +705,9 @@ srv := server.NewServer(&server.Config{
 defer srv.Close()
 ```
 
+Additionally, library registers special environment variables `GONKEX_MOCK_<MOCK_NAME>` the for every mock, which contain the address and port of the corresponding mock server.
+You can use these environment variables when writing tests.
+
 As soon as you spinned up your mocks and configured your service, you can run the tests.
 
 ```go
@@ -676,16 +717,17 @@ runner.RunWithTesting(t, srv.URL, &runner.RunWithTestingParams{
 })
 ```
 
-Additionally, the library registers special environment variables `GONKEX_MOCK_<MOCK_NAME>`, which contain the address and port of the corresponding mock server. You can use these environment variables when writing tests.
-
 ### Mocks definition in the test file
 
-Each test communicates a configuration to the mock-server before running. This configuration defines the responses for specific requests in the mock-server. The configuration is defined in a YAML-file with test in the `mocks` section.
+Each test communicates a configuration to the mock-server before running. This configuration defines the responses for specific requests in the mock-server.
+The configuration is defined in a YAML-file with test in the `mocks` section.
 
 The test file can contain any number of mock service definitions:
 
 ```yaml
 - name: Test with mocks
+  request:
+    ...
   ...
   mocks:
     service1:
@@ -694,8 +736,6 @@ The test file can contain any number of mock service definitions:
       ...
     service3:
       ...
-  request:
-    ...
 ```
 
 Each mock-service definition consists of:

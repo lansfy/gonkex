@@ -282,12 +282,12 @@ func processMatchArrayByPattern(path string, expectedArray []interface{}, actual
 	}
 
 	val, ok := expectedArray[0].(string)
-	if !ok || val != "$matchArrayByPattern()" {
+	if !ok || val != "$matchArray(pattern)" {
 		return expectedArray, nil
 	}
 
 	if expectedLen != 2 {
-		return expectedArray, makeError(path, "$matchArrayByPattern() require only one additional element in array", 1, expectedLen-1)
+		return expectedArray, makeError(path, "$matchArray(pattern) require only one additional element in array", 1, expectedLen-1)
 	}
 
 	res := make([]interface{}, 0, actualLen)
