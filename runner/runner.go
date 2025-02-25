@@ -250,13 +250,11 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		return nil, err
 	}
 
-	bodyStr := string(body)
-
 	result := &models.Result{
 		Path:                req.URL.Path,
 		Query:               req.URL.RawQuery,
 		RequestBody:         actualRequestBody(req),
-		ResponseBody:        bodyStr,
+		ResponseBody:        string(body),
 		ResponseContentType: resp.Header.Get("Content-Type"),
 		ResponseStatusCode:  resp.StatusCode,
 		ResponseStatus:      resp.Status,
@@ -288,7 +286,7 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	}
 
 	var changed bool
-	changed, err = r.setVariablesFromResponse(v, result.ResponseContentType, bodyStr, resp.StatusCode)
+	changed, err = r.setVariablesFromResponse(v, result)
 	if err != nil {
 		// we should show response in output, so better to add this error as result error
 		// and skip all checkers
@@ -311,15 +309,13 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	return result, nil
 }
 
-func (r *Runner) setVariablesFromResponse(t models.TestInterface, contentType, body string, statusCode int) (bool, error) {
+func (r *Runner) setVariablesFromResponse(t models.TestInterface, result *models.Result) (bool, error) {
 	varTemplates := t.GetVariablesToSet()
 	if varTemplates == nil {
 		return false, nil
 	}
 
-	isJSON := strings.Contains(contentType, "json") && body != ""
-
-	vars, err := extractVariablesFromResponse(varTemplates[statusCode], body, isJSON)
+	vars, err := extractVariablesFromResponse(varTemplates[result.ResponseStatusCode], result)
 	if err != nil {
 		return false, colorize.NewEntityError("%s", "variables_to_set").SetSubError(err)
 	}
