@@ -1,5 +1,3 @@
-export GO111MODULE=on
-
 REPO=lansfy
 NAME=gonkex
 VERSION=$(shell git describe --tags 2> /dev/null || git rev-parse --short HEAD)
