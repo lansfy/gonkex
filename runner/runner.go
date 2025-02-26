@@ -310,12 +310,12 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 }
 
 func (r *Runner) setVariablesFromResponse(t models.TestInterface, result *models.Result) (bool, error) {
-	varTemplates := t.GetVariablesToSet()
-	if varTemplates == nil {
+	varTemplates, ok := t.GetVariablesToSet(result.ResponseStatusCode)
+	if !ok || len(varTemplates) == 0 {
 		return false, nil
 	}
 
-	vars, err := extractVariablesFromResponse(varTemplates[result.ResponseStatusCode], result)
+	vars, err := extractVariablesFromResponse(varTemplates, result)
 	if err != nil {
 		return false, colorize.NewEntityError("%s", "variables_to_set").SetSubError(err)
 	}

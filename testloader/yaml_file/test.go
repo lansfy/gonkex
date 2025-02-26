@@ -220,8 +220,12 @@ func (t *Test) GetForm() models.Form {
 	return &formValues{t.Form}
 }
 
-func (t *Test) GetVariablesToSet() map[int]map[string]string {
-	return t.VariablesToSet
+func (t *Test) GetVariablesToSet(code int) (map[string]string, bool) {
+	if t.VariablesToSet != nil {
+		val, ok := t.VariablesToSet[code]
+		return val, ok
+	}
+	return nil, false
 }
 
 func (t *Test) GetFileName() string {

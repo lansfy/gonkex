@@ -76,9 +76,10 @@ func (o *Output) Process(_ models.TestInterface, result *models.Result) error {
 
 func renderResult(result *models.Result, policy ColorPolicy) (string, error) {
 	_, hasHeaders := result.Test.GetResponseHeaders(result.ResponseStatusCode)
+	_, hasVariables := result.Test.GetVariablesToSet(result.ResponseStatusCode)
 
 	var buffer bytes.Buffer
-	t := template.Must(template.New("report").Funcs(getTemplateFuncMap(policy, hasHeaders)).Parse(resultTmpl))
+	t := template.Must(template.New("report").Funcs(getTemplateFuncMap(policy, hasHeaders || hasVariables)).Parse(resultTmpl))
 	if err := t.Execute(&buffer, result); err != nil {
 		return "", err
 	}

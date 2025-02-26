@@ -75,7 +75,7 @@ type TestInterface interface {
 
 	GetVariables() map[string]string
 	GetCombinedVariables() map[string]string
-	GetVariablesToSet() map[int]map[string]string
+	GetVariablesToSet(code int) (map[string]string, bool)
 
 	GetFileName() string
 	FirstTestInFile() bool
