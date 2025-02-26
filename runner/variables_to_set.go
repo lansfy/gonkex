@@ -2,62 +2,91 @@ package runner
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
 
 	"github.com/lansfy/gonkex/colorize"
+	"github.com/lansfy/gonkex/models"
 
 	"github.com/tidwall/gjson"
 )
 
-func extractVariablesFromResponse(varsToSet map[string]string, body string, isJSON bool) (map[string]string, error) {
+func extractVariablesFromResponse(varsToSet map[string]string, result *models.Result) (map[string]string, error) {
 	vars := map[string]string{}
-	names, paths := split(varsToSet)
-	var err error
-	if isJSON {
-		err = fromJSON(vars, names, paths, body)
-	} else {
-		err = fromPlainText(vars, names, body)
+	for name, path := range varsToSet {
+		value, err := processPath(path, result)
+		if err != nil {
+			return nil, colorize.NewEntityError("variable %s", name).SetSubError(err)
+		}
+		vars[name] = value
 	}
-	if err != nil {
-		return nil, err
-	}
-
 	return vars, nil
 }
 
-func fromJSON(vars map[string]string, names, paths []string, body string) error {
-	for n, res := range gjson.GetMany(body, paths...) {
-		if !res.Exists() {
-			return colorize.NewEntityError("variable %s", names[n]).SetSubError(
-				colorize.NewError("path %s does not exist in service response", colorize.Green(paths[n])),
-			)
-		}
-		vars[names[n]] = res.String()
+func processPath(path string, result *models.Result) (string, error) {
+	prefix := "body"
+	parts := strings.SplitN(path, ":", 2)
+	if len(parts) == 2 {
+		prefix = parts[0]
+		path = strings.Trim(parts[1], " ")
 	}
 
-	return nil
+	switch prefix {
+	case "body":
+		if path == "" {
+			return result.ResponseBody, nil
+		}
+		isJSON := strings.Contains(result.ResponseContentType, "json") && result.ResponseBody != ""
+		if isJSON {
+			return getStringFromJSON(result.ResponseBody, path)
+		}
+		return "", fmt.Errorf("paths not supported for plain text body")
+	case "header":
+		if valArr := result.ResponseHeaders[path]; len(valArr) != 0 {
+			return valArr[0], nil
+		}
+		return "", colorize.NewEntityError("response does not include expected header %s", path)
+	case "cookie":
+		valArr, ok := result.ResponseHeaders["Set-Cookie"]
+		if !ok {
+			return "", colorize.NewEntityError("response does not include expected header %s", "Set-Cookie")
+		}
+
+		for _, line := range valArr {
+			if cookie := parseSetCookies(line); cookie != nil {
+				if cookie.Name == path {
+					return cookie.Value, nil
+				}
+			}
+		}
+		return "", colorize.NewEntityError("Set-Cookie header does not include expected cookie %s", path)
+	default:
+		return "", fmt.Errorf("unexpected path prefix '%s' (allowed only [body header cookie])", prefix)
+	}
 }
 
-func fromPlainText(vars map[string]string, names []string, body string) error {
-	if len(names) == 1 {
-		vars[names[0]] = body
+func getStringFromJSON(body, path string) (string, error) {
+	res := gjson.Get(body, path)
+	if !res.Exists() {
+		return "", colorize.NewError("path %s does not exist in service response", colorize.Green(path))
+	}
+	return res.String(), nil
+}
+
+func parseSetCookies(header string) *http.Cookie {
+	parts := strings.Split(header, ";")
+	if len(parts) == 0 {
 		return nil
 	}
 
-	return fmt.Errorf(
-		"count of variables for plain-text response should be 1, %d given",
-		len(names),
-	)
-}
-
-// split returns keys and values of given map as separate slices
-func split(m map[string]string) (keys, values []string) {
-	values = make([]string, 0, len(m))
-	keys = make([]string, 0, len(m))
-
-	for k, v := range m {
-		keys = append(keys, k)
-		values = append(values, v)
+	// First part is always "key=value"
+	keyValue := strings.SplitN(strings.TrimSpace(parts[0]), "=", 2)
+	if len(keyValue) != 2 {
+		return nil
 	}
 
-	return keys, values
+	return &http.Cookie{
+		Name:  strings.TrimSpace(keyValue[0]),
+		Value: strings.TrimSpace(keyValue[1]),
+	}
 }

@@ -365,7 +365,8 @@ Example:
 - name: "get_last_post_id"
   ...
   variables_to_set:
-    200: "id"
+    200:
+      id: ""                      # store whole text body to variable
 
 # if the response is JSON
 - name: "get_last_post_info"
@@ -374,15 +375,24 @@ Example:
     200:
       id: "id"
       title: "title"
-      authorId: "author_info.id"
+      authorId: "author_info.id"  # get nested json fields here (any nesting levels are supported)
+      wholeBody: ""               # store whole text body to variable
 ```
 
-You can access nested json fields like this:
-> "author_info.id"
+It is also possible to retrieve values from the headers and cookies of a query. To do this, specify the prefix "header:" or "cookie:" in the path, respectively. For example,
 
-Any nesting levels are supported.
+```yaml
+- name: "get_last_post_id"
+  ...
+  variables_to_set:
+    302:
+      newLocation: "header:Location"    # get value from "Location" header
+      sessionId: "cookie:session_id"    # get value from "session_id" cookie
+      authorId: "body:author_info.id"   # optional "body:" prefix allows to get value from body
+```
 
-#### From the response of currently running test
+
+#### From the response body of currently running test
 
 Example:
 
