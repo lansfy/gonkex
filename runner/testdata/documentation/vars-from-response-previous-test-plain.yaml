@@ -1,0 +1,29 @@
+- name: collect variables from service plain response
+  method: GET
+  path: /some/path/plain_text
+  response:
+    200: "bodycontent"
+  variables_to_set:
+    200:
+      "bodyVar": ""
+      "headerVar": "header:Some-Header"
+      "cookieVar": "cookie:sessionId"
+  mocks: &ref
+    testservice:
+      strategy: constant
+      headers:
+        Some-Header: some-header-value
+        Set-Cookie: sessionId=38afes7a8
+      body: "bodycontent"
+      statusCode: 200
+
+- name: check variables values
+  method: GET
+  path: /some/path/plain_text
+  response:
+    200: "{{ $bodyVar }}"
+  responseHeaders:
+    200:
+      Some-Header: "{{ $headerVar }}"
+      Set-Cookie: "sessionId={{ $cookieVar }}"
+  mocks: *ref

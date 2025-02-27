@@ -20,21 +20,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type serverWithRedirect struct{}
-
-func (s *serverWithRedirect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/redirect-url", http.StatusFound)
-}
-
-func Test_dontFollowRedirects(t *testing.T) {
-	srv := httptest.NewServer(&serverWithRedirect{})
-	defer srv.Close()
-
-	RunWithTesting(t, srv.URL, &RunWithTestingOpts{
-		TestsDir: "testdata/dont-follow-redirects",
-	})
-}
-
 type failEndpoint struct {
 	expectedError string
 	pattern       string

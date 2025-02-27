@@ -272,6 +272,12 @@ func (t *Test) ApplyVariables(perform func(string) string) {
 	t.Responses = performResponses(t.Responses, perform)
 	t.HeadersVal = performHeaders(t.HeadersVal, perform)
 
+	resHeaders := map[int]map[string]string{}
+	for key, val := range t.ResponseHeaders {
+		resHeaders[key] = performHeaders(val, perform)
+	}
+	t.ResponseHeaders = resHeaders
+
 	if t.Form != nil {
 		t.Form = performForm(t.Form, perform)
 	}
