@@ -29,7 +29,7 @@ func (f *docStorage) ExecuteQuery(query string) ([]json.RawMessage, error) {
 	return nil, fmt.Errorf("wrong request to DB received: %q", query)
 }
 
-func Test_Documentation2_Examples(t *testing.T) {
+func Test_Documentation_Examples(t *testing.T) {
 	m := mocks.NewNop("testservice")
 	err := m.Start()
 	require.NoError(t, err)

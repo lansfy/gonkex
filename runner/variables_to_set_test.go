@@ -208,7 +208,7 @@ func Test_extractVariablesFromCookie(t *testing.T) {
 				"var1": "cookie:session_id",
 				"var2": "cookie:wrong_name",
 			},
-			wantErr: "variable 'var2': Set-Cookie header does not include expected cookie 'wrong_name'",
+			wantErr: "variable 'var2': 'Set-Cookie' header does not include expected cookie wrong_name",
 		},
 	}
 

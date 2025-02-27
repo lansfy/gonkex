@@ -1,0 +1,38 @@
+- name: default http client MUST not follow redirect
+  description: In this test we get Location header value, store it in `locationVar` variable and use in next request
+  method: GET
+  path: /test/redirect
+  response:
+    302: ""
+  responseHeaders:
+    302:
+      Location: /test/other-url
+  variables_to_set:
+    302:
+      locationVar: "header:Location"
+  mocks:
+    testservice:
+      calls: 1
+      strategy: uriVary
+      uris:
+        /test/redirect:
+          strategy: constant
+          headers:
+            Location: /test/other-url
+          body: ""
+          statusCode: 302
+
+- name: use variable to make request to correct url after redirect
+  method: GET
+  path: "{{ $locationVar }}"
+  response:
+    200: ""
+  mocks:
+    testservice:
+      calls: 1
+      strategy: uriVary
+      uris:
+        /test/other-url:
+          strategy: constant
+          body: ""
+          statusCode: 200

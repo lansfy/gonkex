@@ -59,7 +59,8 @@ func processPath(path string, result *models.Result) (string, error) {
 				}
 			}
 		}
-		return "", colorize.NewEntityError("Set-Cookie header does not include expected cookie %s", path)
+		return "", colorize.NewError("%s header does not include expected cookie %s",
+			colorize.Cyan("Set-Cookie"), colorize.Green(path))
 	default:
 		return "", fmt.Errorf("unexpected path prefix '%s' (allowed only [body header cookie])", prefix)
 	}
