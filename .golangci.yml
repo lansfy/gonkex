@@ -75,7 +75,7 @@ linters:
     #- funlen
     - gochecknoinits
     #- goconst
-    #- gocritic
+    - gocritic
     - gofmt
     - goimports
     - gosimple

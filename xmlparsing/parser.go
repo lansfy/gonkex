@@ -24,13 +24,12 @@ func buildMap(nodes []node) map[string]interface{} {
 	result := make(map[string]interface{})
 
 	for name, group := range regroupNodesByName(nodes) {
-		if len(group) == 0 {
+		switch len(group) {
+		case 0:
 			continue
-		}
-
-		if len(group) == 1 {
-			result[name] = buildNode(group[0])
-		} else {
+		case 1:
+			result[name] = buildNode(&group[0])
+		default:
 			result[name] = buildArray(group)
 		}
 	}
@@ -40,21 +39,20 @@ func buildMap(nodes []node) map[string]interface{} {
 
 func buildArray(nodes []node) []interface{} {
 	arr := make([]interface{}, len(nodes))
-	for i, n := range nodes {
-		arr[i] = buildNode(n)
+	for i := range nodes {
+		arr[i] = buildNode(&nodes[i])
 	}
 
 	return arr
 }
 
-func buildNode(n node) interface{} {
+func buildNode(n *node) interface{} {
 	hasAttrs := len(n.Attrs) > 0
 	hasChildren := len(n.Children) > 0
 
 	if hasAttrs && hasChildren {
 		result := buildMap(n.Children)
 		result["-attrs"] = buildAttributes(n.Attrs)
-
 		return result
 	}
 

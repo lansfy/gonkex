@@ -27,19 +27,19 @@ func Test_newPathConstraint(t *testing.T) {
 		{
 			description: "set valid regexp MUST be successful",
 			def: map[interface{}]interface{}{
-				"regexp": "^/test[0-9]*$",
+				"regexp": `^/test\d*$`,
 			},
 			want: &pathConstraint{
-				regexp: regexp.MustCompile("^/test[0-9]*$"),
+				regexp: regexp.MustCompile(`^/test\d*$`),
 			},
 		},
 		{
 			description: "set valid regexp via path field MUST be successful",
 			def: map[interface{}]interface{}{
-				"path": "$matchRegexp(^/test[0-9]*$)",
+				"path": `$matchRegexp(^/test\d*$)`,
 			},
 			want: &pathConstraint{
-				regexp: regexp.MustCompile("^/test[0-9]*$"),
+				regexp: regexp.MustCompile(`^/test\d*$`),
 			},
 		},
 		{
@@ -117,15 +117,15 @@ func Test_pathConstraint_Verify(t *testing.T) {
 		},
 		{
 			description: "regexp matches",
-			re:          "^/test[0-9]*$",
+			re:          `^/test\d*$`,
 			reqPath:     "/test123",
 			wantErr:     "",
 		},
 		{
 			description: "regexp does not match",
-			re:          "^/test[0-9]*$",
+			re:          `^/test\d*$`,
 			reqPath:     "/mismatch",
-			wantErr:     "url 'path' does not match expected regexp:\n     expected: ^/test[0-9]*$\n       actual: /mismatch",
+			wantErr:     "url 'path' does not match expected regexp:\n     expected: ^/test\\d*$\n       actual: /mismatch",
 		},
 	}
 
@@ -134,7 +134,7 @@ func Test_pathConstraint_Verify(t *testing.T) {
 			checker, err := newPathConstraint(tt.path, tt.re)
 			require.NoError(t, err)
 
-			req, err := http.NewRequest(http.MethodGet, tt.reqPath, nil)
+			req, err := http.NewRequest(http.MethodGet, tt.reqPath, http.NoBody)
 			require.NoError(t, err)
 
 			got := checker.Verify(req)

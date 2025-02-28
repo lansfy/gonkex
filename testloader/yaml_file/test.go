@@ -188,7 +188,7 @@ func (t *Test) GetRetryPolicy() models.RetryPolicy {
 
 func (t *Test) ContentType() string {
 	for key, val := range t.HeadersVal {
-		if strings.ToLower(key) == "content-type" {
+		if strings.EqualFold(key, "content-type") {
 			return val
 		}
 	}

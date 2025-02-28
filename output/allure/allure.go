@@ -108,12 +108,8 @@ func (a *Allure) PendingCase(testName string, start time.Time) {
 	a.EndCase("pending", errors.New("test ignored"), start)
 }
 
-// utils
 func getBufferInfo(buf bytes.Buffer, typ string) (string, string) {
-	//    exts,err := mime.ExtensionsByType(typ)
-	//    if err != nil {
-	//        mime.ParseMediaType()
-	//    }
+	// TODO: detect extensions
 	return "text/plain", "txt"
 }
 
