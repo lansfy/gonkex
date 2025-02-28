@@ -167,7 +167,7 @@ func (s *statusServer) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 	s.counter++
-	_, _ = rw.Write([]byte(fmt.Sprintf(`{"calls":%d}`, s.counter)))
+	_, _ = fmt.Fprintf(rw, `{"calls":%d}`, s.counter)
 }
 
 func (s *statusServer) BeforeTest(v models.TestInterface) error {

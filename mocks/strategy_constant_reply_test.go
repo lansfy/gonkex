@@ -67,7 +67,7 @@ body: "Multi-header test"`,
 			require.NoError(t, err)
 
 			// Mock request and response
-			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
 			rec := httptest.NewRecorder()
 
 			// Call the HandleRequest method

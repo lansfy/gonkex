@@ -171,7 +171,8 @@ func (r *Runner) executeTestWithRetryPolicy(v models.TestInterface) (*models.Res
 	}
 
 	for _, o := range r.output {
-		if err = o.Process(v, testResult); err != nil {
+		err = o.Process(v, testResult)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -208,14 +209,16 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 
 	// load mocks
 	if v.ServiceMocks() != nil {
-		if err = r.config.Mocks.LoadDefinitions(r.config.MocksLoader, v.ServiceMocks()); err != nil {
+		err = r.config.Mocks.LoadDefinitions(r.config.MocksLoader, v.ServiceMocks())
+		if err != nil {
 			return nil, err
 		}
 	}
 
 	// launch script in cmd interface
 	if v.BeforeScriptPath() != "" {
-		if err = cmd_runner.CmdRun(v.BeforeScriptPath(), v.BeforeScriptTimeout()); err != nil {
+		err = cmd_runner.CmdRun(v.BeforeScriptPath(), v.BeforeScriptTimeout())
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -275,7 +278,8 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 
 	// launch script in cmd interface
 	if v.AfterRequestScriptPath() != "" {
-		if err = cmd_runner.CmdRun(v.AfterRequestScriptPath(), v.AfterRequestScriptTimeout()); err != nil {
+		err = cmd_runner.CmdRun(v.AfterRequestScriptPath(), v.AfterRequestScriptTimeout())
+		if err != nil {
 			return nil, err
 		}
 	}

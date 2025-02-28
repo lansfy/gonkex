@@ -120,7 +120,8 @@ func (m *ServiceMock) EndRunningContext() []error {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	errs := append(m.errors, m.mock.EndRunningContext()...)
+	errs := m.errors
+	errs = append(errs, m.mock.EndRunningContext()...)
 	for i := range errs {
 		errs[i] = colorize.NewEntityError("mock %s", m.ServiceName).SetSubError(errs[i])
 	}
