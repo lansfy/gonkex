@@ -99,7 +99,8 @@ func Test_ConstantReplyStrategy(t *testing.T) {
 		require.Equal(t, 200, res.StatusCode)
 
 		body, _ := io.ReadAll(res.Body)
-		res.Body.Close()
+		err = res.Body.Close()
+		require.NoError(t, err)
 		require.Equal(t, "somebodycontent", string(body))
 	}
 }

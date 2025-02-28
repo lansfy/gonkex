@@ -55,7 +55,7 @@ type RunWithTestingOpts struct {
 // opts: The configuration options for the test run.
 func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 	if opts.Mocks != nil {
-		registerMocksEnvironment(opts.Mocks)
+		registerMocksEnvironment(t, opts.Mocks)
 	}
 
 	if opts.EnvFilePath != "" {
@@ -103,11 +103,14 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 	}
 }
 
-func registerMocksEnvironment(m *mocks.Mocks) {
+func registerMocksEnvironment(t *testing.T, m *mocks.Mocks) {
 	names := m.GetNames()
 	for _, n := range names {
 		varName := fmt.Sprintf("GONKEX_MOCK_%s", strings.ToUpper(n))
-		os.Setenv(varName, m.Service(n).ServerAddr())
+		err := os.Setenv(varName, m.Service(n).ServerAddr())
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 }
 

@@ -44,7 +44,8 @@ func Test_Substitute(t *testing.T) {
 	vs.Set("name", "John")
 	vs.Set("city", "New York")
 
-	os.Setenv("ENV_VAR", "12345")
+	err := os.Setenv("ENV_VAR", "12345")
+	require.NoError(t, err)
 	defer os.Unsetenv("ENV_VAR")
 
 	tests := []struct {

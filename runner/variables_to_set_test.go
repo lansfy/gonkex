@@ -35,7 +35,7 @@ func Test_extractVariablesFromJSONResponse(t *testing.T) {
 				"var1": "key1",
 				"var2": "missingKey",
 			},
-			wantErr: "variable 'var2': path missingKey does not exist in service response",
+			wantErr: "variable 'var2': path '$.missingKey' does not exist in service response",
 		},
 		{
 			description: "json body with valid paths and optional prefix",
@@ -61,10 +61,11 @@ func Test_extractVariablesFromJSONResponse(t *testing.T) {
 			got, err := extractVariablesFromResponse(tt.varsToSet, result)
 
 			if tt.wantErr != "" {
-				require.Error(t, err)
-				require.EqualError(t, err, tt.wantErr)
+				require.Equal(t, 1, len(err))
+				require.Error(t, err[0])
+				require.EqualError(t, err[0], tt.wantErr)
 			} else {
-				require.NoError(t, err)
+				require.Equal(t, 0, len(err))
 				require.Equal(t, tt.want, got)
 			}
 		})
@@ -107,10 +108,11 @@ func Test_extractVariablesFromPlainResponse(t *testing.T) {
 			got, err := extractVariablesFromResponse(tt.varsToSet, result)
 
 			if tt.wantErr != "" {
-				require.Error(t, err)
-				require.EqualError(t, err, tt.wantErr)
+				require.Equal(t, 1, len(err))
+				require.Error(t, err[0])
+				require.EqualError(t, err[0], tt.wantErr)
 			} else {
-				require.NoError(t, err)
+				require.Equal(t, 0, len(err))
 				require.Equal(t, tt.want, got)
 			}
 		})
@@ -166,10 +168,11 @@ func Test_extractVariablesFromHeaders(t *testing.T) {
 			got, err := extractVariablesFromResponse(tt.varsToSet, result)
 
 			if tt.wantErr != "" {
-				require.Error(t, err)
-				require.EqualError(t, err, tt.wantErr)
+				require.Equal(t, 1, len(err))
+				require.Error(t, err[0])
+				require.EqualError(t, err[0], tt.wantErr)
 			} else {
-				require.NoError(t, err)
+				require.Equal(t, 0, len(err))
 				require.Equal(t, tt.want, got)
 			}
 		})
@@ -220,10 +223,11 @@ func Test_extractVariablesFromCookie(t *testing.T) {
 			got, err := extractVariablesFromResponse(tt.varsToSet, result)
 
 			if tt.wantErr != "" {
-				require.Error(t, err)
-				require.EqualError(t, err, tt.wantErr)
+				require.Equal(t, 1, len(err))
+				require.Error(t, err[0])
+				require.EqualError(t, err[0], tt.wantErr)
 			} else {
-				require.NoError(t, err)
+				require.Equal(t, 0, len(err))
 				require.Equal(t, tt.want, got)
 			}
 		})

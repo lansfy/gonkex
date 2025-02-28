@@ -43,7 +43,7 @@ func (e *Error) SetSubError(err error) *Error {
 func (e *Error) Error() string {
 	buf := strings.Builder{}
 	for _, p := range e.parts {
-		buf.WriteString(p.Text())
+		_, _ = buf.WriteString(p.Text())
 	}
 	return buf.String()
 }
@@ -55,7 +55,7 @@ func asIsString(format string, a ...interface{}) string {
 func (e *Error) ColorError() string {
 	buf := strings.Builder{}
 	for _, p := range e.parts {
-		buf.WriteString(p.ColorText())
+		_, _ = buf.WriteString(p.ColorText())
 	}
 	return buf.String()
 }

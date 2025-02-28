@@ -1,0 +1,13 @@
+- name: Test case 6
+  description: Test variables_to_set errors
+  method: GET
+  path: /json
+  response:
+    200: >
+      {"somefield": 1234}
+  variables_to_set:
+    200:
+      bodyVar: "status"
+      headerVar: "header:Some-Header"
+      cookieVar: "cookie:sessionId"
+      badVar: "wrong:aaaa"

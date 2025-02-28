@@ -46,7 +46,9 @@ func (m *ServiceMock) StartServerWithAddr(addr string) error {
 		Addr:    addr,
 		Handler: m,
 	}
-	go m.server.Serve(ln) // nolint:errcheck
+	go func() {
+		_ = m.server.Serve(ln)
+	}()
 	return nil
 }
 

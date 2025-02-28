@@ -134,7 +134,10 @@ func getRequestBodyCopy(r *http.Request) ([]byte, error) {
 		return nil, err
 	}
 
-	r.Body.Close()
+	err = r.Body.Close()
+	if err != nil {
+		return nil, err
+	}
 
 	// write body for future reusing
 	setRequestBody(r, body)

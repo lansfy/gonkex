@@ -73,6 +73,5 @@ func dropConnection(w http.ResponseWriter) error {
 	if err != nil {
 		return fmt.Errorf("gonkex internal error: connection hijacking: %w", err)
 	}
-	conn.Close()
-	return nil
+	return conn.Close()
 }

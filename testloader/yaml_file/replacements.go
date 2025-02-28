@@ -9,9 +9,9 @@ func performQuery(val string, perform func(string) string) string {
 	var query strings.Builder
 	query.Grow(len(val) + 1)
 	if val != "" && val[0] != '?' {
-		query.WriteString("?")
+		_, _ = query.WriteString("?")
 	}
-	query.WriteString(val)
+	_, _ = query.WriteString(val)
 	return query.String()
 }
 

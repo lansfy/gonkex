@@ -3,6 +3,7 @@ package runner
 import (
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/lansfy/gonkex/colorize"
@@ -11,16 +12,27 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-func extractVariablesFromResponse(varsToSet map[string]string, result *models.Result) (map[string]string, error) {
+func extractVariablesFromResponse(varsToSet map[string]string, result *models.Result) (map[string]string, []error) {
+	// sort keys
+	keys := make([]string, 0, len(varsToSet))
+	for k := range varsToSet {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	// process variables
 	vars := map[string]string{}
-	for name, path := range varsToSet {
+	var errors []error
+	for _, name := range keys {
+		path := varsToSet[name]
 		value, err := processPath(path, result)
 		if err != nil {
-			return nil, colorize.NewEntityError("variable %s", name).SetSubError(err)
+			errors = append(errors, colorize.NewEntityError("variable %s", name).SetSubError(err))
+		} else {
+			vars[name] = value
 		}
-		vars[name] = value
 	}
-	return vars, nil
+	return vars, errors
 }
 
 func processPath(path string, result *models.Result) (string, error) {
@@ -69,7 +81,7 @@ func processPath(path string, result *models.Result) (string, error) {
 func getStringFromJSON(body, path string) (string, error) {
 	res := gjson.Get(body, path)
 	if !res.Exists() {
-		return "", colorize.NewError("path %s does not exist in service response", colorize.Green(path))
+		return "", colorize.NewError("path %s does not exist in service response", colorize.Cyan("$."+path))
 	}
 	return res.String(), nil
 }

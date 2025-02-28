@@ -223,7 +223,7 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	// make pause
 	pause := v.Pause()
 	if pause > 0 {
-		fmt.Printf("Sleep %s before requests\n", pause)
+		_, _ = fmt.Printf("Sleep %s before requests\n", pause)
 		time.Sleep(pause)
 	}
 
@@ -285,12 +285,11 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		result.Errors = append(result.Errors, errs...)
 	}
 
-	var changed bool
-	changed, err = r.setVariablesFromResponse(v, result)
-	if err != nil {
+	changed, errs := r.setVariablesFromResponse(v, result)
+	if len(errs) != 0 {
 		// we should show response in output, so better to add this error as result error
 		// and skip all checkers
-		result.Errors = append(result.Errors, err)
+		result.Errors = append(result.Errors, errs...)
 		return result, nil
 	}
 
@@ -299,7 +298,7 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		v.ApplyVariables(r.config.Variables.Substitute)
 	}
 
-	errs, err := r.checkers.Check(v, result)
+	errs, err = r.checkers.Check(v, result)
 	if err != nil {
 		return nil, err
 	}
@@ -309,19 +308,18 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	return result, nil
 }
 
-func (r *Runner) setVariablesFromResponse(t models.TestInterface, result *models.Result) (bool, error) {
+func (r *Runner) setVariablesFromResponse(t models.TestInterface, result *models.Result) (bool, []error) {
 	varTemplates, ok := t.GetVariablesToSet(result.ResponseStatusCode)
 	if !ok || len(varTemplates) == 0 {
 		return false, nil
 	}
 
-	vars, err := extractVariablesFromResponse(varTemplates, result)
-	if err != nil {
-		return false, colorize.NewEntityError("%s", "variables_to_set").SetSubError(err)
-	}
-
-	if len(vars) == 0 {
-		return false, nil
+	vars, errs := extractVariablesFromResponse(varTemplates, result)
+	if len(errs) != 0 || len(vars) == 0 {
+		for idx := range errs {
+			errs[idx] = colorize.NewEntityError("%s", "variables_to_set").SetSubError(errs[idx])
+		}
+		return false, errs
 	}
 
 	r.config.Variables.Merge(vars)

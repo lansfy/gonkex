@@ -60,6 +60,6 @@ func (s *constantReply) HandleRequest(w http.ResponseWriter, r *http.Request) []
 		w.Header().Add(k, v)
 	}
 	w.WriteHeader(s.statusCode)
-	w.Write(s.replyBody) // nolint:errcheck
+	_, _ = w.Write(s.replyBody)
 	return nil
 }
