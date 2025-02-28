@@ -6,7 +6,6 @@ package cmd_runner
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -51,19 +50,19 @@ func CmdRun(scriptPath string, timeout time.Duration) error {
 		if err := syscall.Kill(-pgid, 15); err != nil {
 			return err
 		}
-		fmt.Printf("Process killed as timeout (%s) reached\n", timeout)
+		_, _ = fmt.Printf("Process killed as timeout (%s) reached\n", timeout)
 	case err := <-done:
 		if err != nil {
 			return fmt.Errorf("process finished with error = %v", err)
 		}
-		log.Print("Process finished successfully")
+		_, _ = fmt.Print("Process finished successfully")
 	}
 
 	// Print log
 	scanner := bufio.NewScanner(stdout)
 	for scanner.Scan() {
 		m := scanner.Text()
-		fmt.Println(m)
+		_, _ = fmt.Println(m)
 	}
 
 	return nil

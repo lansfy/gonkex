@@ -62,7 +62,7 @@ linters-settings:
       - name: unexported-return
       - name: unnecessary-stmt
       - name: unreachable-code
-      #- name: unhandled-error
+      - name: unhandled-error
       - name: var-declaration
 
 linters:

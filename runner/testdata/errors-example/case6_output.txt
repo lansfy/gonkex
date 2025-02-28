@@ -1,0 +1,35 @@
+
+       Name: Test case 6
+Description: Test variables_to_set errors
+       File: testdata/errors-example/case6.yaml
+
+Request:
+     Method: GET
+       Path: /json
+      Query: 
+       Body:
+<no body>
+
+Response:
+    Headers:
+       Content-Length: 17
+       Content-Type: application/json
+       Date: Sat, 1 Dec 2024 00:00:00 GMT
+     Status: 200 OK
+       Body:
+{"somefield":123}
+
+
+     Result: ERRORS!
+
+Errors:
+
+1) 'variables_to_set': variable 'badVar': unexpected path prefix 'wrong' (allowed only [body header cookie])
+
+2) 'variables_to_set': variable 'bodyVar': path '$.status' does not exist in service response
+
+3) 'variables_to_set': variable 'cookieVar': response does not include expected header 'Set-Cookie'
+
+4) 'variables_to_set': variable 'headerVar': response does not include expected header 'Some-Header'
+
+

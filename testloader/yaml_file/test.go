@@ -138,14 +138,12 @@ func (t *Test) Fixtures() []string {
 }
 
 func (t *Test) GetMeta(key string) interface{} {
-	if t.Meta == nil {
-		return nil
+	if t.Meta != nil {
+		if val, ok := t.Meta[key]; ok {
+			return val
+		}
 	}
-	val, ok := t.Meta[key]
-	if !ok {
-		return nil
-	}
-	return val
+	return nil
 }
 
 func (t *Test) ServiceMocks() map[string]interface{} {

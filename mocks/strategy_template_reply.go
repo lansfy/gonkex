@@ -97,7 +97,6 @@ func (s *templateReply) HandleRequest(w http.ResponseWriter, r *http.Request) []
 	}
 
 	w.WriteHeader(s.statusCode)
-	w.Write([]byte(responseBody)) // nolint:errcheck
-
+	_, _ = w.Write([]byte(responseBody))
 	return nil
 }

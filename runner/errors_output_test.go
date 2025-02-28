@@ -68,7 +68,7 @@ func Test_Error_Examples(t *testing.T) {
 	initErrorServer()
 	server := httptest.NewServer(nil)
 
-	for caseID := 1; caseID <= 5; caseID++ {
+	for caseID := 1; caseID <= 6; caseID++ {
 		t.Run(fmt.Sprintf("case%d", caseID), func(t *testing.T) {
 			expected, err := os.ReadFile(fmt.Sprintf("testdata/errors-example/case%d_output.txt", caseID))
 			require.NoError(t, err)
@@ -105,7 +105,7 @@ func Test_Error_Examples(t *testing.T) {
 			require.NoError(t, err)
 
 			if !showOnScreen {
-				require.Equal(t, normalize(buf.String()), normalize(string(expected)))
+				require.Equal(t, normalize(string(expected)), normalize(buf.String()))
 			}
 		})
 	}
