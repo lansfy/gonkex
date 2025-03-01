@@ -9,7 +9,6 @@ func Parse(rawXML string) (map[string]interface{}, error) {
 	if err := xml.Unmarshal([]byte(rawXML), &n); err != nil {
 		return nil, err
 	}
-
 	return buildMap([]node{n}), nil
 }
 
