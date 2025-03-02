@@ -31,17 +31,19 @@ func (c *responseBodyChecker) Check(t models.TestInterface, result *models.Resul
 		return addMainError(compare.Compare(expectedBody, result.ResponseBody, compare.Params{})), nil
 	}
 
-	switch {
-	// is the response JSON document?
-	case strings.Contains(result.ResponseContentType, "json") && expectedBody != "":
-		return compareJsonBody(t, expectedBody, result)
-	// is the response XML document?
-	case strings.Contains(result.ResponseContentType, "xml") && expectedBody != "":
-		return compareXmlBody(t, expectedBody, result)
-	default:
-		// compare bodies as leaf nodes
-		return addMainError(compare.Compare(expectedBody, result.ResponseBody, compare.Params{})), nil
+	if expectedBody != "" {
+		switch {
+		// is the response JSON document?
+		case isJSONResponseBody(result) && expectedBody != "":
+			return compareJsonBody(t, expectedBody, result)
+		// is the response XML document?
+		case isXMLResponseBody(result) && expectedBody != "":
+			return compareXmlBody(t, expectedBody, result)
+		}
 	}
+
+	// compare bodies as leaf nodes
+	return addMainError(compare.Compare(expectedBody, result.ResponseBody, compare.Params{})), nil
 }
 
 func createWrongStatusError(statusCode int, known map[int]string) error {

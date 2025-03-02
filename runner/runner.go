@@ -318,10 +318,10 @@ func (r *Runner) setVariablesFromResponse(t models.TestInterface, result *models
 		return false, nil
 	}
 
-	vars, errs := extractVariablesFromResponse(varTemplates, result)
+	vars, errs := response_body.ExtractValues(varTemplates, result)
 	if len(errs) != 0 || len(vars) == 0 {
 		for idx := range errs {
-			errs[idx] = colorize.NewEntityError("%s", "variables_to_set").SetSubError(errs[idx])
+			errs[idx] = colorize.NewEntityError("section %s", "variables_to_set").SetSubError(errs[idx])
 		}
 		return false, errs
 	}
