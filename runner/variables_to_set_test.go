@@ -9,10 +9,11 @@ import (
 )
 
 func Test_extractVariablesFromJSONResponse(t *testing.T) {
-	body := `{"key1": "value1", "key2": "value2"}`
+	defaultBody := `{"key1": "value1", "key2": "value2"}`
 	tests := []struct {
 		description string
 		varsToSet   map[string]string
+		body        string
 		want        map[string]string
 		wantErr     string
 	}{
@@ -23,10 +24,11 @@ func Test_extractVariablesFromJSONResponse(t *testing.T) {
 				"var2":         "key2",
 				"wholeBodyVar": "",
 			},
+			body: defaultBody,
 			want: map[string]string{
 				"var1":         "value1",
 				"var2":         "value2",
-				"wholeBodyVar": body,
+				"wholeBodyVar": defaultBody,
 			},
 		},
 		{
@@ -35,7 +37,16 @@ func Test_extractVariablesFromJSONResponse(t *testing.T) {
 				"var1": "key1",
 				"var2": "missingKey",
 			},
+			body:    defaultBody,
 			wantErr: "variable 'var2': path '$.missingKey' does not exist in service response",
+		},
+		{
+			description: "empty json body with path",
+			varsToSet: map[string]string{
+				"var1": "key1",
+			},
+			body:    "",
+			wantErr: "variable 'var1': paths not supported for empty body",
 		},
 		{
 			description: "json body with valid paths and optional prefix",
@@ -44,10 +55,11 @@ func Test_extractVariablesFromJSONResponse(t *testing.T) {
 				"var2":         "body: key2 ",
 				"wholeBodyVar": "body:",
 			},
+			body: defaultBody,
 			want: map[string]string{
 				"var1":         "value1",
 				"var2":         "value2",
-				"wholeBodyVar": body,
+				"wholeBodyVar": defaultBody,
 			},
 		},
 	}
@@ -55,7 +67,7 @@ func Test_extractVariablesFromJSONResponse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
 			result := &models.Result{
-				ResponseBody:        body,
+				ResponseBody:        tt.body,
 				ResponseContentType: "json",
 			}
 			got, err := extractVariablesFromResponse(tt.varsToSet, result)
@@ -65,7 +77,117 @@ func Test_extractVariablesFromJSONResponse(t *testing.T) {
 				require.Error(t, err[0])
 				require.EqualError(t, err[0], tt.wantErr)
 			} else {
-				require.Equal(t, 0, len(err))
+				require.Equal(t, 0, len(err), "not exected error: %v", err)
+				require.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func Test_extractVariablesFromXMLResponse(t *testing.T) {
+	defaultBody := `<?xml version="1.0" encoding="UTF-8"?>
+		<Items>
+			<Item>
+				<Name>name1</Name>
+				<Value>value1</Value>
+			</Item>
+			<Item>
+				<Name>name2</Name>
+				<Value>value2</Value>
+			</Item>
+		</Items>`
+	tests := []struct {
+		description string
+		varsToSet   map[string]string
+		body        string
+		want        map[string]string
+		wantErr     string
+	}{
+		{
+			description: "xml body with valid paths",
+			varsToSet: map[string]string{
+				"var1":         "Items.Item.#(Value==\"value1\").Name",
+				"var2":         "Items.Item.#(Name==\"name2\").Value",
+				"wholeBodyVar": "",
+			},
+			body: defaultBody,
+			want: map[string]string{
+				"var1":         "name1",
+				"var2":         "value2",
+				"wholeBodyVar": defaultBody,
+			},
+		},
+		{
+			description: "xml body with missing path",
+			varsToSet: map[string]string{
+				"var1": "Items.Item.#(Value==\"value1\").Name",
+				"var2": "missingKey",
+			},
+			body:    defaultBody,
+			wantErr: "variable 'var2': path '$.missingKey' does not exist in service response",
+		},
+		{
+			description: "empty xml body with path",
+			varsToSet: map[string]string{
+				"var1": "key1",
+			},
+			body:    "",
+			wantErr: "variable 'var1': paths not supported for empty body",
+		},
+		{
+			description: "xml body with valid paths and optional prefix",
+			varsToSet: map[string]string{
+				"var1":         "body:Items.Item.0.Name",
+				"var2":         "body: Items.Item.1.Value ",
+				"wholeBodyVar": "body:",
+			},
+			body: defaultBody,
+			want: map[string]string{
+				"var1":         "name1",
+				"var2":         "value2",
+				"wholeBodyVar": defaultBody,
+			},
+		},
+		{
+			description: "invalid xml body",
+			varsToSet: map[string]string{
+				"var1":         "body:Items.Item.0.Name",
+				"wholeBodyVar": "body:",
+			},
+			body: "<Items>",
+			want: map[string]string{
+				"var1":         "name1",
+				"var2":         "value2",
+				"wholeBodyVar": defaultBody,
+			},
+			wantErr: "variable 'var1': invalid XML in response: XML syntax error on line 1: unexpected EOF",
+		},
+		{
+			description: "invalid xml body with whole body variables",
+			varsToSet: map[string]string{
+				"wholeBodyVar": "",
+			},
+			body: "<Items>",
+			want: map[string]string{
+				"wholeBodyVar": "<Items>",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.description, func(t *testing.T) {
+			result := &models.Result{
+				ResponseBody:        tt.body,
+				ResponseContentType: "xml",
+			}
+			got, err := extractVariablesFromResponse(tt.varsToSet, result)
+
+			if tt.wantErr != "" {
+				require.Equal(t, 1, len(err))
+				require.Error(t, err[0])
+				require.EqualError(t, err[0], tt.wantErr)
+			} else {
+				require.Equal(t, 0, len(err), "not exected error: %v", err)
 				require.Equal(t, tt.want, got)
 			}
 		})
@@ -73,10 +195,11 @@ func Test_extractVariablesFromJSONResponse(t *testing.T) {
 }
 
 func Test_extractVariablesFromPlainResponse(t *testing.T) {
-	body := "plain text value"
+	defaultBody := "plain text value"
 	tests := []struct {
 		description string
 		varsToSet   map[string]string
+		body        string
 		want        map[string]string
 		wantErr     string
 	}{
@@ -85,8 +208,9 @@ func Test_extractVariablesFromPlainResponse(t *testing.T) {
 			varsToSet: map[string]string{
 				"var1": "",
 			},
+			body: defaultBody,
 			want: map[string]string{
-				"var1": body,
+				"var1": defaultBody,
 			},
 		},
 		{
@@ -94,14 +218,23 @@ func Test_extractVariablesFromPlainResponse(t *testing.T) {
 			varsToSet: map[string]string{
 				"var1": "some.path",
 			},
+			body:    defaultBody,
 			wantErr: "variable 'var1': paths not supported for plain text body",
+		},
+		{
+			description: "empty text body with path",
+			varsToSet: map[string]string{
+				"var1": "some.path",
+			},
+			body:    "",
+			wantErr: "variable 'var1': paths not supported for empty body",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
 			result := &models.Result{
-				ResponseBody:        body,
+				ResponseBody:        tt.body,
 				ResponseContentType: "text",
 			}
 
@@ -112,7 +245,7 @@ func Test_extractVariablesFromPlainResponse(t *testing.T) {
 				require.Error(t, err[0])
 				require.EqualError(t, err[0], tt.wantErr)
 			} else {
-				require.Equal(t, 0, len(err))
+				require.Equal(t, 0, len(err), "not exected error: %v", err)
 				require.Equal(t, tt.want, got)
 			}
 		})

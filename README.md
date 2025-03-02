@@ -297,6 +297,7 @@ You can use variables in the description of the test, the following fields are s
 - headers
 - request
 - response
+- response headers
 - dbQuery
 - dbResponse
 - mocks body
@@ -316,6 +317,9 @@ Example:
   request: '{"reqParam": "{{ $reqParam }}"}'
   response:
     200: "{{ $resp }}"
+  responseHeaders:
+    200:
+      Some-Header: "{{ $respHeader }}"
   mocks:
     server_mock:
       strategy: constant
@@ -379,6 +383,8 @@ Example:
       wholeBody: ""               # empty path tells to put whole response body to variable
 ```
 
+All paths must be specified in [gjson format](https://github.com/tidwall/gjson/blob/master/SYNTAX.md). You can use the [GJSON Playground](https://gjson.dev) to experiment with the syntax online.
+
 It is also possible to retrieve values from the headers and cookies of response. To do this, specify the prefix "header:" or "cookie:" in the path, respectively. For example,
 
 ```yaml
@@ -390,7 +396,6 @@ It is also possible to retrieve values from the headers and cookies of response.
       sessionId: "cookie:session_id"    # get value from "session_id" cookie and put to sessionId variable
       authorId: "body:author_info.id"   # optional "body:" prefix allows to get value from body
 ```
-
 
 #### From the response body of currently running test
 

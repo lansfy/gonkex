@@ -26,6 +26,11 @@ func (c *responseBodyChecker) Check(t models.TestInterface, result *models.Resul
 		return []error{createWrongStatusError(result.ResponseStatusCode, t.GetResponses())}, nil
 	}
 
+	// expected body has only regexp, so compare bodies as strings
+	if _, ok := compare.StringAsRegexp(expectedBody); ok {
+		return addMainError(compare.Compare(expectedBody, result.ResponseBody, compare.Params{})), nil
+	}
+
 	switch {
 	// is the response JSON document?
 	case strings.Contains(result.ResponseContentType, "json") && expectedBody != "":

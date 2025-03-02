@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sort"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/lansfy/gonkex/colorize"
 	"github.com/lansfy/gonkex/models"
+	"github.com/lansfy/gonkex/xmlparsing"
 
 	"github.com/tidwall/gjson"
 )
@@ -45,14 +47,18 @@ func processPath(path string, result *models.Result) (string, error) {
 
 	switch prefix {
 	case "body":
-		if path == "" {
+		switch {
+		case path == "":
 			return result.ResponseBody, nil
-		}
-		isJSON := strings.Contains(result.ResponseContentType, "json") && result.ResponseBody != ""
-		if isJSON {
+		case result.ResponseBody == "":
+			return "", fmt.Errorf("paths not supported for empty body")
+		case strings.Contains(result.ResponseContentType, "json"):
 			return getStringFromJSON(result.ResponseBody, path)
+		case strings.Contains(result.ResponseContentType, "xml"):
+			return getStringFromXML(result.ResponseBody, path)
+		default:
+			return "", fmt.Errorf("paths not supported for plain text body")
 		}
-		return "", fmt.Errorf("paths not supported for plain text body")
 	case "header":
 		if valArr := result.ResponseHeaders[path]; len(valArr) != 0 {
 			return valArr[0], nil
@@ -84,6 +90,15 @@ func getStringFromJSON(body, path string) (string, error) {
 		return "", colorize.NewError("path %s does not exist in service response", colorize.Cyan("$."+path))
 	}
 	return res.String(), nil
+}
+
+func getStringFromXML(body, path string) (string, error) {
+	parsed, err := xmlparsing.Parse(body)
+	if err != nil {
+		return "", fmt.Errorf("invalid XML in response: %w", err)
+	}
+	plainParsed, _ := json.Marshal(parsed)
+	return getStringFromJSON(string(plainParsed), path)
 }
 
 func parseSetCookies(header string) *http.Cookie {
