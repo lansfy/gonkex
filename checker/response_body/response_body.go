@@ -11,6 +11,8 @@ import (
 	"github.com/lansfy/gonkex/compare"
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/xmlparsing"
+
+	"sigs.k8s.io/yaml"
 )
 
 func NewChecker() checker.CheckerInterface {
@@ -36,6 +38,8 @@ func (c *responseBodyChecker) Check(t models.TestInterface, result *models.Resul
 			return compareBody(t, expectedBody, result, "JSON", decodeJSON)
 		case isXMLResponseBody(result):
 			return compareBody(t, expectedBody, result, "XML", decodeXML)
+		case isYAMLResponseBody(result):
+			return compareBody(t, expectedBody, result, "YAML", decodeYAML)
 		}
 	}
 
@@ -84,6 +88,14 @@ func decodeJSON(body string) (interface{}, error) {
 
 func decodeXML(body string) (interface{}, error) {
 	return xmlparsing.Parse(body)
+}
+
+func decodeYAML(body string) (interface{}, error) {
+	jsonBody, err := yaml.YAMLToJSON([]byte(body))
+	if err != nil {
+		return nil, err
+	}
+	return decodeJSON(string(jsonBody))
 }
 
 func getCompareParams(t models.TestInterface) compare.Params {
