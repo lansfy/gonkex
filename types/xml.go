@@ -1,10 +1,36 @@
-package xmlparsing
+package types
 
 import (
+	"encoding/json"
 	"encoding/xml"
+	"fmt"
+	"strings"
 )
 
-func Parse(rawXML string) (map[string]interface{}, error) {
+type xmlBodyType struct{}
+
+func (b *xmlBodyType) GetName() string {
+	return "XML"
+}
+
+func (b *xmlBodyType) IsSupportedContentType(contentType string) bool {
+	return strings.Contains(contentType, "xml")
+}
+
+func (b *xmlBodyType) Decode(body string) (interface{}, error) {
+	return ParseXML(body)
+}
+
+func (b *xmlBodyType) ExtractResponseValue(body, path string) (string, error) {
+	parsed, err := ParseXML(body)
+	if err != nil {
+		return "", fmt.Errorf("invalid XML in response: %w", err)
+	}
+	plainParsed, _ := json.Marshal(parsed)
+	return getStringFromJSON(string(plainParsed), path)
+}
+
+func ParseXML(rawXML string) (map[string]interface{}, error) {
 	var n node
 	if err := xml.Unmarshal([]byte(rawXML), &n); err != nil {
 		return nil, err
