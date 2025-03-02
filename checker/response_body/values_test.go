@@ -1,4 +1,4 @@
-package runner
+package response_body
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_extractVariablesFromJSONResponse(t *testing.T) {
+func Test_ExtractValuesFromJSONResponse(t *testing.T) {
 	defaultBody := `{"key1": "value1", "key2": "value2"}`
 	tests := []struct {
 		description string
@@ -70,7 +70,7 @@ func Test_extractVariablesFromJSONResponse(t *testing.T) {
 				ResponseBody:        tt.body,
 				ResponseContentType: "json",
 			}
-			got, err := extractVariablesFromResponse(tt.varsToSet, result)
+			got, err := ExtractValues(tt.varsToSet, result)
 
 			if tt.wantErr != "" {
 				require.Equal(t, 1, len(err))
@@ -84,7 +84,85 @@ func Test_extractVariablesFromJSONResponse(t *testing.T) {
 	}
 }
 
-func Test_extractVariablesFromXMLResponse(t *testing.T) {
+func Test_ExtractValuesFromYAMLResponse(t *testing.T) {
+	defaultBody := `key1: value1
+key2: value2
+`
+	tests := []struct {
+		description string
+		varsToSet   map[string]string
+		body        string
+		want        map[string]string
+		wantErr     string
+	}{
+		{
+			description: "yaml body with valid paths",
+			varsToSet: map[string]string{
+				"var1":         "key1",
+				"var2":         "key2",
+				"wholeBodyVar": "",
+			},
+			body: defaultBody,
+			want: map[string]string{
+				"var1":         "value1",
+				"var2":         "value2",
+				"wholeBodyVar": defaultBody,
+			},
+		},
+		{
+			description: "yaml body with missing path",
+			varsToSet: map[string]string{
+				"var1": "key1",
+				"var2": "missingKey",
+			},
+			body:    defaultBody,
+			wantErr: "variable 'var2': path '$.missingKey' does not exist in service response",
+		},
+		{
+			description: "empty yaml body with path",
+			varsToSet: map[string]string{
+				"var1": "key1",
+			},
+			body:    "",
+			wantErr: "variable 'var1': paths not supported for empty body",
+		},
+		{
+			description: "yaml body with valid paths and optional prefix",
+			varsToSet: map[string]string{
+				"var1":         "body:key1",
+				"var2":         "body: key2 ",
+				"wholeBodyVar": "body:",
+			},
+			body: defaultBody,
+			want: map[string]string{
+				"var1":         "value1",
+				"var2":         "value2",
+				"wholeBodyVar": defaultBody,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.description, func(t *testing.T) {
+			result := &models.Result{
+				ResponseBody:        tt.body,
+				ResponseContentType: "yaml",
+			}
+			got, err := ExtractValues(tt.varsToSet, result)
+
+			if tt.wantErr != "" {
+				require.Equal(t, 1, len(err))
+				require.Error(t, err[0])
+				require.EqualError(t, err[0], tt.wantErr)
+			} else {
+				require.Equal(t, 0, len(err), "not exected error: %v", err)
+				require.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func Test_ExtractValuesFromXMLResponse(t *testing.T) {
 	defaultBody := `<?xml version="1.0" encoding="UTF-8"?>
 		<Items>
 			<Item>
@@ -180,7 +258,7 @@ func Test_extractVariablesFromXMLResponse(t *testing.T) {
 				ResponseBody:        tt.body,
 				ResponseContentType: "xml",
 			}
-			got, err := extractVariablesFromResponse(tt.varsToSet, result)
+			got, err := ExtractValues(tt.varsToSet, result)
 
 			if tt.wantErr != "" {
 				require.Equal(t, 1, len(err))
@@ -194,7 +272,7 @@ func Test_extractVariablesFromXMLResponse(t *testing.T) {
 	}
 }
 
-func Test_extractVariablesFromPlainResponse(t *testing.T) {
+func Test_ExtractValuesFromPlainResponse(t *testing.T) {
 	defaultBody := "plain text value"
 	tests := []struct {
 		description string
@@ -238,7 +316,7 @@ func Test_extractVariablesFromPlainResponse(t *testing.T) {
 				ResponseContentType: "text",
 			}
 
-			got, err := extractVariablesFromResponse(tt.varsToSet, result)
+			got, err := ExtractValues(tt.varsToSet, result)
 
 			if tt.wantErr != "" {
 				require.Equal(t, 1, len(err))
@@ -252,7 +330,7 @@ func Test_extractVariablesFromPlainResponse(t *testing.T) {
 	}
 }
 
-func Test_extractVariablesFromHeaders(t *testing.T) {
+func Test_ExtractValuesFromHeaders(t *testing.T) {
 	headers := map[string][]string{
 		"Test-Header-1": {"aaa", "bbb"},
 		"Test-Header-2": {"ccc"},
@@ -298,7 +376,7 @@ func Test_extractVariablesFromHeaders(t *testing.T) {
 			result := &models.Result{
 				ResponseHeaders: headers,
 			}
-			got, err := extractVariablesFromResponse(tt.varsToSet, result)
+			got, err := ExtractValues(tt.varsToSet, result)
 
 			if tt.wantErr != "" {
 				require.Equal(t, 1, len(err))
@@ -312,7 +390,7 @@ func Test_extractVariablesFromHeaders(t *testing.T) {
 	}
 }
 
-func Test_extractVariablesFromCookie(t *testing.T) {
+func Test_ExtractValuesFromCookie(t *testing.T) {
 	headers := map[string][]string{
 		"Set-Cookie": {
 			"session_id=abc123; Path=/; HttpOnly",
@@ -353,7 +431,7 @@ func Test_extractVariablesFromCookie(t *testing.T) {
 			result := &models.Result{
 				ResponseHeaders: headers,
 			}
-			got, err := extractVariablesFromResponse(tt.varsToSet, result)
+			got, err := ExtractValues(tt.varsToSet, result)
 
 			if tt.wantErr != "" {
 				require.Equal(t, 1, len(err))

@@ -1,4 +1,4 @@
-package runner
+package response_body
 
 import (
 	"encoding/json"
@@ -12,9 +12,10 @@ import (
 	"github.com/lansfy/gonkex/xmlparsing"
 
 	"github.com/tidwall/gjson"
+	"sigs.k8s.io/yaml"
 )
 
-func extractVariablesFromResponse(varsToSet map[string]string, result *models.Result) (map[string]string, []error) {
+func ExtractValues(varsToSet map[string]string, result *models.Result) (map[string]string, []error) {
 	// sort keys
 	keys := make([]string, 0, len(varsToSet))
 	for k := range varsToSet {
@@ -37,6 +38,18 @@ func extractVariablesFromResponse(varsToSet map[string]string, result *models.Re
 	return vars, errors
 }
 
+func isJSONResponseBody(result *models.Result) bool {
+	return strings.Contains(result.ResponseContentType, "json")
+}
+
+func isXMLResponseBody(result *models.Result) bool {
+	return strings.Contains(result.ResponseContentType, "xml")
+}
+
+func isYAMLResponseBody(result *models.Result) bool {
+	return strings.Contains(result.ResponseContentType, "yaml")
+}
+
 func processPath(path string, result *models.Result) (string, error) {
 	prefix := "body"
 	parts := strings.SplitN(path, ":", 2)
@@ -52,10 +65,12 @@ func processPath(path string, result *models.Result) (string, error) {
 			return result.ResponseBody, nil
 		case result.ResponseBody == "":
 			return "", fmt.Errorf("paths not supported for empty body")
-		case strings.Contains(result.ResponseContentType, "json"):
+		case isJSONResponseBody(result):
 			return getStringFromJSON(result.ResponseBody, path)
-		case strings.Contains(result.ResponseContentType, "xml"):
+		case isXMLResponseBody(result):
 			return getStringFromXML(result.ResponseBody, path)
+		case isYAMLResponseBody(result):
+			return getStringFromYAML(result.ResponseBody, path)
 		default:
 			return "", fmt.Errorf("paths not supported for plain text body")
 		}
@@ -99,6 +114,14 @@ func getStringFromXML(body, path string) (string, error) {
 	}
 	plainParsed, _ := json.Marshal(parsed)
 	return getStringFromJSON(string(plainParsed), path)
+}
+
+func getStringFromYAML(body, path string) (string, error) {
+	parsed, err := yaml.YAMLToJSON([]byte(body))
+	if err != nil {
+		return "", fmt.Errorf("invalid YAML in response: %w", err)
+	}
+	return getStringFromJSON(string(parsed), path)
 }
 
 func parseSetCookies(header string) *http.Cookie {

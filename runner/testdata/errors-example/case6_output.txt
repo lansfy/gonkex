@@ -24,12 +24,12 @@ Response:
 
 Errors:
 
-1) 'variables_to_set': variable 'badVar': unexpected path prefix 'wrong' (allowed only [body header cookie])
+1) section 'variables_to_set': variable 'badVar': unexpected path prefix 'wrong' (allowed only [body header cookie])
 
-2) 'variables_to_set': variable 'bodyVar': path '$.status' does not exist in service response
+2) section 'variables_to_set': variable 'bodyVar': path '$.status' does not exist in service response
 
-3) 'variables_to_set': variable 'cookieVar': response does not include expected header 'Set-Cookie'
+3) section 'variables_to_set': variable 'cookieVar': response does not include expected header 'Set-Cookie'
 
-4) 'variables_to_set': variable 'headerVar': response does not include expected header 'Some-Header'
+4) section 'variables_to_set': variable 'headerVar': response does not include expected header 'Some-Header'
 
 

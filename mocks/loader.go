@@ -196,6 +196,9 @@ func loadConstraintOfKind(kind string, def map[interface{}]interface{}, ak *[]st
 	case "bodyMatchesXML":
 		*ak = append(*ak, "body", "comparisonParams")
 		return loadBodyMatchesXMLConstraint(def)
+	case "bodyMatchesYAML":
+		*ak = append(*ak, "body", "comparisonParams")
+		return loadBodyMatchesYAMLConstraint(def)
 	case "bodyJSONFieldMatchesJSON":
 		*ak = append(*ak, "path", "value", "comparisonParams")
 		return loadBodyJSONFieldMatchesJSONConstraint(def)
