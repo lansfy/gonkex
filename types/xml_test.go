@@ -1,4 +1,4 @@
-package xmlparsing
+package types
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_Parse(t *testing.T) {
+func Test_ParseXML(t *testing.T) {
 	tests := []struct {
 		description  string
 		rawXml       string
@@ -120,7 +120,7 @@ func Test_Parse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
-			data, err := Parse(tt.rawXml)
+			data, err := ParseXML(tt.rawXml)
 			require.NoError(t, err)
 			j, err := json.Marshal(data)
 			require.NoError(t, err)

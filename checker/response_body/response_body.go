@@ -1,7 +1,6 @@
 package response_body
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -10,9 +9,7 @@ import (
 	"github.com/lansfy/gonkex/colorize"
 	"github.com/lansfy/gonkex/compare"
 	"github.com/lansfy/gonkex/models"
-	"github.com/lansfy/gonkex/xmlparsing"
-
-	"sigs.k8s.io/yaml"
+	"github.com/lansfy/gonkex/types"
 )
 
 func NewChecker() checker.CheckerInterface {
@@ -33,13 +30,10 @@ func (c *responseBodyChecker) Check(t models.TestInterface, result *models.Resul
 	}
 
 	if expectedBody != "" {
-		switch {
-		case isJSONResponseBody(result):
-			return compareBody(t, expectedBody, result, "JSON", decodeJSON)
-		case isXMLResponseBody(result):
-			return compareBody(t, expectedBody, result, "XML", decodeXML)
-		case isYAMLResponseBody(result):
-			return compareBody(t, expectedBody, result, "YAML", decodeYAML)
+		for _, b := range types.GetRegisteredBodyTypes() {
+			if b.IsSupportedContentType(result.ResponseContentType) {
+				return compareBody(t, expectedBody, result, b.GetName(), b.Decode)
+			}
 		}
 	}
 
@@ -78,24 +72,6 @@ func compareBody(t models.TestInterface, expectedBody string, result *models.Res
 	}
 
 	return addMainError(compare.Compare(expected, actual, getCompareParams(t))), nil
-}
-
-func decodeJSON(body string) (interface{}, error) {
-	var expected interface{}
-	err := json.Unmarshal([]byte(body), &expected)
-	return expected, err
-}
-
-func decodeXML(body string) (interface{}, error) {
-	return xmlparsing.Parse(body)
-}
-
-func decodeYAML(body string) (interface{}, error) {
-	jsonBody, err := yaml.YAMLToJSON([]byte(body))
-	if err != nil {
-		return nil, err
-	}
-	return decodeJSON(string(jsonBody))
 }
 
 func getCompareParams(t models.TestInterface) compare.Params {

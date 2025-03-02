@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"github.com/lansfy/gonkex/colorize"
+	"github.com/lansfy/gonkex/types"
 )
 
 type Loader interface {
@@ -190,21 +191,19 @@ func loadConstraintOfKind(kind string, def map[interface{}]interface{}, ak *[]st
 	case "bodyMatchesText":
 		*ak = append(*ak, "body", "regexp")
 		return loadBodyMatchesTextConstraint(def)
-	case "bodyMatchesJSON":
-		*ak = append(*ak, "body", "comparisonParams")
-		return loadBodyMatchesJSONConstraint(def)
-	case "bodyMatchesXML":
-		*ak = append(*ak, "body", "comparisonParams")
-		return loadBodyMatchesXMLConstraint(def)
-	case "bodyMatchesYAML":
-		*ak = append(*ak, "body", "comparisonParams")
-		return loadBodyMatchesYAMLConstraint(def)
 	case "bodyJSONFieldMatchesJSON":
 		*ak = append(*ak, "path", "value", "comparisonParams")
 		return loadBodyJSONFieldMatchesJSONConstraint(def)
-	default:
-		return nil, errors.New("unknown constraint")
 	}
+
+	for _, b := range types.GetRegisteredBodyTypes() {
+		if kind == "bodyMatches"+b.GetName() {
+			*ak = append(*ak, "body", "comparisonParams")
+			return loadBodyMatchesConstraint(def, b)
+		}
+	}
+
+	return nil, errors.New("unknown constraint")
 }
 
 func validateMapKeys(m map[interface{}]interface{}, allowedKeys []string) error {
