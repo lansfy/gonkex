@@ -9,11 +9,11 @@ Capabilities:
 - provides mocks for external services
 - can be used as a library and ran together with unit-tests
 - stores the results as an [Allure](https://allurereport.org/) report
-- there is a [JSON-schema](#json-schema) to add autocomletion and validation for gonkex YAML files
+- there is a [JSON-schema](#json-schema) to add autocomletion and validation for Gonkex YAML files
 
 ## Table of contents
 
-- [Using gonkex as a library](#using-gonkex-as-a-library)
+- [Using Gonkex as a library](#using-gonkex-as-a-library)
 - [Test scenario example](#test-scenario-example)
 - [Test status](#test-status)
 - [HTTP-request](#http-request)
@@ -32,7 +32,7 @@ Capabilities:
   - [Record inheritance](#record-inheritance)
   - [Expressions](#expressions)
 - [Mocks](#mocks)
-  - [Running mocks while using gonkex as a library](#running-mocks-while-using-gonkex-as-a-library)
+  - [Running mocks while using Gonkex as a library](#running-mocks-while-using-gonkex-as-a-library)
   - [Mocks definition in the test file](#mocks-definition-in-the-test-file)
     - [Request constraints (requestConstraints)](#request-constraints-requestconstraints)
     - [Response strategies (strategy)](#response-strategies-strategy)
@@ -47,16 +47,14 @@ Capabilities:
   - [DB request parameterization](#db-request-parameterization)
   - [Ignoring ordering in DB response](#ignoring-ordering-in-db-response)
 - [JSON-schema](#json-schema)
-  - [Setup in Jetbrains IDE](#setup-in-jetbrains-ide)
-  - [Setup is VSCode IDE](#setup-is-vscode-ide)
 
-## Using gonkex as a library
+## Using Gonkex as a library
 
-To integrate functional and native Go tests and run them together, use gonkex as a library.
+To integrate functional and native Go tests and run them together, use Gonkex as a library.
 
 Create a test file, for example `func_test.go`.
 
-Import gonkex as a dependency to your project in this file:
+Import Gonkex as a dependency to your project in this file:
 
 ```go
 import (
@@ -106,12 +104,12 @@ func TestFuncCases(t *testing.T) {
 }
 ```
 
-Externally written storage may be used for loading test data, if gonkex used as a library.
+Externally written storage may be used for loading test data, if Gonkex used as a library.
 To start using the custom storage, you need to import the custom module, that contains implementation of storage.StorageInterface interface.
 For example, the following NoSQL databases are currently supported as custom modules:
-- Aerospike (github.com/lansfy/gonkex/storage/addons/aerospike)
-- MongoDB (github.com/lansfy/gonkex/storage/addons/mongo)
-- Redis (github.com/lansfy/gonkex/storage/addons/redis)
+- Aerospike ([github.com/lansfy/gonkex/storage/addons/aerospike](https://github.com/lansfy/gonkex/tree/master/storage/addons/aerospike))
+- MongoDB ([github.com/lansfy/gonkex/storage/addons/mongo](https://github.com/lansfy/gonkex/tree/master/storage/addons/mongo))
+- Redis ([github.com/lansfy/gonkex/storage/addons/redis](https://github.com/lansfy/gonkex/tree/master/storage/addons/redis))
 
 The tests can be now ran with `go test`, for example: `go test ./...`.
 
@@ -278,13 +276,37 @@ Example:
      successInRow: 2     # it takes 2 successful test runs to recognize the test as successful
 ```
 
-Next fields supported:
+The following fields are supported:
 
-`attempts` - an integer indicating the number of times that gonkex will retry the test request in the event assertions fail.
+`attempts` - an integer indicating the number of times that Gonkex will retry the test request in the event assertions fail.
 
 `delay` - string containing the waiting time after unsuccessful completion of the test.
 
 `successInRow` - parameter defines the required number of successful test passes for the test to be recognized as successful. And all these successful runs must be consecutive. Default value is 1.
+
+## Customizing a comparison
+
+After receiving a response from the service, the test compares the body of the received response with the body specified in the test.
+By default, only the values of the fields listed in the test body are compared, but you can control the comparison procedure by using boolean flags in the `comparisonParams` section.
+The following flags are supported:
+
+- `ignoreValues` - if true, ignores differences in values and only checks the structure
+
+- `ignoreArraysOrdering` - if true, considers arrays equal regardless of the order of elements
+
+- `disallowExtraFields` - if true, fails the comparison if extra fields exist in the compared structure
+
+All flags are set to false by default.
+
+Example:
+```yaml
+ - name: compare flag example
+   ...
+   comparisonParams:
+     ignoreValues: true
+     ignoreArraysOrdering: true
+     disallowExtraFields: true
+```
 
 ## Variables
 
@@ -529,7 +551,7 @@ with form:
 
 ## Fixtures
 
-To seed the DB before the test, gonkex uses fixture files.
+To seed the DB before the test, Gonkex uses fixture files.
 
 File example:
 
@@ -541,14 +563,14 @@ inherits:
 
 tables:
   posts:
-    - $name: janes_post
+    - id: 100
       title: New post
       text: Post text
       author: Jane Dow
       created_at: 2016-01-01 12:30:12
       updated_at: 2016-01-01 12:30:12
 
-    - $name: apples_post
+    - id: 110
       title: Morning digest
       text: Text
       author: Apple Seed
@@ -556,14 +578,14 @@ tables:
       updated_at: 2016-01-01 12:30:12
 
   comments:
-    - post_id: $janes_post.id
+    - post_id: 100
       content: A comment...
       author_name: John Doe
       author_email: john@doe.com
       created_at: 2016-01-01 12:30:12
       updated_at: 2016-01-01 12:30:12
 
-    - post_id: $apples_post.id
+    - post_id: 110
       content: Another comment...
       author_name: John Doe
       author_email: john@doe.com
@@ -575,7 +597,7 @@ tables:
   ...
 ```
 
-Records in fixtures can use templates, inherit and reference each other.
+Records in fixtures can use templates and inherit.
 
 ### Deleting data from tables
 
@@ -661,8 +683,7 @@ tables:
 
 Don't forget to declare the dependency between files in `inherits`, to make sure that one file is always loaded together with the other one.
 
-It's important to note that record inheritance only works with different fixture files.
-It's not possible to declare inheritance within one file.
+It's important to note that record inheritance only works with different fixture files. It's not possible to declare inheritance within one file.
 
 ### Expressions
 
@@ -684,10 +705,10 @@ In order to imitate responses from external services, use mocks.
 A mock is a web server that is running on-the-fly, and is populated with certain logic before the execution of each test.
 The logic defines what the server responses to a certain request. It's defined in the test file.
 
-### Running mocks while using gonkex as a library
+### Running mocks while using Gonkex as a library
 
 Before running tests, all planned mocks are started.
-It means that gonkex spins up the given number of servers and each one of them gets a random port assigned.
+It means that Gonkex spins up the given number of servers and each one of them gets a random port assigned.
 
 ```go
 // create empty server mocks
@@ -801,71 +822,6 @@ Example:
     ...
 ```
 
-##### bodyMatchesJSON
-
-Checks that the request body is JSON, and it corresponds to the JSON defined in the `body` parameter.
-
-Parameters:
-
-- `body` (mandatory) - expected JSON. All keys on all levels defined in this parameter must be present in the request body.
-
-Example:
-
-```yaml
-  ...
-  mocks:
-    service1:
-      requestConstraints:
-        # this check will demand that the request contains keys key1, key2 and subKey1
-        # and their values set to value1 and value2. However, it's fine if the request has
-        # other keys not mentioned here.
-        - kind: bodyMatchesJSON
-          body: >
-            {
-              "key1": "value1",
-              "key2": {
-                "subKey1": "value2",
-              }
-            }
-    ...
-```
-
-##### bodyJSONFieldMatchesJSON
-
-When request body is JSON, checks that value of particular JSON-field is string-packed JSON
-that matches to JSON defined in `value` parameter.
-
-Parameters:
-
-- `path` (mandatory) - path to string field, containing JSON to check.
-- `value` (mandatory) - expected JSON.
-
-Example:
-
-Origin request that contains string-packed JSON
-
-```yaml
-  {
-      "field1": {
-        "field2": "{\"stringpacked\": \"json\"}"
-      }
-  }
-```
-
-```yaml
-  ...
-  mocks:
-    service1:
-      requestConstraints:
-        - kind: bodyJSONFieldMatchesJSON
-          path: field1.field2
-          value: |
-            {
-              "stringpacked": "json"
-            }
-  ...
-```
-
 ##### pathMatches
 
 Checks that the request path corresponds to the expected one.
@@ -943,10 +899,12 @@ Parameters:
 
 - `method` (mandatory) - string to compare the request method to.
 
-There are also 2 short variations that don't require `method` parameter:
+For the most commonly used methods, there are also short variants that do not require the `method` parameter:
 
 - `methodIsGET`
 - `methodIsPOST`
+- `methodIsPUT`
+- `methodIsDELETE`
 
 Example:
 
@@ -973,6 +931,8 @@ Parameters:
 - `value` - a string with the expected request header value;
 - `regexp` - a regular expression to check the header value against.
 
+It is also possible to specify a regular expression using "$matchRegexp" in the `value` field.
+
 Examples:
 
 ```yaml
@@ -988,6 +948,11 @@ Examples:
         - kind: headerIs
           header: Content-Type
           regexp: ^(application/json|text/plain)$
+    service3:
+      requestConstraints:
+        - kind: headerIs
+          header: Content-Type
+          value: "$matchRegexp(^(application/json|text/plain)$)"
     ...
 ```
 
@@ -1024,6 +989,36 @@ Examples:
     ...
 ```
 
+##### bodyMatchesJSON
+
+Checks that the request body is JSON, and it corresponds to the JSON defined in the `body` parameter.
+
+Parameters:
+
+- `body` (mandatory) - expected JSON. All keys on all levels defined in this parameter must be present in the request body.
+- `comparisonParams` - section allows you to customize the comparison process.
+
+Example:
+
+```yaml
+  ...
+  mocks:
+    service1:
+      requestConstraints:
+        # this check will demand that the request contains keys key1, key2 and subKey1
+        # and their values set to value1 and value2. However, it's fine if the request has
+        # other keys not mentioned here.
+        - kind: bodyMatchesJSON
+          body: >
+            {
+              "key1": "value1",
+              "key2": {
+                "subKey1": "value2",
+              }
+            }
+    ...
+```
+
 ##### bodyMatchesXML
 
 Checks that the request body is XML, and it matches to the XML defined in the `body` parameter.
@@ -1031,6 +1026,7 @@ Checks that the request body is XML, and it matches to the XML defined in the `b
 Parameters:
 
 - `body` (mandatory) - expected XML.
+- `comparisonParams` - section allows you to customize the comparison process.
 
 Example:
 
@@ -1042,7 +1038,6 @@ Example:
         - kind: bodyMatchesXML
           body: |
             <Person>
-              <Company>Hogwarts School of Witchcraft and Wizardry</Company>
               <FullName>Harry Potter</FullName>
               <Email where="work">hpotter@hog.gb</Email>
               <Email where="home">hpotter@gmail.com</Email>
@@ -1052,6 +1047,72 @@ Example:
                 <Value>Jinxes</Value>
               </Group>
             </Person>
+  ...
+```
+
+##### bodyMatchesYAML
+
+Checks that the request body is YAML, and it matches to the YAML defined in the `body` parameter.
+
+Parameters:
+
+- `body` (mandatory) - expected YAML.
+- `comparisonParams` - section allows you to customize the comparison process.
+
+Example:
+
+```yaml
+  ...
+  mocks:
+    service1:
+      requestConstraints:
+        - kind: bodyMatchesYAML
+          body: |
+              FullName: "Harry Potter"
+              Email:
+                work: "hpotter@hog.gb"
+                home: "hpotter@gmail.com"
+              Addr: "4 Privet Drive"
+              Group:
+                - "Hexes"
+                - "Jinxes"
+  ...
+```
+
+##### bodyJSONFieldMatchesJSON
+
+When request body is JSON, checks that value of particular JSON-field is string-packed JSON
+that matches to JSON defined in `value` parameter.
+
+Parameters:
+
+- `path` (mandatory) - path to string field, containing JSON to check.
+- `value` (mandatory) - expected JSON.
+- `comparisonParams` - section allows you to customize the comparison process.
+
+Example:
+
+Origin request that contains string-packed JSON
+
+```yaml
+  {
+      "field1": {
+        "field2": "{\"stringpacked\": \"json\"}"
+      }
+  }
+```
+
+```yaml
+  ...
+  mocks:
+    service1:
+      requestConstraints:
+        - kind: bodyJSONFieldMatchesJSON
+          path: field1.field2
+          value: |
+            {
+              "stringpacked": "json"
+            }
   ...
 ```
 
@@ -1072,30 +1133,6 @@ Example:
   mocks:
     service1:
       strategy: nop
-    ...
-```
-
-##### file
-
-Returns a response read from a file.
-
-Parameters:
-
-- `filename` (mandatory) - name of the file that contains the response body;
-- `statusCode` - HTTP-code of the response, the default value is `200`;
-- `headers` - response headers.
-
-Example:
-
-```yaml
-  ...
-  mocks:
-    service1:
-      strategy: file
-      filename: responses/service1_success.json
-      statusCode: 500
-      headers:
-        Content-Type: application/json
     ...
 ```
 
@@ -1123,6 +1160,30 @@ Example:
           "errorMessage": "Internal error"
         }
       statusCode: 500
+    ...
+```
+
+##### file
+
+Returns a response read from a file.
+
+Parameters:
+
+- `filename` (mandatory) - name of the file that contains the response body;
+- `statusCode` - HTTP-code of the response, the default value is `200`;
+- `headers` - response headers.
+
+Example:
+
+```yaml
+  ...
+  mocks:
+    service1:
+      strategy: file
+      filename: responses/service1_success.json
+      statusCode: 500
+      headers:
+        Content-Type: application/json
     ...
 ```
 
@@ -1242,7 +1303,7 @@ Example:
       sequence:
         # Responds with a different text on each consequent request:
         # "1" for first call, "2" for second call and so on.
-        # For 5th and later calls response will be 404 Not Found.
+        # For 5th and later calls response will be "404 Not Found" and fail the test case.
         - strategy: constant
           body: '1'
         - strategy: constant
@@ -1256,9 +1317,9 @@ Example:
 
 ##### basedOnRequest
 
-Allows multiple requests with same request path. Concurrent safe.
-
-When receiving a request for a resource that is not defined in the parameters, the test will be considered failed.
+Allows multiple requests with same request path.
+When receiving a request to mock, all elements in the "uris" list are sequentially passed through and the first element is returned, all checks (requestConstraints) of which will pass successfully.
+If no such element is found, the test will be considered failed. This stratagy is concurrent safe.
 
 Parameters:
 
@@ -1297,7 +1358,7 @@ Example:
 
 ##### dropRequest
 
-The strategy that by default drops the connection on any request. Used to emulate the network problems.
+When any request is received, this strategy drops the connection to the client. Used to emulate the network problems.
 
 No parameters.
 
@@ -1313,7 +1374,7 @@ Example:
 
 #### Calls count
 
-You can define, how many times each mock or mock resource must be called (using `uriVary`). If the actual number of calls is different from expected, the test will be considered failed.
+You can define, how many times each mock or mock resource must be called. If the actual number of calls is different from expected, the test will be considered failed.
 
 Example:
 
@@ -1417,39 +1478,44 @@ Example:
 After HTTP request execution you can run an SQL query to DB to check the data changes.
 The response can contain several records. Those records are compared to the expected list of records.
 
-### Test Format
-
-You can use legacy style for run sql queries, like this:
-
-```yaml
-- name: my test
-  ...
-  dbQuery: >
-    SELECT ...
-  dbResponse:
-    - ...
-    - ...
-```
-
-But, for now, already acceptable style is:
+Use the following syntax to query the database:
 
 ```yaml
 - name: my test
   ...
   dbChecks:
-    - dbQuery: >
-        SELECT ...
+    - dbQuery: "SELECT ..."   # first query
       dbResponse:
         - ...
+        - ...
+    - dbQuery: "SELECT ..."   # second query
+      dbResponse:
+        - ...
+        - ...
+      comparisonParams:       # you can add a comparisonParams section to customize the comparison
+        ignoreArraysOrdering: true
+        disallowExtraFields: true
+    - ....
 ```
 
-With second variant, you can run any amount of needed queries, after test case runned.
+This syntax allows any number of queries to be executed after the test case is complete.
+
+You can also use legacy style for run sql queries (but this method only allows you to execute one query), like this:
+
+```yaml
+- name: my test
+  ...
+  dbQuery: "SELECT ..."
+  dbResponse:
+    - ...
+    - ...
+```
 
 *NOTE*: All mentioned below techniques are still work with both variants of query format.
 
 ### Query definition
 
-Query is a SELECT that returns any number of strings.
+Query is a SELECT that returns any number of records.
 
 - `dbQuery` - a string that contains an SQL query.
 
@@ -1457,16 +1523,15 @@ Example:
 
 ```yaml
   ...
-  dbQuery: >
-    SELECT code, purchase_date, partner_id FROM mark_paid_schedule AS m WHERE m.code = 'GIFT100000-000002'
+  dbQuery: "SELECT code, purchase_date, partner_id FROM mark_paid_schedule AS m WHERE m.code = 'GIFT100000-000002'"
   ...
 ```
 
 ### Definition of DB request response
 
-The response is a list of JSON objects that the DB request should return.
+The response is a list of records in JSON format that the DB query should return.
 
-- `dbResponse` - a string that contains a list of JSON objects.
+- `dbResponse` - list of strings containing JSON objects.
 
 Example:
 
@@ -1480,11 +1545,14 @@ Example:
 
 As you can see in this example, you can use Regexp for checking db response body.
 
+To show that the query returns no records, you can specify an empty list in `dbResponse`. For example,
+
 ```yaml
   ...
-  dbResponse:
-    # empty list
+  dbResponse: []   # empty list
 ```
+
+Gonkex allows you to add a `comparisonParams` section to the database query parameters to customize the result comparison process.
 
 ### DB request parameterization
 
@@ -1494,12 +1562,13 @@ Example:
 
 ```yaml
   ...
-    dbQuery: >
-      SELECT code, partner_id FROM mark_paid_schedule AS m WHERE DATE(m.purchase_date) BETWEEN '{{ .fromDate }}' AND '{{ .toDate }}'
+    dbChecks:
+      - dbQuery: >
+          SELECT code, partner_id FROM mark_paid_schedule AS m WHERE DATE(m.purchase_date) BETWEEN '{{ .fromDate }}' AND '{{ .toDate }}'
 
-    dbResponse:
-      - '{"code":"{{ .cert1 }}","partner_id":1}'
-      - '{"code":"{{ .cert2 }}","partner_id":1}'
+        dbResponse:
+          - '{"code":"{{ .cert1 }}","partner_id":1}'
+          - '{"code":"{{ .cert2 }}","partner_id":1}'
   ...
     cases:
       ...
@@ -1517,23 +1586,24 @@ Example:
 
 ```yaml
   ...
-    dbQuery: >
-      SELECT code, partner_id FROM mark_paid_schedule AS m WHERE DATE(m.purchase_date) BETWEEN '{{ .fromDate }}' AND '{{ .toDate }}'
+    dbChecks:
+      - dbQuery: >
+          SELECT code, partner_id FROM mark_paid_schedule AS m WHERE DATE(m.purchase_date) BETWEEN '{{ .fromDate }}' AND '{{ .toDate }}'
 
-    dbResponse:
-      - '{"code":"{{ .cert1 }}","partner_id":1}'
+        dbResponse:
+          - '{"code":"{{ .cert1 }}","partner_id":1}'
   ...
     cases:
       ...
       dbQueryArgs:
-        fromDate: "2330-02-01"
-        toDate: "2330-02-05"
+        fromDate: "2030-02-01"
+        toDate: "2030-02-05"
       dbResponseArgs:
         cert1: "GIFT100000-000002"
       ...
       dbQueryArgs:
-        fromDate: "2330-02-01"
-        toDate: "2330-02-05"
+        fromDate: "2030-02-01"
+        toDate: "2030-02-05"
       dbResponseFull:
         - '{"code":"GIFT100000-000002","partner_id":1}'
         - '{"code":"GIFT100000-000003","partner_id":1}'
@@ -1541,91 +1611,28 @@ Example:
 
 ### Ignoring ordering in DB response
 
-You can use `ignoreDbOrdering` flag in `comparisonParams` section to toggle DB response ordering ignore feature.
-This can be used to bypass using `ORDER BY` operators in query.
-
-- `ignoreDbOrdering` - true/false value.
+Gonkex allows you to add a `comparisonParams` section to the database query parameters to customize the result comparison process.
+For example, you can specify the `ignoreArraysOrdering` flag to ignore the order of records when comparing.
+This can be used to bypass the use of `ORDER BY` operators in a query.
 
 Example:
 
 ```yaml
-  comparisonParams:
-    ignoreDbOrdering: true
   ...
-  dbQuery: >
-    SELECT id, name, surname FROM users LIMIT 2
-    
-  dbResponse:
-    - '{ "id": 2, "name": "John", "surname": "Doe" }'
-    - '{ "id": 1, "name": "Jane", "surname": "Doe" }'
+    dbChecks:
+      - dbQuery: >
+          SELECT id, name, surname FROM users LIMIT 2
+
+        dbResponse:
+          - '{ "id": 2, "name": "John", "surname": "Doe" }'
+          - '{ "id": 1, "name": "Jane", "surname": "Doe" }'
+
+        comparisonParams:
+          ignoreArraysOrdering: true
 ```
 
 ## JSON-schema
 
-Use [file with schema](https://raw.githubusercontent.com/lansfy/gonkex/master/gonkex.json) to add syntax highlight to your favourite IDE and write Gonkex tests more easily.
-
+Use [file with schema](https://raw.githubusercontent.com/lansfy/gonkex/master/schema/gonkex.json) to add syntax highlight to your favourite IDE and write Gonkex tests more easily.
 It adds in-line documentation and auto-completion to any IDE that supports it.
-
-Example in Jetbrains IDE:
-![Example Jetbrains](https://i.imgur.com/oYuPuR3.gif)
-
-Example in VSCode IDE:
-![Example Jetbrains](https://i.imgur.com/hBIGjP9.gif)
-
-### Setup in Jetbrains IDE
-
-Download [file with schema](https://raw.githubusercontent.com/lansfy/gonkex/master/gonkex.json).
-Open preferences File->Preferences
-In Languages & Frameworks > Schemas and DTDs > JSON Schema Mappings
-
-![Jetbrains IDE Settings](https://i.imgur.com/xkO22by.png)
-
-Add new schema
-
-![Add schema](https://i.imgur.com/XHw14GJ.png)
-
-Specify schema name, schema file, and select Schema version: Draft 7
-
-![Name, file, version](https://i.imgur.com/LfJfis0.png)
-
-After that add mapping. You can choose from single file, directory, or file mask.
-
-![Mapping](https://i.imgur.com/iFjm0Ld.png)
-
-Choose what suits you best.
-
-![Mapping pattern](https://i.imgur.com/WIK6sZW.png)
-
-Save your preferences. If you done everything right, you should not see No JSON Schema in bottom right corner
-
-![No Schema](https://i.imgur.com/zLqv1Zv.png)
-
-Instead, you should see your schema name
-
-![Schema Name](https://i.imgur.com/DDXdCO7.png)
-
-### Setup is VSCode IDE
-
-At first, you need to download YAML Language plugin
-Open Extensions by going to Code(File)->Preferences->Extensions
-
-![VSCode Preferences](https://i.imgur.com/X7bk5Kh.png)
-
-Look for YAML and install YAML Language Support by Red Hat
-
-![Yaml Extension](https://i.imgur.com/57onioF.png)
-
-Open Settings by going to Code(File)->Preferences->Settings
-
-Open Schema Settings by typing YAML:Schemas and click on *Edit in settings.json*
-![Yaml link](https://i.imgur.com/IEwxWyG.png)
-
-Add file match to apply the JSON on YAML files.
-
-```
-"yaml.schemas": {
-  "C:\\Users\\Leo\\gonkex.json": ["*.gonkex.yaml"]          
-}
-```
-
-In the example above the JSON schema stored in C:\Users\Leo\gonkex.json will be applied on all the files that ends with .gonkex.yaml
+The [following article](https://github.com/lansfy/gonkex/tree/master/schema) describes how to add schema to your IDE.
