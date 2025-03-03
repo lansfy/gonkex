@@ -7,6 +7,101 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test_XML_GetName(t *testing.T) {
+	b := &xmlBodyType{}
+	require.Equal(t, "XML", b.GetName())
+}
+
+func Test_XML_IsSupportedContentType(t *testing.T) {
+	b := &xmlBodyType{}
+	tests := []struct {
+		contentType string
+		want        bool
+	}{
+		{"application/xml", true},
+		{"text/xml", true},
+		{"application/json", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.contentType, func(t *testing.T) {
+			require.Equal(t, tt.want, b.IsSupportedContentType(tt.contentType))
+		})
+	}
+}
+
+func Test_XML_Decode(t *testing.T) {
+	b := &xmlBodyType{}
+	tests := []struct {
+		body    string
+		want    interface{}
+		wantErr string
+	}{
+		{
+			body: "<root><key>value</key></root>",
+			want: map[string]interface{}{
+				"root": map[string]interface{}{"key": "value"},
+			},
+		},
+		{
+			body:    "<invalid_xml>",
+			wantErr: "XML syntax error on line 1: unexpected EOF",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.body, func(t *testing.T) {
+			got, err := b.Decode(tt.body)
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.wantErr)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func Test_XML_ExtractResponseValue(t *testing.T) {
+	b := &xmlBodyType{}
+	tests := []struct {
+		body    string
+		path    string
+		want    string
+		wantErr string
+	}{
+		{
+			body: "<root><key>value</key></root>",
+			path: "root.key",
+			want: "value",
+		},
+		{
+			body:    "<root><key>value</key></root>",
+			path:    "missing",
+			wantErr: "path '$.missing' does not exist in service response",
+		},
+		{
+			body:    "<invalid_xml>",
+			path:    "key",
+			wantErr: "invalid XML in response: XML syntax error on line 1: unexpected EOF",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.body, func(t *testing.T) {
+			got, err := b.ExtractResponseValue(tt.body, tt.path)
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.wantErr)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
 func Test_ParseXML(t *testing.T) {
 	tests := []struct {
 		description  string
