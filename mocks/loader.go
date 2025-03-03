@@ -176,6 +176,10 @@ func loadConstraintOfKind(kind string, def map[interface{}]interface{}, ak *[]st
 		return &methodConstraint{name: kind, method: "GET"}, nil
 	case "methodIsPOST":
 		return &methodConstraint{name: kind, method: "POST"}, nil
+	case "methodIsPUT":
+		return &methodConstraint{name: kind, method: "PUT"}, nil
+	case "methodIsDELETE":
+		return &methodConstraint{name: kind, method: "DELETE"}, nil
 	case "headerIs":
 		*ak = append(*ak, "header", "value", "regexp")
 		return loadHeaderConstraint(def)

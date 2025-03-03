@@ -60,13 +60,11 @@
         },
         "comparisonParams":{
           "type":"object",
-          "description": "Boolean switches to conrol response checks",
+          "description": "Boolean switches to control response checks",
           "properties": {
             "ignoreValues": { "type": "boolean", "description": "Ignore response body JSON values, validate only parameters names" },
             "disallowExtraFields": { "type": "boolean", "description": "Disallow extra JSON parameters in response body" },
-            "ignoreArraysOrdering": { "type": "boolean", "description": "Ignore JSON arrays elements ordering in response body" },
-            "ignoreDbOrdering ": { "type": "boolean", "description": "Toggles ignore ordering in DB response" }
-
+            "ignoreArraysOrdering": { "type": "boolean", "description": "Ignore JSON arrays elements ordering in response body" }
           }
         },
         "status": {
@@ -426,6 +424,14 @@
             {
               "const": "methodIsPOST",
               "title": "Checks that the request method corresponds to POST"
+            },
+            {
+              "const": "methodIsPUT",
+              "title": "Checks that the request method corresponds to PUT"
+            },
+            {
+              "const": "methodIsDELETE",
+              "title": "Checks that the request method corresponds to DELETE"
             },
             {
               "const": "headerIs",
