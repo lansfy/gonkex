@@ -20,7 +20,7 @@ Response:
 
 Errors:
 
-1) service 'response body' comparison: at path '$' values do not match:
+1) service 'response body' comparison: path '$': values do not match:
      expected: 123
        actual: 1234
 

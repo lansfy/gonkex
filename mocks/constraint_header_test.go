@@ -2,8 +2,9 @@ package mocks
 
 import (
 	"net/http"
-	"regexp"
 	"testing"
+
+	"github.com/lansfy/gonkex/compare"
 
 	"github.com/stretchr/testify/require"
 )
@@ -33,8 +34,8 @@ func Test_loadHeaderConstraint(t *testing.T) {
 				"regexp": "^test-.*$",
 			},
 			want: &headerConstraint{
-				header: "X-Test",
-				regexp: regexp.MustCompile("^test-.*$"),
+				header:  "X-Test",
+				matcher: compare.StringAsMatcher("$matchRegexp(^test-.*$)"),
 			},
 		},
 		{
@@ -44,8 +45,8 @@ func Test_loadHeaderConstraint(t *testing.T) {
 				"value":  "$matchRegexp(^test-.*$)",
 			},
 			want: &headerConstraint{
-				header: "X-Test",
-				regexp: regexp.MustCompile("^test-.*$"),
+				header:  "X-Test",
+				matcher: compare.StringAsMatcher("$matchRegexp(^test-.*$)"),
 			},
 		},
 		{
@@ -54,14 +55,6 @@ func Test_loadHeaderConstraint(t *testing.T) {
 				"value": "test-value",
 			},
 			wantErr: "'header' key required",
-		},
-		{
-			description: "invalid regexp value MUST fail",
-			def: map[interface{}]interface{}{
-				"header": "X-Test",
-				"regexp": "[invalid",
-			},
-			wantErr: "error parsing regexp: missing closing ]: `[invalid`",
 		},
 	}
 
@@ -118,7 +111,6 @@ func Test_headerConstraint_Verify(t *testing.T) {
 			request: &http.Request{
 				Header: http.Header{"X-Test": []string{"test-value"}},
 			},
-			wantErr: "",
 		},
 		{
 			description: "header value does not match regexp",
@@ -127,7 +119,7 @@ func Test_headerConstraint_Verify(t *testing.T) {
 			request: &http.Request{
 				Header: http.Header{"X-Test": []string{"wrong-value"}},
 			},
-			wantErr: "'X-Test' header value does not match regexp:\n     expected: ^test-.*$\n       actual: wrong-value",
+			wantErr: "'X-Test' header: value does not match regexp:\n     expected: $matchRegexp(^test-.*$)\n       actual: wrong-value",
 		},
 		{
 			description: "header value matches expected value",
@@ -136,21 +128,29 @@ func Test_headerConstraint_Verify(t *testing.T) {
 			request: &http.Request{
 				Header: http.Header{"X-Test": []string{"test-value"}},
 			},
-			wantErr: "",
+		},
+		{
+			description: "invalid regexp value MUST fail",
+			header:      "X-Test",
+			regexp:      "[invalid",
+			request: &http.Request{
+				Header: http.Header{"X-Test": []string{"test-value"}},
+			},
+			wantErr: "'X-Test' header: cannot compile regexp:\n     expected: <nil>\n       actual: missing closing ]: `[invalid`",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
-			var reCompiled *regexp.Regexp
+			var matcher compare.Matcher
 			if tt.regexp != "" {
-				reCompiled = regexp.MustCompile(tt.regexp)
+				matcher = compare.StringAsMatcher(compare.MatchRegexpWrap(tt.regexp))
 			}
 
 			c := &headerConstraint{
-				header: tt.header,
-				value:  tt.value,
-				regexp: reCompiled,
+				header:  tt.header,
+				value:   tt.value,
+				matcher: matcher,
 			}
 
 			got := c.Verify(tt.request)

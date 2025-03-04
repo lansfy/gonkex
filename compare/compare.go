@@ -3,7 +3,6 @@ package compare
 import (
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/lansfy/gonkex/colorize"
@@ -29,18 +28,6 @@ const (
 	arrayType = "array"
 	mapType   = "map"
 )
-
-var regexExprRx = regexp.MustCompile(`^\$matchRegexp\((.+)\)$`)
-
-// StringAsRegexp ensures that provided string has format "$matchRegexp(...)" and returns
-// the value from brackets
-func StringAsRegexp(expr string) (string, bool) {
-	if matches := regexExprRx.FindStringSubmatch(expr); matches != nil {
-		return matches[1], true
-	}
-
-	return "", false
-}
 
 // Compare compares values as plain text
 // It can be compared several ways:
@@ -176,18 +163,10 @@ func compareRegex(path string, expected, actual interface{}) []error {
 		return []error{makeError(path, "type mismatch", "string", reflect.TypeOf(expected))}
 	}
 
-	regexExpr, _ := StringAsRegexp(expected.(string))
-
-	rx, err := regexp.Compile(regexExpr)
+	matcher := StringAsMatcher(expected.(string))
+	err := matcher.MatchValues("path %s:", path, actual)
 	if err != nil {
-		// simplify error text
-		errorText := strings.TrimPrefix(err.Error(), "error parsing regexp: ")
-		return []error{makeError(path, "cannot compile regexp", nil, errorText)}
-	}
-
-	value := fmt.Sprintf("%v", actual)
-	if !rx.MatchString(value) {
-		return []error{makeError(path, "value does not match regexp", expected, actual)}
+		return []error{err}
 	}
 
 	return nil
@@ -199,7 +178,7 @@ func leafMatchType(expected interface{}) leafsMatchType {
 		return pure
 	}
 
-	if _, ok = StringAsRegexp(val); ok {
+	if StringAsMatcher(val) != nil {
 		return regex
 	}
 
@@ -224,11 +203,11 @@ func makeValueCompareError(path, msg string, expected, actual interface{}) error
 	}
 
 	parts = append(parts, diffStrings(expectedStr, actualStr)...)
-	return colorize.NewError("at path %s "+msg+":\n     diff (--- expected vs +++ actual):\n", parts...)
+	return colorize.NewError("path %s: "+msg+":\n     diff (--- expected vs +++ actual):\n", parts...)
 }
 
 func makeError(path, msg string, expected, actual interface{}) error {
-	return colorize.NewNotEqualError("at path %s "+msg+":", path, expected, actual)
+	return colorize.NewNotEqualError("path %s: "+msg+":", path, expected, actual)
 }
 
 func convertToArray(array interface{}) []interface{} {

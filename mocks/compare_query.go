@@ -1,11 +1,14 @@
-package compare
+package mocks
 
 import (
 	"fmt"
 	"regexp"
 )
 
-func Query(expected, actual []string) (bool, error) {
+// TODO: support matchers
+var regexExprRx = regexp.MustCompile(`^\$matchRegexp\((.+)\)$`)
+
+func compareQuery(expected, actual []string) (bool, error) {
 	if len(expected) != len(actual) {
 		return false, fmt.Errorf("expected and actual query params have different lengths")
 	}

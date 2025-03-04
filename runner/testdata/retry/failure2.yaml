@@ -1,5 +1,5 @@
 - name: we have several success but not in row
-  description: "service 'response body' comparison: at path '$.error' values do not match:\n     expected: \n       actual: fake error"
+  description: "service 'response body' comparison: path '$.error': values do not match:\n     expected: \n       actual: fake error"
   method: GET
   path: /test.run/010101010101
   response:

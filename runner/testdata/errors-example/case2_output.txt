@@ -24,7 +24,7 @@ Response:
 
 Errors:
 
-1) service 'response body' comparison: at path '$.somefield' values do not match:
+1) service 'response body' comparison: path '$.somefield': values do not match:
      expected: 1234
        actual: 123
 
