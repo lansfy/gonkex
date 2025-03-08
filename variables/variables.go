@@ -1,3 +1,4 @@
+// Package variables provides functionality for managing and substituting variables in Gonkex tests
 package variables
 
 import (
@@ -6,36 +7,45 @@ import (
 	"strings"
 )
 
+// variableRx is a regular expression that matches variable patterns like "{{ $varname }}"
 var variableRx = regexp.MustCompile(`{{\s*\$(\w+)\s*}}`)
 
+// Variables represents a storage for variable names and their values
+// Used for variable substitution in test descriptions, paths, queries, headers, requests, responses, etc.
 type Variables struct {
 	variables map[string]string
 }
 
+// New creates a new instance of Variables with an empty variables map
 func New() *Variables {
 	return &Variables{
 		variables: make(map[string]string),
 	}
 }
 
-// Set adds new variable (or replace existing)
+// Set adds a new variable (or replaces an existing one) to the variables map
 func (vs *Variables) Set(name, value string) {
 	vs.variables[name] = value
 }
 
-// Load adds new variables and replaces values of existing
+// Merge adds new variables and replaces values of existing ones from a provided map
+// Useful when applying variables from multiple sources (e.g., test cases, environment)
 func (vs *Variables) Merge(variables map[string]string) {
 	for n, v := range variables {
 		vs.variables[n] = v
 	}
 }
 
-// Len returns number of variables in storage
+// Len returns the number of variables currently stored in the variables map
 func (vs *Variables) Len() int {
 	return len(vs.variables)
 }
 
-// Substitute replaces all variables in str to their values and returns result string
+// Substitute replaces all variable references in a string with their actual values
+// Variables are specified in the format "{{ $varname }}" in the input string
+// The method first looks for the variable in the internal variables map,
+// and if not found, checks environment variables
+// Returns the input string with all recognized variables replaced with their values
 func (vs *Variables) Substitute(s string) string {
 	return variableRx.ReplaceAllStringFunc(s, func(found string) string {
 		name := getVarName(found)

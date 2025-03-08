@@ -2,7 +2,7 @@ package types
 
 // BodyType defines an interface for handling service response bodies.
 type BodyType interface {
-	// GetName returns the name of the body type (e.g., JSON, XML).
+	// GetName returns the name of the body type (e.g., JSON, XML, YAML).
 	GetName() string
 
 	// IsSupportedContentType checks if the given content type is supported by this body type.
