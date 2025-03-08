@@ -3,6 +3,7 @@ package mocks
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/lansfy/gonkex/colorize"
@@ -123,4 +124,18 @@ func (m *Mocks) SetCheckers(checkers []CheckerInterface) {
 	for _, v := range m.mocks {
 		v.SetCheckers(checkers)
 	}
+}
+
+// RegisterEnvironmentVariables sets environment variables for all mock services.
+// It generates environment variable names using the given prefix and the service name,
+// then assigns the corresponding server address for each mock service.
+func (m *Mocks) RegisterEnvironmentVariables(prefix string) error {
+	for _, name := range m.GetNames() {
+		varName := strings.ToUpper(prefix + name)
+		err := os.Setenv(varName, m.Service(name).ServerAddr())
+		if err != nil {
+			return fmt.Errorf("register environment variable %q: %w", varName, err)
+		}
+	}
+	return nil
 }

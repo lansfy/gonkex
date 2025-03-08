@@ -62,7 +62,7 @@ func New(loader testloader.LoaderInterface, opts *RunnerOpts) *Runner {
 		r.config.CustomClient = newClient(r.config.HTTPProxyURL)
 	}
 	if r.config.TestHandler == nil {
-		r.config.TestHandler = defaultTestHandler
+		r.config.TestHandler = r.defaultTestHandler
 	}
 
 	r.AddCheckers(response_body.NewChecker())
@@ -330,6 +330,23 @@ func (r *Runner) setVariablesFromResponse(t models.TestInterface, result *models
 	return true, nil
 }
 
+func (r *Runner) defaultTestHandler(t models.TestInterface, f TestExecutor) error {
+	result, err := f(t)
+	if err != nil {
+		if isTestWasSkipped(err) {
+			return nil
+		}
+		return err
+	}
+	if len(result.Errors) != 0 {
+		if len(r.output) != 0 {
+			return errors.New("failed")
+		}
+		return result.Errors[0]
+	}
+	return nil
+}
+
 func checkHasFocused(tests []models.TestInterface) bool {
 	for _, test := range tests {
 		if test.GetStatus() == models.StatusFocus {
@@ -342,18 +359,4 @@ func checkHasFocused(tests []models.TestInterface) bool {
 
 func isTestWasSkipped(err error) bool {
 	return err != nil && (errors.Is(err, checker.ErrTestSkipped) || errors.Is(err, checker.ErrTestBroken))
-}
-
-func defaultTestHandler(t models.TestInterface, f TestExecutor) error {
-	result, err := f(t)
-	if err != nil {
-		if isTestWasSkipped(err) {
-			return nil
-		}
-		return err
-	}
-	if len(result.Errors) != 0 {
-		return result.Errors[0]
-	}
-	return nil
 }
