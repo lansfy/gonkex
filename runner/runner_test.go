@@ -42,9 +42,13 @@ func (e *failEndpoint) Run(h endpoint.Helper) error {
 	return fmt.Errorf("fake error")
 }
 
-func (e *failEndpoint) Handler(t models.TestInterface, f TestExecutor) error {
+func (e *failEndpoint) BeforeTest(t models.TestInterface) error {
 	e.expectedError = t.GetDescription()
-	return defaultTestHandler(t, f)
+	return nil
+}
+
+func (e *failEndpoint) Check(models.TestInterface, *models.Result) ([]error, error) {
+	return nil, nil
 }
 
 func Test_retries(t *testing.T) {
@@ -55,7 +59,6 @@ func Test_retries(t *testing.T) {
 		"failure1.yaml",
 		"failure2.yaml",
 		"failure3.yaml",
-		"failure4.yaml",
 	}
 
 	for _, file := range testCases {
@@ -70,9 +73,11 @@ func Test_retries(t *testing.T) {
 					HelperEndpoints: endpoint.EndpointMap{
 						"run/*": e.Run,
 					},
-					TestHandler: e.Handler,
 				},
 			)
+
+			runner.AddCheckers(e)
+
 			err := runner.Run()
 			if e.expectedError != "" {
 				require.Error(t, err)
@@ -81,6 +86,30 @@ func Test_retries(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, len(e.pattern)-1, e.index)
 			}
+		})
+	}
+}
+
+func Test_retries_load_errors(t *testing.T) {
+	testCases := []struct {
+		name      string
+		wantError string
+	}{
+		{"failure_load_1.yaml", "error: section 'retryPolicy': 'successInRow' count must be positive"},
+		{"failure_load_2.yaml", "error: section 'retryPolicy': attempts count must be non-negative"},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			yamlLoader := yaml_file.NewLoader("testdata/retry/" + tt.name)
+			runner := New(
+				yamlLoader,
+				&RunnerOpts{},
+			)
+
+			err := runner.Run()
+			require.Error(t, err)
+			require.Contains(t, err.Error(), tt.wantError)
 		})
 	}
 }

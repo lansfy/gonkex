@@ -1,10 +1,8 @@
 package runner
 
 import (
-	"fmt"
 	"net/url"
 	"os"
-	"strings"
 	"testing"
 	"text/template"
 
@@ -17,9 +15,10 @@ import (
 	"github.com/lansfy/gonkex/storage"
 	"github.com/lansfy/gonkex/testloader/yaml_file"
 	"github.com/lansfy/gonkex/variables"
-
-	"github.com/joho/godotenv"
 )
+
+// MockEnvironmentPrefix is the default prefix used by gonkex for registering mock service environment variables.
+const MockEnvironmentPrefix = "GONKEX_MOCK_"
 
 type RunWithTestingOpts struct {
 	// TestsDir is the directory where test definitions or files are located.
@@ -55,11 +54,13 @@ type RunWithTestingOpts struct {
 // opts: The configuration options for the test run.
 func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 	if opts.Mocks != nil {
-		registerMocksEnvironment(t, opts.Mocks)
+		if err := opts.Mocks.RegisterEnvironmentVariables(MockEnvironmentPrefix); err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	if opts.EnvFilePath != "" {
-		if err := godotenv.Load(opts.EnvFilePath); err != nil {
+		if err := RegisterEnvironmentVariables(opts.EnvFilePath, false); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -100,17 +101,6 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 	err := runner.Run()
 	if err != nil {
 		t.Fatal(err)
-	}
-}
-
-func registerMocksEnvironment(t *testing.T, m *mocks.Mocks) {
-	names := m.GetNames()
-	for _, n := range names {
-		varName := fmt.Sprintf("GONKEX_MOCK_%s", strings.ToUpper(n))
-		err := os.Setenv(varName, m.Service(n).ServerAddr())
-		if err != nil {
-			t.Fatal(err)
-		}
 	}
 }
 
