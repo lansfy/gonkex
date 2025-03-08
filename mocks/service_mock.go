@@ -9,6 +9,7 @@ import (
 	"github.com/lansfy/gonkex/colorize"
 )
 
+// ServiceMock represents a mock HTTP service for testing purposes
 type ServiceMock struct {
 	server            *http.Server
 	listener          net.Listener
@@ -21,6 +22,8 @@ type ServiceMock struct {
 	ServiceName string
 }
 
+// NewServiceMock creates a new ServiceMock instance with the given name and mock definition.
+// If the mock definition is nil, it creates a default definition with a fail reply.
 func NewServiceMock(serviceName string, mock *Definition) *ServiceMock {
 	if mock == nil {
 		mock = NewDefinition("$", nil, NewFailReply(), CallsNoConstraint, OrderNoValue)
@@ -32,10 +35,14 @@ func NewServiceMock(serviceName string, mock *Definition) *ServiceMock {
 	}
 }
 
+// StartServer initializes and starts an HTTP server on localhost with a random port.
+// After starting the server, you can use ServerAddr() method to get the actual
+// address (including the randomly assigned port) where the server is listening.
 func (m *ServiceMock) StartServer() error {
 	return m.StartServerWithAddr("localhost:0") // loopback, random port
 }
 
+// StartServerWithAddr initializes and starts an HTTP server on the specified address.
 func (m *ServiceMock) StartServerWithAddr(addr string) error {
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -52,6 +59,7 @@ func (m *ServiceMock) StartServerWithAddr(addr string) error {
 	return nil
 }
 
+// ShutdownServer gracefully stops the HTTP server using the provided context
 func (m *ServiceMock) ShutdownServer(ctx context.Context) error {
 	err := m.server.Shutdown(ctx)
 	m.listener = nil
@@ -59,6 +67,8 @@ func (m *ServiceMock) ShutdownServer(ctx context.Context) error {
 	return err
 }
 
+// ServerAddr returns the actual address (including port) where the mock server is listening.
+// Panics if the server hasn't been started.
 func (m *ServiceMock) ServerAddr() string {
 	if m.listener == nil {
 		panic("mock server " + m.ServiceName + " is not started")
@@ -66,6 +76,9 @@ func (m *ServiceMock) ServerAddr() string {
 	return m.listener.Addr().String()
 }
 
+// ServeHTTP handles incoming HTTP requests by executing the mock definition and running checkers.
+// Errors from both Definition execution and checkers are accumulated.
+// Implements the http.Handler interface.
 func (m *ServiceMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -94,6 +107,7 @@ func (m *ServiceMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// SetDefinition replaces the current mock definition with a new one
 func (m *ServiceMock) SetDefinition(newDefinition *Definition) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -101,6 +115,7 @@ func (m *ServiceMock) SetDefinition(newDefinition *Definition) {
 	m.mock = newDefinition
 }
 
+// ResetDefinition restores the original default definition
 func (m *ServiceMock) ResetDefinition() {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -108,6 +123,7 @@ func (m *ServiceMock) ResetDefinition() {
 	m.mock = m.defaultDefinition
 }
 
+// ResetRunningContext clears all accumulated errors and resets the mock definition's running context
 func (m *ServiceMock) ResetRunningContext() {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -116,6 +132,7 @@ func (m *ServiceMock) ResetRunningContext() {
 	m.mock.ResetRunningContext()
 }
 
+// EndRunningContext finalizes the running context and returns all accumulated errors
 func (m *ServiceMock) EndRunningContext() []error {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
@@ -128,6 +145,7 @@ func (m *ServiceMock) EndRunningContext() []error {
 	return errs
 }
 
+// SetCheckers configures the request checkers used to validate incoming HTTP requests
 func (m *ServiceMock) SetCheckers(checkers []CheckerInterface) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()

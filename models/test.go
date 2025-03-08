@@ -4,88 +4,99 @@ import (
 	"time"
 )
 
+// Status represents the test execution status
+// Can be used to mark tests as skipped, broken, or focused for execution
 type Status string
 
 const (
-	StatusNone    Status = ""
-	StatusFocus   Status = "focus"
-	StatusBroken  Status = "broken"
-	StatusSkipped Status = "skipped"
+	StatusNone    Status = ""        // Default status, test will be executed normally
+	StatusFocus   Status = "focus"   // Only tests with this status will be executed, others will be skipped
+	StatusBroken  Status = "broken"  // Test is marked as broken and will not be executed
+	StatusSkipped Status = "skipped" // Test will be skipped during execution
 )
 
+// ComparisonParams defines how responses should be compared
+// Controls behavior of response comparison
 type ComparisonParams interface {
-	IgnoreValuesChecking() bool
-	IgnoreArraysOrdering() bool
-	DisallowExtraFields() bool
+	IgnoreValuesChecking() bool // If true, only structure is checked, values are ignored
+	IgnoreArraysOrdering() bool // If true, arrays are considered equal regardless of element order
+	DisallowExtraFields() bool  // If true, comparison fails if extra fields exist in compared structure
 }
 
+// DatabaseCheck represents a database query to be executed after an HTTP request
 type DatabaseCheck interface {
-	DbQueryString() string
-	DbResponseJson() []string
-	GetComparisonParams() ComparisonParams
+	DbQueryString() string                 // storage query to execute against the database
+	DbResponseJson() []string              // Expected records as serialized JSON strings
+	GetComparisonParams() ComparisonParams // Comparison parameters for database response
 }
 
+// RetryPolicy defines how tests should be retried if they fail
 type RetryPolicy interface {
-	Attempts() int
-	Delay() time.Duration
-	SuccessCount() int
+	Attempts() int        // Number of retry attempts for failed tests
+	Delay() time.Duration // Delay between retry attempts
+	SuccessCount() int    // Required number of consecutive successful test passes to mark as successful
 }
 
+// Form represents multipart/form-data for file uploads and form submissions
 type Form interface {
-	GetFiles() map[string]string
-	GetFields() map[string]string
+	GetFiles() map[string]string  // Map of field name to file path for file uploads
+	GetFields() map[string]string // Map of field name to field value for form fields
 }
 
-// Common Test interface
+// TestInterface defines the interface for Gonkex test cases
+// Contains all methods necessary to execute a test
 type TestInterface interface {
-	GetName() string
-	GetDescription() string
+	GetName() string        // Test name, used for reporting
+	GetDescription() string // Test description
 
-	GetMethod() string
-	Path() string
-	ToQuery() string
-	ContentType() string
-	Headers() map[string]string
-	Cookies() map[string]string
-	GetRequest() string
-	GetForm() Form
+	GetMethod() string          // HTTP method (GET, POST, etc.)
+	Path() string               // URL path for the request
+	ToQuery() string            // Query string parameters
+	ContentType() string        // Content type header for the request
+	Headers() map[string]string // HTTP headers for the request
+	Cookies() map[string]string // Cookies for the request
+	GetRequest() string         // Request body as string
+	GetForm() Form              // Form data for multipart/form-data requests
 
-	GetMeta(key string) interface{}
+	GetMeta(key string) interface{} // Additional metadata for the test
 
-	GetStatus() Status
-	GetResponses() map[int]string
-	GetResponse(code int) (string, bool)
-	GetResponseHeaders(code int) (map[string]string, bool)
+	GetStatus() Status                                     // Test execution status (focus, broken, skipped)
+	GetResponses() map[int]string                          // Expected responses for different HTTP status codes
+	GetResponse(code int) (string, bool)                   // Get expected response for a specific HTTP status code
+	GetResponseHeaders(code int) (map[string]string, bool) // Get expected response headers for a specific status code
 
-	GetDatabaseChecks() []DatabaseCheck
-	GetComparisonParams() ComparisonParams
-	GetRetryPolicy() RetryPolicy
+	Fixtures() []string                 // List of fixtures to load before test execution
+	GetDatabaseChecks() []DatabaseCheck // Database checks to perform after the request
 
-	Fixtures() []string
-	ServiceMocks() map[string]interface{}
+	GetComparisonParams() ComparisonParams // Comparison parameters for response checking
+	GetRetryPolicy() RetryPolicy           // Retry policy for failed tests
 
-	Pause() time.Duration
-	AfterRequestPause() time.Duration
+	ServiceMocks() map[string]interface{} // Mocks for external services
 
-	BeforeScriptPath() string
-	BeforeScriptTimeout() time.Duration
+	Pause() time.Duration             // Pause duration before test execution
+	AfterRequestPause() time.Duration // Pause duration after request execution
 
-	AfterRequestScriptPath() string
-	AfterRequestScriptTimeout() time.Duration
+	BeforeScriptPath() string           // Path to script to execute before the request
+	BeforeScriptTimeout() time.Duration // Timeout for the before script
 
-	GetVariables() map[string]string
-	GetCombinedVariables() map[string]string
-	GetVariablesToSet(code int) (map[string]string, bool)
+	AfterRequestScriptPath() string           // Path to script to execute after the request
+	AfterRequestScriptTimeout() time.Duration // Timeout for the after request script
 
-	GetFileName() string
-	FirstTestInFile() bool
-	LastTestInFile() bool
-	OneOfCase() bool
+	GetVariables() map[string]string                      // Test-specific variables
+	GetCombinedVariables() map[string]string              // Combined variables from all sources
+	GetVariablesToSet(code int) (map[string]string, bool) // Variables to extract from the response
 
-	SetStatus(status Status)
+	GetFileName() string   // Source file name for the test
+	FirstTestInFile() bool // Whether this is the first test in the file
+	LastTestInFile() bool  // Whether this is the last test in the file
+	OneOfCase() bool       // Whether this test is part of a case-based test
 
-	// ApplyVariables run specified function for every string in object
+	SetStatus(status Status) // Set the execution status of the test
+
+	// ApplyVariables applies a function to every string in the test
+	// Used for variable substitution in test definitions
 	ApplyVariables(func(string) string)
-	// Clone returns copy of current object
+	// Clone returns a copy of the current test
+	// Used when applying cases to create multiple test instances
 	Clone() TestInterface
 }
