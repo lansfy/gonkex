@@ -5,20 +5,6 @@ import (
 	"time"
 )
 
-// start new test case
-func NewTestCase(name string, start time.Time) *TestCase {
-	test := new(TestCase)
-	test.Name = name
-
-	if !start.IsZero() {
-		test.Start = start.UnixNano() / 1000
-	} else {
-		test.Start = time.Now().UnixNano() / 1000
-	}
-
-	return test
-}
-
 type TestCase struct {
 	Status string `xml:"status,attr"`
 	Start  int64  `xml:"start,attr"`
@@ -43,6 +29,20 @@ type TestCase struct {
 type Label struct {
 	Name  string `xml:"name,attr"`
 	Value string `xml:"value,attr"`
+}
+
+// start new test case
+func NewTestCase(name string, start time.Time) *TestCase {
+	test := new(TestCase)
+	test.Name = name
+
+	if !start.IsZero() {
+		test.Start = start.UnixNano() / 1000
+	} else {
+		test.Start = time.Now().UnixNano() / 1000
+	}
+
+	return test
 }
 
 func (t *TestCase) SetDescription(desc string) {

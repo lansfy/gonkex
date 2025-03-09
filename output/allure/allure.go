@@ -1,7 +1,6 @@
 package allure
 
 import (
-	"bytes"
 	"encoding/xml"
 	"errors"
 	"os"
@@ -33,7 +32,7 @@ func (a *Allure) EndSuite(end time.Time) error {
 	suite := a.GetCurrentSuite()
 	suite.SetEnd(end)
 	if suite.HasTests() {
-		if err := writeSuite(a.TargetDir, suite); err != nil {
+		if _, err := writeSuite(a.TargetDir, suite); err != nil {
 			return err
 		}
 	}
@@ -68,7 +67,7 @@ func (a *Allure) EndCase(status string, err error, end time.Time) {
 }
 
 func (a *Allure) CreateStep(name string, stepFunc func()) {
-	status := `passed`
+	status := "passed"
 	a.StartStep(name, time.Now())
 	// if test error
 	stepFunc()
@@ -93,14 +92,15 @@ func (a *Allure) EndStep(status string, end time.Time) {
 	currentStep[suite] = currentStep[suite].Parent
 }
 
-func (a *Allure) AddAttachment(attachmentName, buf bytes.Buffer, typ string) {
-	mime, ext := getBufferInfo(buf, typ)
-	name, _ := writeBuffer(a.TargetDir, buf, ext)
+func (a *Allure) AddAttachment(attachmentName, content string, typ string) {
+	mime := "text/plain"
+	ext := "txt"
+	name, _ := writeAttachment(a.TargetDir, content, ext)
 	currentState[a.GetCurrentSuite()].AddAttachment(beans.NewAttachment(
-		attachmentName.String(),
+		attachmentName,
 		mime,
 		name,
-		buf.Len()))
+		len(content)))
 }
 
 func (a *Allure) PendingCase(testName string, start time.Time) {
@@ -108,27 +108,18 @@ func (a *Allure) PendingCase(testName string, start time.Time) {
 	a.EndCase("pending", errors.New("test ignored"), start)
 }
 
-func getBufferInfo(buf bytes.Buffer, typ string) (string, string) {
-	// TODO: detect extensions
-	return "text/plain", "txt"
-}
-
-func writeBuffer(pathDir string, buf bytes.Buffer, ext string) (string, error) {
-	fileName := uuid.New().String() + `-attachment.` + ext
-	err := os.WriteFile(filepath.Join(pathDir, fileName), buf.Bytes(), 0o644)
-
+func writeAttachment(pathDir string, content string, ext string) (string, error) {
+	fileName := uuid.New().String() + "-attachment." + ext
+	err := os.WriteFile(filepath.Join(pathDir, fileName), []byte(content), 0o644)
 	return fileName, err
 }
 
-func writeSuite(pathDir string, suite *beans.Suite) error {
+func writeSuite(pathDir string, suite *beans.Suite) (string, error) {
+	fileName := uuid.New().String() + "-testsuite.xml"
 	b, err := xml.Marshal(suite)
 	if err != nil {
-		return err
+		return fileName, err
 	}
-	err = os.WriteFile(filepath.Join(pathDir, uuid.New().String()+`-testsuite.xml`), b, 0o644)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	err = os.WriteFile(filepath.Join(pathDir, fileName), b, 0o644)
+	return fileName, err
 }
