@@ -1,7 +1,6 @@
 package allure
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -37,30 +36,29 @@ func (o *Output) Process(t models.TestInterface, result *models.Result) error {
 	testCase.AddLabel("story", result.Path)
 
 	o.allure.AddAttachment(
-		*bytes.NewBufferString("Request"),
-		*bytes.NewBufferString(fmt.Sprintf(`Query: %s\n Body: %s`, result.Query, result.RequestBody)),
+		"Request",
+		fmt.Sprintf("Query: %s\n Body: %s", result.Query, result.RequestBody),
 		"txt")
 	o.allure.AddAttachment(
-		*bytes.NewBufferString("Response"),
-		*bytes.NewBufferString(fmt.Sprintf(`Body: %s`, result.ResponseBody)),
+		"Response",
+		fmt.Sprintf("Body: %s", result.ResponseBody),
 		"txt")
 
 	for i, dbresult := range result.DatabaseResult {
 		if dbresult.Query != "" {
 			o.allure.AddAttachment(
-				*bytes.NewBufferString(fmt.Sprintf("Db Query #%d", i+1)),
-				*bytes.NewBufferString(fmt.Sprintf(`SQL string: %s`, dbresult.Query)),
+				fmt.Sprintf("Db Query #%d", i+1),
+				fmt.Sprintf("SQL string: %s", dbresult.Query),
 				"txt")
 			o.allure.AddAttachment(
-				*bytes.NewBufferString(fmt.Sprintf("Db Response #%d", i+1)),
-				*bytes.NewBufferString(fmt.Sprintf(`Response: %s`, dbresult.Response)),
+				fmt.Sprintf("Db Response #%d", i+1),
+				fmt.Sprintf("Response: %s", dbresult.Response),
 				"txt")
 		}
 	}
 
 	status, err := getAllureStatus(result)
 	o.allure.EndCase(status, err, time.Now())
-
 	return nil
 }
 
@@ -69,12 +67,7 @@ func (o *Output) Finalize() {
 }
 
 func notRunnedStatus(status models.Status) bool {
-	switch status {
-	case models.StatusBroken, models.StatusSkipped:
-		return true
-	default:
-		return false
-	}
+	return status == models.StatusBroken || status == models.StatusSkipped
 }
 
 func getAllureStatus(r *models.Result) (string, error) {
@@ -83,24 +76,14 @@ func getAllureStatus(r *models.Result) (string, error) {
 		return string(testStatus), nil
 	}
 
-	var (
-		status     = "passed"
-		testErrors []error
-	)
-
-	if len(r.Errors) != 0 {
-		status = "failed"
-		testErrors = r.Errors
+	if len(r.Errors) == 0 {
+		return "passed", nil
 	}
 
-	if len(testErrors) != 0 {
-		errText := ""
-		for _, err := range testErrors {
-			errText = errText + err.Error() + "\n"
-		}
-
-		return status, errors.New(errText)
+	errText := ""
+	for _, err := range r.Errors {
+		errText += err.Error() + "\n"
 	}
 
-	return status, nil
+	return "failed", errors.New(errText)
 }

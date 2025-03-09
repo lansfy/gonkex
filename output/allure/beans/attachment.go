@@ -1,5 +1,12 @@
 package beans
 
+type Attachment struct {
+	Title  string `xml:"title,attr"`
+	Type   string `xml:"type,attr"`
+	Size   int    `xml:"size,attr"`
+	Source string `xml:"source,attr"`
+}
+
 func NewAttachment(title, mime, source string, size int) *Attachment {
 	return &Attachment{
 		Title:  title,
@@ -7,11 +14,4 @@ func NewAttachment(title, mime, source string, size int) *Attachment {
 		Source: source,
 		Size:   size,
 	}
-}
-
-type Attachment struct {
-	Title  string `xml:"title,attr"`
-	Type   string `xml:"type,attr"`
-	Size   int    `xml:"size,attr"`
-	Source string `xml:"source,attr"`
 }
