@@ -9,20 +9,20 @@ import (
 	"sync"
 )
 
-// возможные состояния светофора
+// possible traffic light conditions
 const (
 	lightRed    = "red"
 	lightYellow = "yellow"
 	lightGreen  = "green"
 )
 
-// структура для хранения состояния светофора
+// structure for storing traffic light status
 type trafficLights struct {
 	CurrentLight string       `json:"currentLight"`
 	mutex        sync.RWMutex `json:"-"`
 }
 
-// экземпляр светофора
+// traffic light instance
 var lights = trafficLights{
 	CurrentLight: lightRed,
 }
@@ -30,12 +30,12 @@ var lights = trafficLights{
 func main() {
 	initServer()
 
-	// запуск сервера (блокирующий)
+	// server startup (blocking)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func initServer() {
-	// метод для получения текущего состояния светофора
+	// method for obtaining the current state of the traffic light
 	http.HandleFunc("/light/get", func(w http.ResponseWriter, r *http.Request) {
 		lights.mutex.RLock()
 		defer lights.mutex.RUnlock()
@@ -49,7 +49,7 @@ func initServer() {
 		w.Write(resp)
 	})
 
-	// метод для установки нового состояния светофора
+	// method for setting a new traffic light state
 	http.HandleFunc("/light/set", func(w http.ResponseWriter, r *http.Request) {
 		lights.mutex.Lock()
 		defer lights.mutex.Unlock()
