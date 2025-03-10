@@ -4,12 +4,13 @@ Gonkex will test your services using their API. It can bomb the service with pre
 
 Capabilities:
 
-- works with REST/JSON API
-- seeds the DB with fixtures data (supports PostgreSQL, MySQL, Sqlite, TimescaleDB, MariaDB, SQLServer, ClickHouse)
-- provides mocks for external services
-- can be used as a library and ran together with unit-tests
+- works with REST/(JSON,XML,YAML) API
+- provides [declarative mocks](#mocks) for external services
+- seeds the database with [fixtures data](#fixtures) (supports PostgreSQL, MySQL, Sqlite, TimescaleDB, MariaDB, SQLServer, ClickHouse, Aerospike, MongoDB, Redis)
+- [execute and verify database queries](#a-db-query) to check test outcomes
+- run as a [standalone tool](https://github.com/lansfy/gonkex-cli/) or as a [library](#using-gonkex-as-a-library) alongside your unit tests
 - stores the results as an [Allure](https://allurereport.org/) report
-- there is a [JSON-schema](#json-schema) to add autocomletion and validation for Gonkex YAML files
+- there is a [JSON-schema](#json-schema) to add autocomplete and validation for Gonkex YAML files
 
 ## Table of contents
 
@@ -41,11 +42,11 @@ Capabilities:
    * [Mocks definition in the test file](#mocks-definition-in-the-test-file)
       + [Request constraints (requestConstraints)](#request-constraints-requestconstraints)
          - [nop](#nop)
+         - [methodIs](#methodis)
+         - [headerIs](#headeris)
          - [pathMatches](#pathmatches)
          - [queryMatches](#querymatches)
          - [queryMatchesRegexp](#querymatchesregexp)
-         - [methodIs](#methodis)
-         - [headerIs](#headeris)
          - [bodyMatchesText](#bodymatchestext)
          - [bodyMatchesJSON](#bodymatchesjson)
          - [bodyMatchesXML](#bodymatchesxml)
@@ -846,6 +847,74 @@ Example:
     ...
 ```
 
+##### methodIs
+
+Checks that the request method corresponds to the expected one.
+
+Parameters:
+
+- `method` (mandatory) - string to compare the request method to.
+
+For the most commonly used methods, there are also short variants that do not require the `method` parameter:
+
+- `methodIsGET`
+- `methodIsPOST`
+- `methodIsPUT`
+- `methodIsDELETE`
+
+Example:
+
+```yaml
+  ...
+  mocks:
+    service1:
+      requestConstraints:
+        - kind: methodIs
+          method: PUT
+    ...
+    service2:
+      requestConstraints:
+        - kind: methodIsPOST
+    ...
+```
+
+##### headerIs
+
+Checks that the request has the defined header and (optional) that its value either equals the pre-defined one or falls under the definition of a regular expression.
+
+Parameters:
+
+- `header` (mandatory) - name of the header that is expected with the request;
+- `value` - a string with the expected request header value;
+- `regexp` - a regular expression to check the header value against.
+
+It is also possible to specify a regular expression using `$matchRegexp` in the `value` field.
+
+Examples:
+
+```yaml
+  ...
+  mocks:
+    service1:
+      requestConstraints:
+        - kind: headerIs
+          header: Content-Type
+          value: application/json
+    ...
+    service2:
+      requestConstraints:
+        - kind: headerIs
+          header: Content-Type
+          regexp: ^(application/json|text/plain)$
+    ...
+    service3:
+      requestConstraints:
+        - kind: headerIs
+          header: Content-Type
+          value: "$matchRegexp(^(application/json|text/plain)$)"
+    ...
+```
+
 ##### pathMatches
 
 Checks that the request path corresponds to the expected one.
@@ -864,6 +933,7 @@ Example:
       requestConstraints:
         - kind: pathMatches
           path: /api/v1/test/somevalue
+    ...
     service2:
       requestConstraints:
         - kind: pathMatches
@@ -915,71 +985,6 @@ Example:
     ...
 ```
 
-##### methodIs
-
-Checks that the request method corresponds to the expected one.
-
-Parameters:
-
-- `method` (mandatory) - string to compare the request method to.
-
-For the most commonly used methods, there are also short variants that do not require the `method` parameter:
-
-- `methodIsGET`
-- `methodIsPOST`
-- `methodIsPUT`
-- `methodIsDELETE`
-
-Example:
-
-```yaml
-  ...
-  mocks:
-    service1:
-      requestConstraints:
-        - kind: methodIs
-          method: PUT
-    service2:
-      requestConstraints:
-        - kind: methodIsPOST
-    ...
-```
-
-##### headerIs
-
-Checks that the request has the defined header and (optional) that its value either equals the pre-defined one or falls under the definition of a regular expression.
-
-Parameters:
-
-- `header` (mandatory) - name of the header that is expected with the request;
-- `value` - a string with the expected request header value;
-- `regexp` - a regular expression to check the header value against.
-
-It is also possible to specify a regular expression using "$matchRegexp" in the `value` field.
-
-Examples:
-
-```yaml
-  ...
-  mocks:
-    service1:
-      requestConstraints:
-        - kind: headerIs
-          header: Content-Type
-          value: application/json
-    service2:
-      requestConstraints:
-        - kind: headerIs
-          header: Content-Type
-          regexp: ^(application/json|text/plain)$
-    service3:
-      requestConstraints:
-        - kind: headerIs
-          header: Content-Type
-          value: "$matchRegexp(^(application/json|text/plain)$)"
-    ...
-```
-
 ##### bodyMatchesText
 
 Checks that the request has the defined body text, or it falls under the definition of a regular expression.
@@ -1006,6 +1011,7 @@ Examples:
                     }
                   }
                 }
+    ...
     service2:
       requestConstraints:
         - kind: bodyMatchesText
@@ -1019,7 +1025,7 @@ Checks that the request body is JSON, and it corresponds to the JSON defined in 
 
 Parameters:
 
-- `body` (mandatory) - expected JSON. All keys on all levels defined in this parameter must be present in the request body.
+- `body` (mandatory) - expected JSON (all keys on all levels defined in this parameter must be present in the request body);
 - `comparisonParams` - section allows you to customize the comparison process.
 
 Example:
@@ -1049,7 +1055,7 @@ Checks that the request body is XML, and it matches to the XML defined in the `b
 
 Parameters:
 
-- `body` (mandatory) - expected XML.
+- `body` (mandatory) - expected XML;
 - `comparisonParams` - section allows you to customize the comparison process.
 
 Example:
@@ -1071,7 +1077,7 @@ Example:
                 <Value>Jinxes</Value>
               </Group>
             </Person>
-  ...
+    ...
 ```
 
 ##### bodyMatchesYAML
@@ -1080,7 +1086,7 @@ Checks that the request body is YAML, and it matches to the YAML defined in the 
 
 Parameters:
 
-- `body` (mandatory) - expected YAML.
+- `body` (mandatory) - expected YAML;
 - `comparisonParams` - section allows you to customize the comparison process.
 
 Example:
@@ -1098,9 +1104,9 @@ Example:
                 home: "hpotter@gmail.com"
               Addr: "4 Privet Drive"
               Group:
-                - "Hexes"
-                - "Jinxes"
-  ...
+                - Hexes
+                - Jinxes
+    ...
 ```
 
 ##### bodyJSONFieldMatchesJSON
@@ -1110,8 +1116,8 @@ that matches to JSON defined in `value` parameter.
 
 Parameters:
 
-- `path` (mandatory) - path to string field, containing JSON to check.
-- `value` (mandatory) - expected JSON.
+- `path` (mandatory) - path to string field, containing JSON to check;
+- `value` (mandatory) - expected JSON;
 - `comparisonParams` - section allows you to customize the comparison process.
 
 Example:
@@ -1137,7 +1143,7 @@ Origin request that contains string-packed JSON
             {
               "stringpacked": "json"
             }
-  ...
+    ...
 ```
 
 #### Response strategies (strategy)
@@ -1247,8 +1253,8 @@ When receiving a request for a resource that is not defined in the parameters, t
 
 Parameters:
 
-- `uris` (mandatory) - a list of resources, each resource can be configured as a separate mock-service using any available request constraints and response strategies (see example)
-- `basePath` - common base route for all resources, empty by default
+- `uris` (mandatory) - a list of resources, each resource can be configured as a separate mock-service using any available request constraints and response strategies (see example);
+- `basePath` - common base route for all resources, empty by default.
 
 Example:
 
@@ -1281,7 +1287,7 @@ When receiving a request with a method not defined in methodVary, the test will 
 
 Parameters:
 
-- `methods` (mandatory) - a list of methods, each method can be configured as a separate mock-service using any available request constraints and response strategies (see example)
+- `methods` (mandatory) - a list of methods, each method can be configured as a separate mock-service using any available request constraints and response strategies (see example).
 
 Example:
 
@@ -1347,7 +1353,7 @@ If no such element is found, the test will be considered failed. This stratagy i
 
 Parameters:
 
-- `uris` (mandatory) - a list of resources, each resource can be configured as a separate mock-service using any available request constraints and response strategies (see example)
+- `uris` (mandatory) - a list of resources, each resource can be configured as a separate mock-service using any available request constraints and response strategies (see example).
 
 Example:
 
@@ -1410,7 +1416,7 @@ Example:
       calls: 1
       strategy: file
       filename: responses/books_list.json
-  ...
+    ...
 ```
 
 ```yaml
@@ -1424,7 +1430,7 @@ Example:
           calls: 1
           strategy: file
           filename: responses/books_list.json
-  ...
+    ...
 ```
 
 ## Shell scripts usage
@@ -1442,8 +1448,8 @@ When the test is ran, operations are performed in the following order:
 
 To define the script you need to provide 2 parameters:
 
-- `path` (mandatory) - string with a path to the script file.
-- `timeout` - time in seconds, is responsible for stopping the script on timeout. The default value is `3`.
+- `path` (mandatory) - string with a path to the script file;
+- `timeout` - time in seconds, is responsible for stopping the script on timeout (the default value is 3 seconds).
 
 Example:
 
@@ -1451,7 +1457,16 @@ Example:
   ...
   afterRequestScript:
     path: './cli_scripts/cmd_recalculate.sh'
-    # the timeout will be equal 10s
+    # the timeout will be equal 10 seconds (defined as duration string)
+    timeout: 10s
+  ...
+```
+
+```yaml
+  ...
+  beforeScript:
+    path: './cli_scripts/cmd_recalculate.sh'
+    # the timeout will be equal 10 seconds (if a number is specified, it is assumed to be the number of seconds)
     timeout: 10
   ...
 ```
@@ -1460,16 +1475,7 @@ Example:
   ...
   beforeScript:
     path: './cli_scripts/cmd_recalculate.sh'
-    # the timeout will be equal 10s
-    timeout: 10
-  ...
-```
-
-```yaml
-  ...
-  beforeScript:
-    path: './cli_scripts/cmd_recalculate.sh'
-    # the timeout will equal 3s
+    # default timeout equal 3 seconds
   ...
 ```
 

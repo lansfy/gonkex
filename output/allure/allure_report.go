@@ -15,9 +15,16 @@ type Output struct {
 	allure         Allure
 }
 
-func NewOutput(suiteName, reportLocation string) *Output {
-	resultsDir, _ := filepath.Abs(reportLocation)
-	_ = os.Mkdir(resultsDir, 0o777)
+func NewOutput(suiteName, reportLocation string) (*Output, error) {
+	resultsDir, err := filepath.Abs(reportLocation)
+	if err != nil {
+		return nil, err
+	}
+	err = os.Mkdir(resultsDir, 0o777)
+	if err != nil {
+		return nil, err
+	}
+
 	a := Allure{
 		Suites:    nil,
 		TargetDir: resultsDir,
@@ -27,33 +34,26 @@ func NewOutput(suiteName, reportLocation string) *Output {
 	return &Output{
 		reportLocation: reportLocation,
 		allure:         a,
-	}
+	}, nil
 }
 
 func (o *Output) Process(t models.TestInterface, result *models.Result) error {
+	description := t.GetDescription()
+	if description == "" {
+		description = "No description"
+	}
+
 	testCase := o.allure.StartCase(t.GetName(), time.Now())
-	testCase.SetDescriptionOrDefaultValue(t.GetDescription(), "No description")
+	testCase.SetDescription(description)
 	testCase.AddLabel("story", result.Path)
 
-	o.allure.AddAttachment(
-		"Request",
-		fmt.Sprintf("Query: %s\n Body: %s", result.Query, result.RequestBody),
-		"txt")
-	o.allure.AddAttachment(
-		"Response",
-		fmt.Sprintf("Body: %s", result.ResponseBody),
-		"txt")
+	o.allure.AddAttachment("Request", fmt.Sprintf("Query: %s\n Body: %s", result.Query, result.RequestBody), "txt")
+	o.allure.AddAttachment("Response", fmt.Sprintf("Body: %s", result.ResponseBody), "txt")
 
 	for i, dbresult := range result.DatabaseResult {
 		if dbresult.Query != "" {
-			o.allure.AddAttachment(
-				fmt.Sprintf("Db Query #%d", i+1),
-				fmt.Sprintf("SQL string: %s", dbresult.Query),
-				"txt")
-			o.allure.AddAttachment(
-				fmt.Sprintf("Db Response #%d", i+1),
-				fmt.Sprintf("Response: %s", dbresult.Response),
-				"txt")
+			o.allure.AddAttachment(fmt.Sprintf("Db Query #%d", i+1), fmt.Sprintf("SQL string: %s", dbresult.Query), "txt")
+			o.allure.AddAttachment(fmt.Sprintf("Db Response #%d", i+1), fmt.Sprintf("Response: %s", dbresult.Response), "txt")
 		}
 	}
 
@@ -62,8 +62,8 @@ func (o *Output) Process(t models.TestInterface, result *models.Result) error {
 	return nil
 }
 
-func (o *Output) Finalize() {
-	_ = o.allure.EndSuite(time.Now())
+func (o *Output) Finalize() error {
+	return o.allure.EndSuite(time.Now())
 }
 
 func notRunnedStatus(status models.Status) bool {

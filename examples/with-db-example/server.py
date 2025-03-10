@@ -30,7 +30,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return {'num': {'generated': str(random.randint(0, 100))}}
 
     def do_GET(self):
-        # заголовки ответа
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-type", "application/json")
         self.end_headers()
