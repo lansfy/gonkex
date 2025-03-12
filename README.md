@@ -1247,10 +1247,10 @@ Example:
   mocks:
     service1:
       strategy: template
-      body: >
+      body: |
         {
-          "value-from-query": {{ .request.Query "value" }},
-          "data-from-body": {{ default 10 .request.Json.data }}
+          "value-from-query": "{{ .request.Query "some_value" }}",
+          "data-from-body": "{{ .request.Json.data }}"
         }
       statusCode: 200
     ...
