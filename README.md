@@ -22,6 +22,9 @@ Capabilities:
 - [Test status](#test-status)
 - [Retry policy](#retry-policy)
 - [Customizing a comparison](#customizing-a-comparison)
+- [Pattern matching](#pattern-matching)
+   * [$matchRegexp](#matchregexp)
+   * [$matchArray](#matcharray)
 - [Delays](#delays)
 - [Variables](#variables)
    * [Assignment](#assignment)
@@ -334,13 +337,109 @@ Example:
      disallowExtraFields: true
 ```
 
+## Pattern matching
+
+The pattern matching is a feature in Gonkex that allows you to validate request, response, query results using some pattern (like regular expressions) instead of exact matching.
+This is especially useful when you testing dynamic or unpredictable parts of data (like timestamps, UUIDs, or random tokens).
+
+### $matchRegexp
+
+The basic syntax for using `$matchRegexp` is:
+```yaml
+$matchRegexp(regular_expression)
+```
+
+where `regular_expression` is a valid Go [regular expression](https://pkg.go.dev/regexp/syntax) pattern.
+
+Example:
+
+```yaml
+- name: WHEN order information is requested, service MUST return valid order data
+  method: GET
+  path: /api/orders/12345
+  response:
+    200: >
+      {
+        "order_id": "$matchRegexp(^\\d{5,7}$)",
+        "created_at": "$matchRegexp(^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$)",
+        "status": "$matchRegexp(pending|processing|shipped|delivered)",
+        "total_amount": 1299.99,
+        "transaction_id": "$matchRegexp(^txn_[a-zA-Z0-9]{24}$)",
+        "tracking_number": "$matchRegexp(^(TR\\d{10})?$)"
+      }
+```
+
+*NOTE*: If you want to match the entire string, use `^` at the beginning and `$` at the end of your pattern. 
+
+### $matchArray
+
+The `$matchArray` feature allows you to validate that all elements in an array match a specific pattern. This is especially useful when:
+
+- you don't know exactly how many elements will be in the array;
+- all elements in the array should follow the same pattern or structure;
+- you want to avoid repetitive pattern definitions for large arrays.
+
+To use `$matchArray`, you need to define an array with exactly two elements:
+
+- the literal string `$matchArray(pattern)`;
+- a pattern object that defines what each array element should match.
+
+Example:
+
+```yaml
+- name: WHEN orders information is requested, service MUST return valid orders data
+  method: GET
+  path: /api/orders
+
+  response:
+    200: >
+      {
+        "user": "testuser",
+        "orders": [
+          "$matchArray(pattern)",
+          {
+            "order_id": "$matchRegexp(^ORDER[0-9]{4}$)",
+            "amount": "$matchRegexp(^[0-9]+\\.?[0-9]*$)",
+            "status": "$matchRegexp(pending|processing|completed)"
+          }
+        ]
+      }
+```
+
+This pattern will match arrays of any length, as long as all elements follow the specified structure.
+
+You can also combine several `$matchArray`:
+
+```yaml
+  ...
+  response:
+    200: >
+      {
+        "data": {
+          "products": [
+            "$matchArray(pattern)",
+            {
+              "product_id": "$matchRegexp(^PROD-[A-Z0-9]{6}$)",
+              "price": "$matchRegexp(^\\d+\\.\\d{2}$)",
+              "tags": [
+                "$matchArray(pattern)",
+                "$matchRegexp(^[a-z_]{3,20}$)"
+              ]
+            }
+          ]
+        }
+      }
+  ...
+```
+
+
 ## Delays
 
 `pause` - amount of time that the test should wait before executing.
 
 `afterRequestPause` - amount of time that the test should wait after executing. It is important to note that this wait is part of the request test, i.e. all checks and mocks constraints will be checked after the wait is complete.
 
-This delays should be defined using Go's [time duration string](https://pkg.go.dev/time#ParseDuration).
+This delays should be defined using Go [time duration string](https://pkg.go.dev/time#ParseDuration).
 
 ## Variables
 
@@ -1462,7 +1561,7 @@ When the test is ran, operations are performed in the following order:
 To define the script you need to provide 2 parameters:
 
 - `path` (mandatory) - string with a path to the script file.
-- `timeout` - time is responsible for stopping the script on timeout. Should be specified in Go's [time duration string](https://pkg.go.dev/time#ParseDuration) or in seconds. The default value is `3s`.
+- `timeout` - time is responsible for stopping the script on timeout. Should be specified in Go [time duration string](https://pkg.go.dev/time#ParseDuration) or in seconds. The default value is `3s`.
 
 Example:
 
