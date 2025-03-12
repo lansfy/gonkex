@@ -49,14 +49,6 @@ func (t *TestCase) SetDescription(desc string) {
 	t.Desc = desc
 }
 
-func (t *TestCase) SetDescriptionOrDefaultValue(desc, defVal string) {
-	if desc == "" {
-		t.Desc = defVal
-	} else {
-		t.Desc = desc
-	}
-}
-
 func (t *TestCase) AddLabel(name, value string) {
 	t.addLabel(&Label{
 		Name:  name,
