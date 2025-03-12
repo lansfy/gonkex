@@ -22,6 +22,7 @@ Capabilities:
 - [Test status](#test-status)
 - [Retry policy](#retry-policy)
 - [Customizing a comparison](#customizing-a-comparison)
+- [Delays](#delays)
 - [Variables](#variables)
    * [Assignment](#assignment)
       + [In the description of the test](#in-the-description-of-the-test)
@@ -33,10 +34,10 @@ Capabilities:
    * [Form](#form)
    * [File upload](#file-upload)
 - [Fixtures](#fixtures)
-   * [Deleting data from tables](#deleting-data-from-tables)
    * [Record templates](#record-templates)
    * [Record inheritance](#record-inheritance)
    * [Expressions](#expressions)
+   * [Deleting data from tables](#deleting-data-from-tables)
 - [Mocks](#mocks)
    * [Running mocks while using Gonkex as a library](#running-mocks-while-using-gonkex-as-a-library)
    * [Mocks definition in the test file](#mocks-definition-in-the-test-file)
@@ -262,7 +263,7 @@ or for elements of map/array (if it's JSON):
 
 ## HTTP-request
 
-`method` - a parameter for HTTP request type (e.g. "GET", "POST", "DELETE" and so on)
+`method` - a parameter for HTTP request type (e.g. `GET`, `POST`, `DELETE` and so on)
 
 `path` - a parameter for URL path, the format is in the example above.
 
@@ -332,6 +333,14 @@ Example:
      ignoreArraysOrdering: true
      disallowExtraFields: true
 ```
+
+## Delays
+
+`pause` - amount of time that the test should wait before executing.
+
+`afterRequestPause` - amount of time that the test should wait after executing. It is important to note that this wait is part of the request test, i.e. all checks and mocks constraints will be checked after the wait is complete.
+
+This delays should be defined using Go's [time duration string](https://pkg.go.dev/time#ParseDuration).
 
 ## Variables
 
@@ -432,7 +441,7 @@ Example:
 
 All paths must be specified in [gjson format](https://github.com/tidwall/gjson/blob/master/SYNTAX.md). You can use the [GJSON Playground](https://gjson.dev) to experiment with the syntax online.
 
-It is also possible to retrieve values from the headers and cookies of response. To do this, specify the prefix "header:" or "cookie:" in the path, respectively. For example,
+It is also possible to retrieve values from the headers and cookies of response. To do this, specify the prefix `header:` or `cookie:` in the path, respectively. For example,
 
 ```yaml
 - name: "get_data_from_last_response"
@@ -624,18 +633,6 @@ tables:
 
 Records in fixtures can use templates and inherit.
 
-### Deleting data from tables
-
-To clear the table before the test put square brackets next to the table name.
-
-Example:
-
-```yaml
-# fixtures/empty_posts_table.yml
-tables:
-  posts: []
-```
-
 ### Record templates
 
 Usually, to insert a record to a DB, it's necessary to list all the fields without default values.
@@ -708,11 +705,11 @@ tables:
 
 Don't forget to declare the dependency between files in `inherits`, to make sure that one file is always loaded together with the other one.
 
-It's important to note that record inheritance only works with different fixture files. It's not possible to declare inheritance within one file.
+*NOTE*: Record inheritance only works with different fixture files. It's not possible to declare inheritance within one file.
 
 ### Expressions
 
-When you need to write an expression execution result to the DB and not a static value, you can use `$eval()` construct.
+When you need to write an expression execution result to the DB and not a static value, you can use `$eval(...)` construct.
 Everything inside the brackets will be inserted into the DB as raw, non-escaped data.
 This way, within `$eval()` you can write everything you would in a regular query.
 
@@ -723,6 +720,20 @@ tables:
   comments:
     - created_at: $eval(NOW())
 ```
+
+### Deleting data from tables
+
+To clear the table before the test put square brackets next to the table name.
+
+Example:
+
+```yaml
+# fixtures/empty_posts_table.yml
+tables:
+  # cleanup posts table
+  posts: []
+```
+
 ## Mocks
 
 In order to imitate responses from external services, use mocks.
@@ -1283,7 +1294,7 @@ Example:
 
 Uses various response strategies, depending on the request method.
 
-When receiving a request with a method not defined in methodVary, the test will be considered failed.
+When receiving a request with a method not defined in `methodVary`, the test will be considered failed.
 
 Parameters:
 
@@ -1348,7 +1359,7 @@ Example:
 ##### basedOnRequest
 
 Allows multiple requests with same request path.
-When receiving a request to mock, all elements in the "uris" list are sequentially passed through and the first element is returned, all checks (requestConstraints) of which will pass successfully.
+When receiving a request to mock, all elements in the `uris` list are sequentially passed through and the first element is returned, all checks (`requestConstraints`) of which will pass successfully.
 If no such element is found, the test will be considered failed. This stratagy is concurrent safe.
 
 Parameters:
@@ -1440,16 +1451,18 @@ When the test is ran, operations are performed in the following order:
 1. Fixtures load
 2. Mocks setup
 3. beforeScript execute
-4. HTTP-request sent
-5. afterRequestScript execute
-6. The checks are ran
+4. pause before request
+5. HTTP-request sent
+6. afterRequestPause
+7. afterRequestScript execute
+8. The checks are ran
 
 ### Script definition
 
 To define the script you need to provide 2 parameters:
 
-- `path` (mandatory) - string with a path to the script file;
-- `timeout` - time in seconds, is responsible for stopping the script on timeout (the default value is 3 seconds).
+- `path` (mandatory) - string with a path to the script file.
+- `timeout` - time is responsible for stopping the script on timeout. Should be specified in Go's [time duration string](https://pkg.go.dev/time#ParseDuration) or in seconds. The default value is `3s`.
 
 Example:
 
@@ -1457,7 +1470,7 @@ Example:
   ...
   afterRequestScript:
     path: './cli_scripts/cmd_recalculate.sh'
-    # the timeout will be equal 10 seconds (defined as duration string)
+    # the timeout will be equal 500 milliseconds (defined as duration string)
     timeout: 10s
   ...
 ```
@@ -1570,10 +1583,10 @@ Example:
   dbResponse:
     - '{"code":"GIFT100000-000002","purchase_date":"2330-02-02T13:15:11.912874","partner_id":1}'
     - '{"code":"GIFT100000-000003","purchase_date":"2330-02-02T13:15:11.912874","partner_id":1}'
-    - '{"code":"$matchRegexp(GIFT([0-9]{6})-([0-9]{6}))","purchase_date":"2330-02-02T13:15:11.912874","partner_id":1}'
+    - '{"code":"$matchRegexp(^GIFT([0-9]{6})-([0-9]{6})$)","purchase_date":"2330-02-02T13:15:11.912874","partner_id":1}'
 ```
 
-As you can see in this example, you can use Regexp for checking db response body.
+As you can see in this example, you can use Regexp for checking DB response body.
 
 To show that the query returns no records, you can specify an empty list in `dbResponse`. For example,
 
