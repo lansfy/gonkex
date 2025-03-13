@@ -24,6 +24,7 @@ Capabilities:
 - [Customizing a comparison](#customizing-a-comparison)
 - [Pattern matching](#pattern-matching)
    * [$matchRegexp](#matchregexp)
+   * [$matchTime](#matchtime)
    * [$matchArray](#matcharray)
 - [Delays](#delays)
 - [Variables](#variables)
@@ -339,12 +340,13 @@ Example:
 
 ## Pattern matching
 
-The pattern matching is a feature in Gonkex that allows you to validate request, response, query results using some pattern (like regular expressions) instead of exact matching.
+The pattern matching is a feature in Gonkex that allows you to validate response, mock request, DB query results using some pattern (like regular expressions) instead of exact matching.
 This is especially useful when you testing dynamic or unpredictable parts of data (like timestamps, UUIDs, or random tokens).
 
 ### $matchRegexp
 
 The basic syntax for using `$matchRegexp` is:
+
 ```yaml
 $matchRegexp(regular_expression)
 ```
@@ -370,6 +372,37 @@ Example:
 ```
 
 *NOTE*: If you want to match the entire string, use `^` at the beginning and `$` at the end of your pattern. 
+
+### $matchTime
+
+The `$matchTime` function is allows you to validate timestamp strings in response, mock request, DB query results according to specific time format patterns.
+Unlike the more general `$matchRegexp`, `$matchTime` is designed specifically for time validation.
+
+The basic syntax for using `$matchTime` is:
+
+```yaml
+$matchTime(format_string)
+```
+
+where `format_string` is a valid [Go time format](https://pkg.go.dev/time#pkg-constants) or [Python time format](https://docs.python.org/3/library/datetime.html#format-codes) pattern.
+
+Example:
+
+```yaml
+  ...
+  response:
+    200: >
+      {
+        "id": "12345",
+        "created_at": "$matchTime(2006-01-02T15:04:05Z07:00)",
+        "updated_at": "$matchTime(%Y-%m-%dT%H:%M:%S%z)",
+        "event_date": "$matchTime(Jan 2, 2006)",
+        "scheduled_time": "$matchTime(%H:%M:%S)"
+      }
+  ...
+```
+
+*NOTE*: For consistency, try to stick to one format style (Go or Python format) in all tests.
 
 ### $matchArray
 

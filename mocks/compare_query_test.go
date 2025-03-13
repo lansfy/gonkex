@@ -1,4 +1,4 @@
-package compare
+package mocks
 
 import (
 	"testing"
@@ -39,7 +39,7 @@ func TestCompareQuery(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ok, err := Query(tt.expected, tt.actual)
+			ok, err := compareQuery(tt.expected, tt.actual)
 			if err != nil {
 				t.Error(err)
 			}

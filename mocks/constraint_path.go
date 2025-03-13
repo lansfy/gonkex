@@ -2,7 +2,6 @@ package mocks
 
 import (
 	"net/http"
-	"regexp"
 
 	"github.com/lansfy/gonkex/colorize"
 	"github.com/lansfy/gonkex/compare"
@@ -18,33 +17,25 @@ func loadPathConstraint(def map[interface{}]interface{}) (verifier, error) {
 		return nil, err
 	}
 
-	if s, ok := compare.StringAsRegexp(pathStr); ok {
+	matcher := compare.StringAsMatcher(compare.MatchRegexpWrap(regexpStr))
+	if m := compare.StringAsMatcher(pathStr); m != nil {
 		pathStr = ""
-		regexpStr = s
+		matcher = m
 	}
 
-	return newPathConstraint(pathStr, regexpStr)
+	return newPathConstraint(pathStr, matcher), nil
 }
 
-func newPathConstraint(path, re string) (verifier, error) {
-	var reCompiled *regexp.Regexp
-	if re != "" {
-		var err error
-		reCompiled, err = regexp.Compile(re)
-		if err != nil {
-			return nil, err
-		}
+func newPathConstraint(path string, matcher compare.Matcher) verifier {
+	return &pathConstraint{
+		path:    path,
+		matcher: matcher,
 	}
-	res := &pathConstraint{
-		path:   path,
-		regexp: reCompiled,
-	}
-	return res, nil
 }
 
 type pathConstraint struct {
-	path   string
-	regexp *regexp.Regexp
+	path    string
+	matcher compare.Matcher
 }
 
 func (c *pathConstraint) GetName() string {
@@ -56,8 +47,12 @@ func (c *pathConstraint) Verify(r *http.Request) []error {
 	if c.path != "" && c.path != path {
 		return []error{colorize.NewNotEqualError("url %s does not match expected:", "path", c.path, path)}
 	}
-	if c.regexp != nil && !c.regexp.MatchString(path) {
-		return []error{colorize.NewNotEqualError("url %s does not match expected regexp:", "path", c.regexp, path)}
+
+	if c.matcher != nil {
+		err := c.matcher.MatchValues("url %s:", "path", path)
+		if err != nil {
+			return []error{err}
+		}
 	}
 	return nil
 }

@@ -29,11 +29,11 @@ Errors:
      expected: 400
        actual: 200
 
-2) at path '$[0].field1' values do not match:
+2) path '$[0].field1': values do not match:
      expected: value2
        actual: value1
 
-3) at path '$[1].field2' values do not match:
+3) path '$[1].field2': values do not match:
      expected: 124
        actual: 123
 

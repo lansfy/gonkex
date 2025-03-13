@@ -25,7 +25,7 @@ func (c *responseBodyChecker) Check(t models.TestInterface, result *models.Resul
 	}
 
 	// expected body has only regexp, so compare bodies as strings
-	if _, ok := compare.StringAsRegexp(expectedBody); ok {
+	if compare.StringAsMatcher(expectedBody) != nil {
 		return addMainError(compare.Compare(expectedBody, result.ResponseBody, compare.Params{})), nil
 	}
 

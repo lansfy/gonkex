@@ -2,7 +2,6 @@ package mocks
 
 import (
 	"net/http"
-	"regexp"
 
 	"github.com/lansfy/gonkex/colorize"
 	"github.com/lansfy/gonkex/compare"
@@ -24,35 +23,27 @@ func loadHeaderConstraint(def map[interface{}]interface{}) (verifier, error) {
 		return nil, err
 	}
 
-	if s, ok := compare.StringAsRegexp(valueStr); ok {
+	matcher := compare.StringAsMatcher(compare.MatchRegexpWrap(regexpStr))
+	if m := compare.StringAsMatcher(valueStr); m != nil {
 		valueStr = ""
-		regexpStr = s
+		matcher = m
 	}
 
-	return newHeaderConstraint(header, valueStr, regexpStr)
+	return newHeaderConstraint(header, valueStr, matcher), nil
 }
 
-func newHeaderConstraint(header, value, re string) (verifier, error) {
-	var reCompiled *regexp.Regexp
-	if re != "" {
-		var err error
-		reCompiled, err = regexp.Compile(re)
-		if err != nil {
-			return nil, err
-		}
+func newHeaderConstraint(header, value string, matcher compare.Matcher) verifier {
+	return &headerConstraint{
+		header:  header,
+		value:   value,
+		matcher: matcher,
 	}
-	res := &headerConstraint{
-		header: header,
-		value:  value,
-		regexp: reCompiled,
-	}
-	return res, nil
 }
 
 type headerConstraint struct {
-	header string
-	value  string
-	regexp *regexp.Regexp
+	header  string
+	value   string
+	matcher compare.Matcher
 }
 
 func (c *headerConstraint) GetName() string {
@@ -67,8 +58,11 @@ func (c *headerConstraint) Verify(r *http.Request) []error {
 	if c.value != "" && c.value != value {
 		return []error{colorize.NewNotEqualError("%s header value does not match:", c.header, c.value, value)}
 	}
-	if c.regexp != nil && !c.regexp.MatchString(value) {
-		return []error{colorize.NewNotEqualError("%s header value does not match regexp:", c.header, c.regexp, value)}
+	if c.matcher != nil {
+		err := c.matcher.MatchValues("%s header:", c.header, value)
+		if err != nil {
+			return []error{err}
+		}
 	}
 	return nil
 }

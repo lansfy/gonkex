@@ -2,8 +2,9 @@ package mocks
 
 import (
 	"net/http"
-	"regexp"
 	"testing"
+
+	"github.com/lansfy/gonkex/compare"
 
 	"github.com/stretchr/testify/require"
 )
@@ -30,7 +31,7 @@ func Test_newPathConstraint(t *testing.T) {
 				"regexp": `^/test\d*$`,
 			},
 			want: &pathConstraint{
-				regexp: regexp.MustCompile(`^/test\d*$`),
+				matcher: compare.StringAsMatcher(`$matchRegexp(^/test\d*$)`),
 			},
 		},
 		{
@@ -39,7 +40,7 @@ func Test_newPathConstraint(t *testing.T) {
 				"path": `$matchRegexp(^/test\d*$)`,
 			},
 			want: &pathConstraint{
-				regexp: regexp.MustCompile(`^/test\d*$`),
+				matcher: compare.StringAsMatcher(`$matchRegexp(^/test\d*$)`),
 			},
 		},
 		{
@@ -47,10 +48,7 @@ func Test_newPathConstraint(t *testing.T) {
 			def: map[interface{}]interface{}{
 				"path": "",
 			},
-			want: &pathConstraint{
-				path:   "",
-				regexp: nil,
-			},
+			want: &pathConstraint{},
 		},
 		{
 			description: "set path with wrong type MUST fail",
@@ -65,13 +63,6 @@ func Test_newPathConstraint(t *testing.T) {
 				"regexp": "",
 			},
 			wantErr: "'regexp' value can't be empty",
-		},
-		{
-			description: "set invalid regexp MUST fail",
-			def: map[interface{}]interface{}{
-				"regexp": "[",
-			},
-			wantErr: "error parsing regexp: missing closing ]: `[`",
 		},
 	}
 
@@ -99,7 +90,7 @@ func Test_pathConstraint_Verify(t *testing.T) {
 	tests := []struct {
 		description string
 		path        string
-		re          string
+		regexp      string
 		reqPath     string
 		wantErr     string
 	}{
@@ -117,22 +108,31 @@ func Test_pathConstraint_Verify(t *testing.T) {
 		},
 		{
 			description: "regexp matches",
-			re:          `^/test\d*$`,
+			regexp:      `^/test\d*$`,
 			reqPath:     "/test123",
 			wantErr:     "",
 		},
 		{
 			description: "regexp does not match",
-			re:          `^/test\d*$`,
+			regexp:      `^/test\d*$`,
 			reqPath:     "/mismatch",
-			wantErr:     "url 'path' does not match expected regexp:\n     expected: ^/test\\d*$\n       actual: /mismatch",
+			wantErr:     "url 'path': value does not match regexp:\n     expected: $matchRegexp(^/test\\d*$)\n       actual: /mismatch",
+		},
+		{
+			description: "set invalid regexp MUST fail",
+			regexp:      "[invalid",
+			wantErr:     "url 'path': cannot compile regexp:\n     expected: <nil>\n       actual: missing closing ]: `[invalid`",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
-			checker, err := newPathConstraint(tt.path, tt.re)
-			require.NoError(t, err)
+			var matcher compare.Matcher
+			if tt.regexp != "" {
+				matcher = compare.StringAsMatcher(compare.MatchRegexpWrap(tt.regexp))
+			}
+
+			checker := newPathConstraint(tt.path, matcher)
 
 			req, err := http.NewRequest(http.MethodGet, tt.reqPath, http.NoBody)
 			require.NoError(t, err)

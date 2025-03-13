@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/lansfy/gonkex/compare"
 )
 
 func loadQueryRegexpConstraint(def map[interface{}]interface{}) (verifier, error) {
@@ -56,7 +54,7 @@ func (c *queryRegexpConstraint) Verify(r *http.Request) (errors []error) {
 			continue
 		}
 
-		if ok, err := compare.Query(want, got); err != nil {
+		if ok, err := compareQuery(want, got); err != nil {
 			errors = append(errors, fmt.Errorf(
 				"'%s' parameters comparison failed. \n %s'", key, err.Error(),
 			))

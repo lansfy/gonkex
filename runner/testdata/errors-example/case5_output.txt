@@ -20,7 +20,7 @@ Response:
 
 Errors:
 
-1) mock 'subservice': at path '$': number of 'calls' does not match:
+1) mock 'subservice': path '$': number of 'calls' does not match:
      expected: 1
        actual: 0
 

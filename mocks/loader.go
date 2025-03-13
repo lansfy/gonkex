@@ -43,7 +43,7 @@ func (l *loaderImpl) LoadDefinition(rawDef interface{}) (*Definition, error) {
 
 func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definition, error) {
 	wrap := func(err error) error {
-		return colorize.NewEntityError("at path %s", path).SetSubError(err)
+		return colorize.NewEntityError("path %s", path).SetSubError(err)
 	}
 
 	def, ok := rawDef.(map[interface{}]interface{})

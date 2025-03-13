@@ -77,7 +77,7 @@ func (d *Definition) EndRunningContext() []error {
 		errs = s.EndRunningContext()
 	}
 	if d.callsConstraint != CallsNoConstraint && d.calls != d.callsConstraint {
-		errs = append(errs, colorize.NewEntityError("at path %s", d.path).SetSubError(
+		errs = append(errs, colorize.NewEntityError("path %s", d.path).SetSubError(
 			colorize.NewNotEqualError("number of %s does not match:", "calls", d.callsConstraint, d.calls),
 		))
 	}

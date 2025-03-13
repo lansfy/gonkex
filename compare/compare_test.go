@@ -12,7 +12,7 @@ import (
 
 func makeErrorString(path, msg string, expected, actual interface{}) string {
 	return fmt.Sprintf(
-		"at path '%s' %s:\n     expected: %v\n       actual: %v",
+		"path '%s': %s:\n     expected: %v\n       actual: %v",
 		path,
 		msg,
 		expected,
@@ -22,7 +22,7 @@ func makeErrorString(path, msg string, expected, actual interface{}) string {
 
 func makeDiffErrorString(path, diff string) string {
 	return fmt.Sprintf(
-		"at path '%s' values do not match:\n     diff (--- expected vs +++ actual):\n%s\n",
+		"path '%s': values do not match:\n     diff (--- expected vs +++ actual):\n%s\n",
 		path,
 		diff,
 	)
