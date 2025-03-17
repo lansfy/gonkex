@@ -9,7 +9,16 @@ import (
 	"github.com/lansfy/gonkex/colorize"
 )
 
-// ServiceMock represents a mock HTTP service for testing purposes
+var _ http.RoundTripper = (*ServiceMock)(nil)
+
+// ServiceMock represents a mock HTTP service for testing purposes.
+// ServiceMock helps with integration testing by simulating external HTTP services with configurable behavior.
+// It can verify that requests match expected patterns and return predefined responses,
+// allowing for controlled testing of code that interacts with external services.
+//
+// Each ServiceMock instance maintains its own HTTP server on a dynamically assigned port,
+// tracks errors that occur during request processing, and can be configured with
+// a set of checkers to validate incoming requests.
 type ServiceMock struct {
 	server            *http.Server
 	listener          net.Listener
@@ -105,6 +114,17 @@ func (m *ServiceMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := wrap.Flush(); err != nil {
 		m.errors = append(m.errors, err)
 	}
+}
+
+// RoundTrip implements the http.RoundTripper interface, allowing ServiceMock to be used as a transport for HTTP clients.
+// This setup allows you to intercept outgoing HTTP requests in your tests and have them
+// processed by your mock service instead of reaching the actual external service.
+// The original URL is preserved for pattern matching in the mock definition, while
+// the request is physically routed to the mock server's address.
+func (m *ServiceMock) RoundTrip(req *http.Request) (*http.Response, error) {
+	reqCopy := req.Clone(req.Context())
+	reqCopy.URL.Host = m.ServerAddr()
+	return http.DefaultTransport.RoundTrip(reqCopy)
 }
 
 // SetDefinition replaces the current mock definition with a new one
