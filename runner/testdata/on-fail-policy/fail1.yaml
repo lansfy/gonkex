@@ -1,0 +1,5 @@
+- name: test with error 11
+  method: GET
+  path: /endpoint
+  response:
+    400: "{}"

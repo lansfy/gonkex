@@ -5,6 +5,8 @@ import (
 	"github.com/lansfy/gonkex/models"
 )
 
+var _ checker.ExtendedCheckerInterface = (*checkersList)(nil)
+
 type checkersList struct {
 	children []checker.CheckerInterface
 }

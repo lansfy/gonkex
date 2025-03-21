@@ -24,25 +24,41 @@ import (
 	"github.com/lansfy/gonkex/variables"
 )
 
+// OnFailPolicy defines the policy to follow when a test fails.
+type OnFailPolicy string
+
+const (
+	// PolicySkipFile skips the current test file if test fails (default policy).
+	PolicySkipFile OnFailPolicy = "file"
+	// PolicyStop stops all test execution on failure.
+	PolicyStop OnFailPolicy = "stop"
+	// PolicyContinue continues running tests despite failures.
+	PolicyContinue OnFailPolicy = "continue"
+)
+
+// HTTPClient defines an interface for making HTTP requests.
 type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
+// RunnerOpts holds configuration options for the test runner.
 type RunnerOpts struct {
-	Host            string
-	FixturesDir     string
-	DB              storage.StorageInterface
-	Mocks           *mocks.Mocks
-	MocksLoader     mocks.Loader
-	Variables       *variables.Variables
-	CustomClient    HTTPClient
-	HTTPProxyURL    *url.URL
-	HelperEndpoints endpoint.EndpointMap
-	TestHandler     func(models.TestInterface, TestExecutor) error
+	Host            string                                         // The base URL of the server being tested.
+	FixturesDir     string                                         // Directory containing fixture files.
+	DB              storage.StorageInterface                       // Database interface for test storage.
+	Mocks           *mocks.Mocks                                   // Mock implementations for external dependencies.
+	MocksLoader     mocks.Loader                                   // Loader for mock configurations.
+	Variables       *variables.Variables                           // Variables used in test execution.
+	CustomClient    HTTPClient                                     // Custom HTTP client for making requests.
+	HTTPProxyURL    *url.URL                                       // Proxy URL for HTTP requests.
+	HelperEndpoints endpoint.EndpointMap                           // Map of helper endpoints for testing.
+	TestHandler     func(models.TestInterface, TestExecutor) error // Handler function for executing tests.
+	OnFailPolicy    OnFailPolicy                                   // Policy defining what happens when a step fails.
 }
 
 type TestExecutor func(models.TestInterface) (*models.Result, error)
 
+// Runner orchestrates test execution, output handling, and validation.
 type Runner struct {
 	loader   testloader.LoaderInterface
 	output   []output.OutputInterface
@@ -50,12 +66,16 @@ type Runner struct {
 	config   RunnerOpts
 }
 
+// New creates a new test runner with the given loader and options.
 func New(loader testloader.LoaderInterface, opts *RunnerOpts) *Runner {
 	r := &Runner{
 		loader: loader,
 	}
 	if opts != nil {
 		r.config = *opts
+	}
+	if r.config.OnFailPolicy == "" {
+		r.config.OnFailPolicy = PolicySkipFile
 	}
 
 	if r.config.CustomClient == nil {
@@ -73,14 +93,17 @@ func New(loader testloader.LoaderInterface, opts *RunnerOpts) *Runner {
 	return r
 }
 
+// AddOutput adds one or more output handlers to the runner.
 func (r *Runner) AddOutput(o ...output.OutputInterface) {
 	r.output = append(r.output, o...)
 }
 
+// AddCheckers adds one or more checkers to validate test results.
 func (r *Runner) AddCheckers(c ...checker.CheckerInterface) {
 	r.checkers.AddCheckers(c...)
 }
 
+// Run executes the test suite, processing each test and handling failures according to policy.
 func (r *Runner) Run() error {
 	tests, err := r.loader.Load()
 	if err != nil {
@@ -88,28 +111,46 @@ func (r *Runner) Run() error {
 	}
 
 	hasFocused := checkHasFocused(tests)
+
+	var wasError bool
+	var errs []error
 	for _, t := range tests {
-		// make a copy because go test runner runs tests in separate goroutines
-		// and without copy tests will override each other
-		test := t
-		if hasFocused {
-			switch test.GetStatus() {
-			case models.StatusFocus:
-				test.SetStatus(models.StatusNone)
-			case models.StatusBroken:
-				// do nothing
-			default:
-				test.SetStatus(models.StatusSkipped)
+		if t.FirstTestInFile() {
+			wasError = false
+		}
+
+		switch t.GetStatus() {
+		case models.StatusFocus:
+			t.SetStatus(models.StatusNone)
+		case models.StatusBroken:
+			// do nothing
+		default:
+			if hasFocused || wasError {
+				t.SetStatus(models.StatusSkipped)
 			}
 		}
 
-		err := r.config.TestHandler(test, r.executeTestWithRetryPolicy)
+		err := r.config.TestHandler(t, r.executeTestWithRetryPolicy)
 		if err != nil {
-			return colorize.NewEntityError("test %s error", test.GetName()).SetSubError(err)
+			err = colorize.NewEntityError("test %s error", t.GetName()).SetSubError(err)
+			if r.config.OnFailPolicy == PolicyStop {
+				return err
+			}
+			errs = append(errs, err)
+			if r.config.OnFailPolicy == PolicySkipFile {
+				wasError = true
+			}
 		}
 	}
 
-	return nil
+	switch len(errs) {
+	case 0:
+		return nil
+	case 1:
+		return errs[0]
+	default:
+		return errors.New("some steps failed")
+	}
 }
 
 func (r *Runner) executeTestWithRetryPolicy(v models.TestInterface) (*models.Result, error) {
@@ -347,6 +388,7 @@ func (r *Runner) defaultTestHandler(t models.TestInterface, f TestExecutor) erro
 	return nil
 }
 
+// checkHasFocused checks if any test has a "focus" status, indicating prioritized execution.
 func checkHasFocused(tests []models.TestInterface) bool {
 	for _, test := range tests {
 		if test.GetStatus() == models.StatusFocus {

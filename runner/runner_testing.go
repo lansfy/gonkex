@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"errors"
 	"net/url"
 	"os"
 	"testing"
@@ -45,6 +46,8 @@ type RunWithTestingOpts struct {
 	HelperEndpoints endpoint.EndpointMap
 	// TemplateReplyFuncs contains a set of template functions for processing or customizing replies in tests.
 	TemplateReplyFuncs template.FuncMap
+	// OnFailPolicy defining what happens when a some step of test fails.
+	OnFailPolicy OnFailPolicy
 }
 
 // RunWithTesting is a helper function that wraps the common Run function and provides a simple way
@@ -92,6 +95,7 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 			HTTPProxyURL:    proxyURL,
 			HelperEndpoints: opts.HelperEndpoints,
 			TestHandler:     handler.HandleTest,
+			OnFailPolicy:    opts.OnFailPolicy,
 		},
 	)
 
@@ -134,6 +138,7 @@ func (h *testingHandler) HandleTest(test models.TestInterface, executor TestExec
 		}
 
 		if !result.Passed() {
+			returnErr = errors.New("failed")
 			t.Fail()
 		}
 	})

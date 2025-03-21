@@ -246,3 +246,45 @@ func Test_status(t *testing.T) {
 		})
 	}
 }
+
+func Test_on_fail_policy(t *testing.T) {
+	testCases := []struct {
+		policy  OnFailPolicy
+		postfix string
+		total   int
+		skipped int
+		wantErr string
+	}{
+		{PolicySkipFile, "", 6, 3, "some steps failed"},
+		{PolicyStop, "", 1, 0, "test 'test with error 11' error: failed"},
+		{PolicyContinue, "", 6, 0, "some steps failed"},
+		{PolicySkipFile, "fail3.yaml", 3, 2, "test 'test with error 31' error: failed"},
+		{PolicyStop, "fail3.yaml", 1, 0, "test 'test with error 31' error: failed"},
+		{PolicyContinue, "fail3.yaml", 3, 0, "some steps failed"},
+	}
+
+	for _, tt := range testCases {
+		t.Run(string(tt.policy), func(t *testing.T) {
+			obj := &statusServer{}
+			srv := httptest.NewServer(obj)
+			defer srv.Close()
+
+			yamlLoader := yaml_file.NewLoader("testdata/on-fail-policy/" + tt.postfix)
+			runner := New(
+				yamlLoader,
+				&RunnerOpts{
+					Host:         srv.URL,
+					OnFailPolicy: tt.policy,
+				},
+			)
+
+			runner.AddOutput(obj)
+
+			err := runner.Run()
+			require.Error(t, err)
+			require.Equal(t, tt.wantErr, err.Error())
+			require.Equal(t, tt.total, obj.totalTests, "total number of test is different")
+			require.Equal(t, tt.skipped, obj.skippedTests, "skipped number of test is different")
+		})
+	}
+}
