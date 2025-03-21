@@ -1,0 +1,17 @@
+- name: test with error 31
+  method: GET
+  path: /endpoint
+  response:
+    400: "{}"
+
+- name: test with error 32
+  method: GET
+  path: /endpoint
+  response:
+    400: "{}"
+
+- name: test with error 33
+  method: GET
+  path: /endpoint
+  response:
+    400: "{}"
