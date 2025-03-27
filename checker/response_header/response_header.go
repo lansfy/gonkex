@@ -15,7 +15,6 @@ func NewChecker() checker.CheckerInterface {
 type responseHeaderChecker struct{}
 
 func (c *responseHeaderChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
-	// test response headers with the expected headers
 	expectedHeaders, ok := t.GetResponseHeaders(result.ResponseStatusCode)
 	if !ok || len(expectedHeaders) == 0 {
 		return nil, nil
@@ -23,40 +22,29 @@ func (c *responseHeaderChecker) Check(t models.TestInterface, result *models.Res
 
 	var errs []error
 	for k, v := range expectedHeaders {
-		k = textproto.CanonicalMIMEHeaderKey(k)
-		actualValues, ok := result.ResponseHeaders[k]
-		if !ok {
-			errs = append(errs, colorize.NewError(
-				"response does not include expected header %s",
-				colorize.Cyan(k),
-			))
-			continue
-		}
-		found := false
-		for _, actualValue := range actualValues {
-			if v == actualValue {
-				found = true
-				break
-			}
-		}
-		if found {
-			continue
-		}
-		if len(actualValues) == 1 {
-			errs = append(errs, colorize.NewNotEqualError(
-				"response header %s value does not match:",
-				k,
-				v,
-				actualValues[0],
-			))
-		} else {
-			errs = append(errs, colorize.NewError(
-				"response header %s value does not match expected %s",
-				colorize.Cyan(k),
-				colorize.Green(v),
-			))
+		err := checkOneHeader(k, v, result.ResponseHeaders)
+		if err != nil {
+			errs = append(errs, err)
 		}
 	}
 
 	return errs, nil
+}
+
+func checkOneHeader(key, value string, responseHeaders map[string][]string) error {
+	key = textproto.CanonicalMIMEHeaderKey(key)
+	actualValues, ok := responseHeaders[key]
+	if !ok {
+		return colorize.NewError("response does not include expected header %s", colorize.Cyan(key))
+	}
+	for _, actualValue := range actualValues {
+		if value == actualValue {
+			return nil
+		}
+	}
+	if len(actualValues) == 1 {
+		return colorize.NewNotEqualError("response header %s value does not match:", key, value, actualValues[0])
+	}
+	return colorize.NewError(
+		"response header %s value does not match expected %s", colorize.Cyan(key), colorize.Green(value))
 }

@@ -1603,7 +1603,7 @@ Example:
   afterRequestScript:
     path: './cli_scripts/cmd_recalculate.sh'
     # the timeout will be equal 500 milliseconds (defined as duration string)
-    timeout: 10s
+    timeout: 500ms
   ...
 ```
 
