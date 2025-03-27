@@ -25,7 +25,7 @@ type ComparisonParams interface {
 
 // DatabaseCheck represents a database query to be executed after an HTTP request
 type DatabaseCheck interface {
-	DbQueryString() string                 // storage query to execute against the database
+	DbQueryString() string                 // Storage query to execute against the database
 	DbResponseJson() []string              // Expected records as serialized JSON strings
 	GetComparisonParams() ComparisonParams // Comparison parameters for database response
 }

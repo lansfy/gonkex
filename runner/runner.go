@@ -133,7 +133,7 @@ func (r *Runner) Run() error {
 		err := r.config.TestHandler(t, r.executeTestWithRetryPolicy)
 		if err != nil {
 			err = colorize.NewEntityError("test %s error", t.GetName()).SetSubError(err)
-			if r.config.OnFailPolicy == PolicyStop {
+			if hasFocused || r.config.OnFailPolicy == PolicyStop {
 				return err
 			}
 			errs = append(errs, err)

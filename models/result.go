@@ -3,7 +3,7 @@ package models
 // DatabaseResult represents the result of a database check
 // Contains both the query that was executed and the response records
 type DatabaseResult struct {
-	Query    string   // The sotrage query that was executed
+	Query    string   // The storage query that was executed
 	Response []string // The records returned from the database as JSON items serialized to strings
 }
 
