@@ -26,6 +26,9 @@ Capabilities:
    * [$matchRegexp](#matchregexp)
    * [$matchTime](#matchtime)
    * [$matchArray](#matcharray)
+      + [$matchArray(pattern)](#matcharray-pattern)
+      + [$matchArray(subset+pattern)](#matcharray-subset-pattern)
+      + [$matchArray(pattern+subset)](#matcharray-pattern-subset)
 - [Delays](#delays)
 - [Variables](#variables)
    * [Assignment](#assignment)
@@ -412,6 +415,8 @@ The `$matchArray` feature allows you to validate that all elements in an array m
 - all elements in the array should follow the same pattern or structure;
 - you want to avoid repetitive pattern definitions for large arrays.
 
+#### $matchArray(pattern)
+
 To use `$matchArray`, you need to define an array with exactly two elements:
 
 - the literal string `$matchArray(pattern)`;
@@ -441,30 +446,57 @@ Example:
 
 This pattern will match arrays of any length, as long as all elements follow the specified structure.
 
-You can also combine several `$matchArray`:
+#### $matchArray(subset+pattern)
+
+In this mode:
+
+- the first element in your test array must be the literal string `$matchArray(subset+pattern)`;
+- the last element defines the pattern that any additional elements in the response array must match;
+- all elements between these two (the subset) are treated as required initial elements that must appear at the beginning of the response array in the exact order specified;
+- after matching these initial elements, any remaining elements in the response array must match the pattern defined in the last element.
+
+*NOTE*: you still can use the `ignoreArraysOrdering` parameter with `$matchArray(subset+pattern)`.
+When set to `true`, this parameter allows the subset elements to appear anywhere in the array, not just at the beginning, while still maintaining the pattern matching for additional elements.
+
+#### $matchArray(pattern+subset)
+
+In this mode:
+
+- the first element in your test array must be the literal string `$matchArray(pattern+subset)`;
+- the second element defines the pattern that any leading elements in the response array must match;
+- all elements after these two (the subset) are treated as required final elements that must appear at the end of the response array in the exact order specified;
+- the beginning of the response array must contain zero or more elements that match the pattern defined in the second element.
 
 ```yaml
-  ...
+- name: WHEN products are requested, service MUST return regular products followed by featured products
+  method: GET
+  path: /api/products
   response:
     200: >
       {
-        "data": {
-          "products": [
-            "$matchArray(pattern)",
-            {
-              "product_id": "$matchRegexp(^PROD-[A-Z0-9]{6}$)",
-              "price": "$matchRegexp(^\\d+\\.\\d{2}$)",
-              "tags": [
-                "$matchArray(pattern)",
-                "$matchRegexp(^[a-z_]{3,20}$)"
-              ]
-            }
-          ]
-        }
+        "products": [
+          "$matchArray(pattern+subset)",
+          {
+            "product_id": "$matchRegexp(^PROD-[A-Z0-9]{6}$)",
+            "price": "$matchRegexp(^\\d+\\.\\d{2}$)",
+            "featured": false
+          },
+          {
+            "product_id": "FEATURED-001",
+            "price": "29.99",
+            "featured": true
+          },
+          {
+            "product_id": "FEATURED-002",
+            "price": "49.99",
+            "featured": true
+          }
+        ]
       }
-  ...
 ```
 
+*NOTE*: you still can use the `ignoreArraysOrdering` parameter with `$matchArray(pattern+subset)`.
+When set to `true`, this parameter allows the subset elements to appear anywhere in the array, not just at the end, while still maintaining the pattern matching for additional elements.
 
 ## Delays
 
