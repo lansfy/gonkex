@@ -254,6 +254,12 @@ func getUnmatchedArrays(expected, actual []interface{}, params *Params) (expecte
 	return expectedError, actual
 }
 
+func fillArrayWithPattern(pattern interface{}, arr []interface{}) {
+	for idx := range arr {
+		arr[idx] = pattern
+	}
+}
+
 func processMatchArrayByPattern(path string, expectedArray []interface{}, actualLen int) ([]interface{}, error) {
 	expectedLen := len(expectedArray)
 	if expectedLen == 0 {
@@ -261,18 +267,35 @@ func processMatchArrayByPattern(path string, expectedArray []interface{}, actual
 	}
 
 	val, ok := expectedArray[0].(string)
-	if !ok || val != "$matchArray(pattern)" {
+	if !ok || !strings.HasPrefix(val, "$matchArray(") || !strings.HasSuffix(val, ")") {
 		return expectedArray, nil
 	}
 
-	if expectedLen != 2 {
-		return expectedArray, makeError(path, "$matchArray(pattern) require only one additional element in array", 1, expectedLen-1)
-	}
+	params := val[12 : len(val)-1]
 
-	res := make([]interface{}, 0, actualLen)
-	for i := 0; i < actualLen; i++ {
-		res = append(res, expectedArray[1])
-	}
+	res := make([]interface{}, actualLen)
 
+	switch params {
+	case "pattern":
+		if expectedLen != 2 {
+			return nil, colorize.NewError("path %s: array with $matchArray(pattern) must pattern element", colorize.Cyan(path))
+		}
+		fillArrayWithPattern(expectedArray[1], res)
+	case "subset+pattern":
+		if expectedLen < 3 {
+			return nil, colorize.NewError("path %s: array with $matchArray(subset+pattern) must have pattern and additional elements", colorize.Cyan(path))
+		}
+		fillArrayWithPattern(expectedArray[len(expectedArray)-1], res)
+		copy(res, expectedArray[1:len(expectedArray)-1])
+	case "pattern+subset":
+		if expectedLen < 3 {
+			return nil, colorize.NewError("path %s: array with $matchArray(pattern+subset) must have pattern and additional elements", colorize.Cyan(path))
+		}
+		fillArrayWithPattern(expectedArray[1], res)
+		subset := expectedArray[2:]
+		copy(res[len(res)-len(subset):], subset)
+	default:
+		return nil, makeError(path, "unknown $matchArray mode", "pattern / pattern+subset / subset+pattern", params)
+	}
 	return res, nil
 }
