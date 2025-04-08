@@ -1,0 +1,54 @@
+
+       Name: Test case 7 #1
+Description: Test body mismatch error
+       File: testdata/errors-example/case7.yaml
+
+Request:
+     Method: GET
+       Path: /text
+      Query: ?aaa=bbb
+       Body:
+<no body>
+
+Response:
+     Status: 200 OK
+       Body:
+1234
+
+
+     Result: ERRORS!
+
+Errors:
+
+1) service 'response body' comparison: path '$': values do not match:
+     expected: 12345
+       actual: 1234
+
+
+
+       Name: Test case 7 #2 (subname 2)
+Description: other description 2
+       File: testdata/errors-example/case7.yaml
+
+Request:
+     Method: GET
+       Path: /text
+      Query: ?aaa=bbb
+       Body:
+<no body>
+
+Response:
+     Status: 200 OK
+       Body:
+1234
+
+
+     Result: ERRORS!
+
+Errors:
+
+1) service 'response body' comparison: path '$': values do not match:
+     expected: 123
+       actual: 1234
+
+
