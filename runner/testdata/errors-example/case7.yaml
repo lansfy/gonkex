@@ -1,0 +1,16 @@
+- name: Test case 7
+  description: Test body mismatch error
+  method: GET
+  path: /text
+  query: ?aaa=bbb
+  response:
+    200: "{{ .bodyContent }}"
+  cases:
+    - responseArgs:
+        200:
+          bodyContent: "12345"
+    - name: subname 2
+      description: other description 2
+      responseArgs:
+        200:
+          bodyContent: "123"

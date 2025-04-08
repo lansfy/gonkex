@@ -68,7 +68,7 @@ func Test_Error_Examples(t *testing.T) {
 	initErrorServer()
 	server := httptest.NewServer(nil)
 
-	for caseID := 1; caseID <= 6; caseID++ {
+	for caseID := 1; caseID <= 7; caseID++ {
 		t.Run(fmt.Sprintf("case%d", caseID), func(t *testing.T) {
 			expected, err := os.ReadFile(fmt.Sprintf("testdata/errors-example/case%d_output.txt", caseID))
 			require.NoError(t, err)
@@ -82,12 +82,13 @@ func Test_Error_Examples(t *testing.T) {
 			r := New(
 				yamlLoader,
 				&RunnerOpts{
-					Host:        server.URL,
-					Variables:   variables.New(),
-					Mocks:       m,
-					MocksLoader: mocks.NewYamlLoader(nil),
-					DB:          &fakeStorage{},
-					TestHandler: testHandler,
+					Host:         server.URL,
+					Variables:    variables.New(),
+					Mocks:        m,
+					MocksLoader:  mocks.NewYamlLoader(nil),
+					DB:           &fakeStorage{},
+					TestHandler:  testHandler,
+					OnFailPolicy: PolicyContinue,
 				},
 			)
 

@@ -323,13 +323,13 @@ After receiving a response from the service, the test compares the body of the r
 By default, only the values of the fields listed in the test body are compared, but you can control the comparison procedure by using boolean flags in the `comparisonParams` section.
 The following flags are supported:
 
-- `ignoreValues` - if true, ignores differences in values and only checks the structure
+- `ignoreValues` - if `true`, ignores differences in values and only checks the structure
 
-- `ignoreArraysOrdering` - if true, considers arrays equal regardless of the order of elements
+- `ignoreArraysOrdering` - if `true`, considers arrays equal regardless of the order of elements
 
-- `disallowExtraFields` - if true, fails the comparison if extra fields exist in the compared structure
+- `disallowExtraFields` - if `true`, fails the comparison if extra fields exist in the compared structure
 
-All flags are set to false by default.
+All flags are set to `false` by default.
 
 Example:
 ```yaml
@@ -1769,17 +1769,16 @@ Example:
 
 ```yaml
   ...
-    dbChecks:
-      - dbQuery: >
-          SELECT code, partner_id FROM mark_paid_schedule AS m WHERE DATE(m.purchase_date) BETWEEN '{{ .fromDate }}' AND '{{ .toDate }}'
+  dbChecks:
+    - dbQuery: >
+        SELECT code, partner_id FROM mark_paid_schedule AS m WHERE DATE(m.purchase_date) BETWEEN '{{ .fromDate }}' AND '{{ .toDate }}'
 
-        dbResponse:
-          - '{"code":"{{ .cert1 }}","partner_id":1}'
-          - '{"code":"{{ .cert2 }}","partner_id":1}'
+      dbResponse:
+        - '{"code":"{{ .cert1 }}","partner_id":1}'
+        - '{"code":"{{ .cert2 }}","partner_id":1}'
   ...
-    cases:
-      ...
-      dbQueryArgs:
+  cases:
+    - dbQueryArgs:
         fromDate: "2330-02-01"
         toDate: "2330-02-05"
       dbResponseArgs:
@@ -1793,22 +1792,21 @@ Example:
 
 ```yaml
   ...
-    dbChecks:
-      - dbQuery: >
-          SELECT code, partner_id FROM mark_paid_schedule AS m WHERE DATE(m.purchase_date) BETWEEN '{{ .fromDate }}' AND '{{ .toDate }}'
+  dbChecks:
+    - dbQuery: >
+        SELECT code, partner_id FROM mark_paid_schedule AS m WHERE DATE(m.purchase_date) BETWEEN '{{ .fromDate }}' AND '{{ .toDate }}'
 
-        dbResponse:
-          - '{"code":"{{ .cert1 }}","partner_id":1}'
+      dbResponse:
+        - '{"code":"{{ .cert1 }}","partner_id":1}'
   ...
-    cases:
-      ...
-      dbQueryArgs:
+  cases:
+    - dbQueryArgs:
         fromDate: "2030-02-01"
         toDate: "2030-02-05"
       dbResponseArgs:
         cert1: "GIFT100000-000002"
-      ...
-      dbQueryArgs:
+
+    - dbQueryArgs:
         fromDate: "2030-02-01"
         toDate: "2030-02-05"
       dbResponseFull:
@@ -1826,16 +1824,14 @@ Example:
 
 ```yaml
   ...
-    dbChecks:
-      - dbQuery: >
-          SELECT id, name, surname FROM users LIMIT 2
+  dbChecks:
+    - dbQuery: "SELECT id, name, surname FROM users LIMIT 2"
+      dbResponse:
+        - '{ "id": 2, "name": "John", "surname": "Doe" }'
+        - '{ "id": 1, "name": "Jane", "surname": "Doe" }'
 
-        dbResponse:
-          - '{ "id": 2, "name": "John", "surname": "Doe" }'
-          - '{ "id": 1, "name": "Jane", "surname": "Doe" }'
-
-        comparisonParams:
-          ignoreArraysOrdering: true
+      comparisonParams:
+        ignoreArraysOrdering: true
 ```
 
 ## JSON-schema
