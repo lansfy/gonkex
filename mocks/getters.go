@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/lansfy/gonkex/compare"
 )
@@ -46,17 +47,28 @@ func getOptionalStringKey(def map[interface{}]interface{}, name string, allowedE
 }
 
 func getOptionalIntKey(def map[interface{}]interface{}, name string, defaultValue int) (int, error) {
-	if c, ok := def[name]; ok {
-		value, ok := c.(int)
-		if !ok {
-			return 0, wrongTypeError(name, "integer")
-		}
-		if value < 0 {
-			return 0, fmt.Errorf("value for the key '%s' cannot be negative", name)
-		}
-		return value, nil
+	c, ok := def[name]
+	if !ok {
+		return defaultValue, nil
 	}
-	return defaultValue, nil
+
+	var err error
+	var parsedValue int
+	switch v := c.(type) {
+	case int:
+		parsedValue = v
+	case string:
+		parsedValue, err = strconv.Atoi(v)
+	default:
+		err = errors.New("fake")
+	}
+	if err != nil {
+		return 0, fmt.Errorf("value for key '%s' cannot be converted to integer", name)
+	}
+	if parsedValue < 0 {
+		return 0, fmt.Errorf("value for the key '%s' cannot be negative", name)
+	}
+	return parsedValue, nil
 }
 
 func loadHeaders(def map[interface{}]interface{}) (map[string]string, error) {

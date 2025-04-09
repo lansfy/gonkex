@@ -67,9 +67,12 @@
   variables:
     methodVar: POST
     someVar: "some-value"
+    someCode: "200"
+    callCount: "1"
 
   mocks:
     testservice:
+      calls: "{{ $callCount }}"
       requestConstraints:
         - kind: methodIs
           method: "{{ $methodVar }}"
@@ -90,4 +93,4 @@
         {
           "data": "{{ $someVar }}"
         }
-      statusCode: 200
+      statusCode: "{{ $someCode }}"
