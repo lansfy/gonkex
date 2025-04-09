@@ -128,8 +128,11 @@ func Test_getOptionalStringKey(t *testing.T) {
 
 func Test_getOptionalIntKey(t *testing.T) {
 	inputMap := map[interface{}]interface{}{
-		"key":       42,
-		"nonIntKey": "aaaa",
+		"key":         42,
+		"stringKey":   "84",
+		"nonIntKey":   "aaaa",
+		"negativeKey": "-100",
+		"nilKey":      nil,
 	}
 
 	tests := []struct {
@@ -146,17 +149,37 @@ func Test_getOptionalIntKey(t *testing.T) {
 			want:         42,
 		},
 		{
+			description:  "key exists and value is string with valid integer",
+			key:          "stringKey",
+			defaultValue: 0,
+			want:         84,
+		},
+		{
 			description:  "key does not exist, default value returned",
 			key:          "absentKey",
 			defaultValue: 99,
 			want:         99,
 		},
 		{
-			description:  "key exists but value is not an integer",
+			description:  "key exists but value can't be converted to integer",
 			key:          "nonIntKey",
 			defaultValue: 99,
 			want:         0,
-			wantErr:      "key 'nonIntKey' has non-integer value",
+			wantErr:      "value for key 'nonIntKey' cannot be converted to integer",
+		},
+		{
+			description:  "key exists but value is a negative integer",
+			key:          "negativeKey",
+			defaultValue: 99,
+			want:         0,
+			wantErr:      "value for the key 'negativeKey' cannot be negative",
+		},
+		{
+			description:  "key exists but value is a negative integer",
+			key:          "nilKey",
+			defaultValue: 99,
+			want:         0,
+			wantErr:      "value for key 'nilKey' cannot be converted to integer",
 		},
 	}
 
