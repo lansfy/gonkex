@@ -1,84 +1,13 @@
-linters-settings:
-  govet:
-    check-shadowing: true
-  golint:
-    min-confidence: 0.8
-  gocyclo:
-    min-complexity: 15
-  dupl:
-    threshold: 100
-  goconst:
-    min-len: 2
-    min-occurrences: 3
-  misspell:
-    locale: EN
-  lll:
-    line-length: 150
-  goimports:
-    local-prefixes: example.com/aaa/bbb/
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - performance
-      - style
-      - experimental
-    disabled-checks:
-      - paramTypeCombine
-      - unnamedResult
-  funlen:
-    lines: 120
-    statements: 70
-  revive:
-    ignore-generated-header: true
-    severity: warning
-    confidence: 0.8
-    error-code: 0
-    warning-code: 0
-    rules:
-      - name: blank-imports
-      - name: context-as-argument
-      - name: context-keys-type
-      - name: dot-imports
-      - name: duplicated-imports
-      - name: early-return
-      - name: empty-block
-      - name: error-naming
-      - name: error-return
-      - name: error-strings
-      - name: errorf
-      - name: identical-branches
-      - name: if-return
-      - name: import-shadowing
-      - name: increment-decrement
-      - name: indent-error-flow
-      - name: package-comments
-      - name: range
-      - name: range-val-address
-      - name: range-val-in-closure
-      - name: receiver-naming
-      - name: redefines-builtin-id
-      - name: superfluous-else
-      - name: time-naming
-      - name: unexported-return
-      - name: unnecessary-stmt
-      - name: unreachable-code
-      - name: unhandled-error
-      - name: var-declaration
+version: "2"
 
 linters:
-  disable-all: true
+  default: none
   enable:
     - bodyclose
     - dogsled
     - errcheck
-    - exportloopref
-    #- funlen
     - gochecknoinits
-    #- goconst
     - gocritic
-    - gofmt
-    - goimports
-    - gosimple
     - govet
     - ineffassign
     - lll
@@ -86,22 +15,101 @@ linters:
     - nakedret
     - revive
     - staticcheck
-    #- stylecheck
-    - typecheck
     - unconvert
     - unparam
     - unused
     - whitespace
-
+  settings:
+    dupl:
+      threshold: 100
+    funlen:
+      lines: 120
+      statements: 70
+    goconst:
+      min-len: 2
+      min-occurrences: 3
+    gocritic:
+      disabled-checks:
+        - paramTypeCombine
+        - unnamedResult
+      enabled-tags:
+        - diagnostic
+        - performance
+        - style
+        - experimental
+    gocyclo:
+      min-complexity: 15
+    lll:
+      line-length: 150
+    misspell:
+      locale: US
+    revive:
+      confidence: 0.8
+      severity: warning
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: duplicated-imports
+        - name: early-return
+        - name: empty-block
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: identical-branches
+        - name: if-return
+        - name: import-shadowing
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: package-comments
+        - name: range
+        - name: range-val-address
+        - name: range-val-in-closure
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: time-naming
+        - name: unexported-return
+        - name: unnecessary-stmt
+        - name: unreachable-code
+        - name: unhandled-error
+        - name: var-declaration
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - dupl
+          - funlen
+          - gosec
+          - lll
+        path: _test\.go
+    paths:
+      - storage/addons/sqldb/testfixtures
+      - third_party$
+      - builtin$
+      - examples$
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-  exclude-dirs:
-    - storage/addons/sqldb/testfixtures
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - dupl
-        - gosec
-        - funlen
-        - lll
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - example.com/aaa/bbb/
+  exclusions:
+    generated: lax
+    paths:
+      - storage/addons/sqldb/testfixtures
+      - third_party$
+      - builtin$
+      - examples$

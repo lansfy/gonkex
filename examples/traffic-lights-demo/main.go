@@ -16,15 +16,21 @@ const (
 	lightGreen  = "green"
 )
 
+type data struct {
+	CurrentLight string `json:"currentLight"`
+}
+
 // structure for storing traffic light status
 type trafficLights struct {
-	CurrentLight string       `json:"currentLight"`
-	mutex        sync.RWMutex `json:"-"`
+	data
+	mutex sync.RWMutex
 }
 
 // traffic light instance
 var lights = trafficLights{
-	CurrentLight: lightRed,
+	data: data{
+		CurrentLight: lightRed,
+	},
 }
 
 func main() {
@@ -40,13 +46,13 @@ func initServer() {
 		lights.mutex.RLock()
 		defer lights.mutex.RUnlock()
 
-		resp, err := json.Marshal(lights)
+		resp, err := json.Marshal(lights.data)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		w.Header().Add("Content-Type", "application/json")
-		w.Write(resp)
+		_, _ = w.Write(resp)
 	})
 
 	// method for setting a new traffic light state

@@ -20,12 +20,12 @@ func initServer() {
 func Do(w http.ResponseWriter, r *http.Request) {
 	if err := BackendPost(); err != nil {
 		log.Print(err)
-		w.Write([]byte("{\"status\": \"error\"}"))
+		_, _ = w.Write([]byte("{\"status\": \"error\"}"))
 		return
 	}
 
 	w.Header().Add("Content-Type", "application/json")
-	w.Write([]byte("{\n  \"data\": {\n    \"hero\": {\n      \"name\": \"R2-D2\",\n   " +
+	_, _ = w.Write([]byte("{\n  \"data\": {\n    \"hero\": {\n      \"name\": \"R2-D2\",\n   " +
 		"   \"friends\": [\n        {\n          \"name\": \"Luke Skywalker\"\n        },\n        " +
 		"{\n          \"name\": \"Han Solo\"\n        },\n        {\n          \"name\": \"Leia Organa\"\n   " +
 		"     }\n      ]\n    }\n  }\n}"))
@@ -45,9 +45,10 @@ func BackendPost() error {
 	if err != nil {
 		return err
 	}
+
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("backend response status code %d", res.StatusCode)
 	}
 
-	return nil
+	return res.Body.Close()
 }

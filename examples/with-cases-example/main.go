@@ -50,7 +50,7 @@ func Do(w http.ResponseWriter, r *http.Request) {
 func buildRequest(jsonRequest []byte) Request {
 	var request Request
 
-	json.Unmarshal(jsonRequest, &request)
+	_ = json.Unmarshal(jsonRequest, &request)
 
 	return request
 }
