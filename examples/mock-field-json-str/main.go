@@ -23,18 +23,18 @@ func ProxyRequest(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Print(err)
-		w.Write([]byte("{\"status\": \"error\"}"))
+		_, _ = w.Write([]byte("{\"status\": \"error\"}"))
 		return
 	}
 
 	if err := BackendPost(string(body)); err != nil {
 		log.Print(err)
-		w.Write([]byte("{\"status\": \"error\"}"))
+		_, _ = w.Write([]byte("{\"status\": \"error\"}"))
 		return
 	}
 
 	w.Header().Add("Content-Type", "application/json")
-	w.Write([]byte("{\"status\": \"ok\"}"))
+	_, _ = w.Write([]byte("{\"status\": \"ok\"}"))
 }
 
 type BackendParams struct {
@@ -64,5 +64,5 @@ func BackendPost(originBody string) error {
 		return fmt.Errorf("backend response status code %d", res.StatusCode)
 	}
 
-	return nil
+	return res.Body.Close()
 }

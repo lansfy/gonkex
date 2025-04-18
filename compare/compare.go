@@ -137,7 +137,7 @@ func getType(value interface{}) string {
 }
 
 func isScalarType(t string) bool {
-	return !(t == "array" || t == "map")
+	return t != "map" && t != "array"
 }
 
 func compareLeafs(path string, expected, actual interface{}) []error {
