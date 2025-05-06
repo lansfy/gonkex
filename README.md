@@ -299,6 +299,8 @@ or for elements of map/array (if it's JSON):
 If you expect a test to succeed after only a few attempts (for example, one testcase has run some asynchronous operation and the second testcase is trying to wait for the results after that),
 then you need to do several test retry. You can define the number of retries required using the `retryPolicy` field.
 
+*NOTE*: An attempt is considered successful if the actual response matches the expected response.
+
 Example:
 
 ```yaml

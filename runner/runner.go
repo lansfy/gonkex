@@ -130,7 +130,7 @@ func (r *Runner) Run() error {
 			}
 		}
 
-		err := r.config.TestHandler(t, r.executeTestWithRetryPolicy)
+		err := r.config.TestHandler(t, r.executeTest)
 		if err != nil {
 			err = colorize.NewEntityError("test %s error", t.GetName()).SetSubError(err)
 			if hasFocused || r.config.OnFailPolicy == PolicyStop {
@@ -153,7 +153,51 @@ func (r *Runner) Run() error {
 	}
 }
 
-func (r *Runner) executeTestWithRetryPolicy(v models.TestInterface) (*models.Result, error) {
+func makeServiceRequest(config *RunnerOpts, v models.TestInterface) (*models.Result, error) {
+	req, err := NewRequest(config.Host, v)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp *http.Response
+	if strings.HasPrefix(req.URL.Path, endpoint.Prefix) {
+		resp, err = endpoint.SelectEndpoint(config.Mocks, config.HelperEndpoints, req.URL.Path, req) //nolint:bodyclose // false positive
+	} else {
+		resp, err = config.CustomClient.Do(req) //nolint:bodyclose // false positive
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := io.ReadAll(resp.Body)
+
+	_ = resp.Body.Close()
+
+	if err != nil {
+		return nil, err
+	}
+
+	result := &models.Result{
+		Path:                req.URL.Path,
+		Query:               req.URL.RawQuery,
+		RequestBody:         actualRequestBody(req),
+		ResponseBody:        string(body),
+		ResponseContentType: resp.Header.Get("Content-Type"),
+		ResponseStatusCode:  resp.StatusCode,
+		ResponseStatus:      resp.Status,
+		ResponseHeaders:     resp.Header,
+		Test:                v,
+	}
+
+	// support for Trailer headers: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Trailer
+	for name, value := range resp.Trailer {
+		result.ResponseHeaders[name] = value
+	}
+
+	return result, nil
+}
+
+func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	retryPolicy := v.GetRetryPolicy()
 
 	retryCount := retryPolicy.Attempts()
@@ -184,44 +228,6 @@ func (r *Runner) executeTestWithRetryPolicy(v models.TestInterface) (*models.Res
 		return nil, checker.ErrTestSkipped
 	}
 
-	var testResult *models.Result
-	var err error
-	var successCount int
-	for i := 0; i < retryCount+1; i++ {
-		if i != 0 {
-			time.Sleep(retryPolicy.Delay())
-		}
-		testResult, err = r.executeTest(v)
-		if err != nil {
-			return nil, err
-		}
-		if !testResult.Passed() {
-			successCount = 0
-		} else {
-			successCount++
-		}
-		if successCount >= successRequired {
-			break
-		}
-	}
-
-	if testResult.Passed() && successCount < successRequired {
-		testResult.Errors = append(testResult.Errors,
-			fmt.Errorf("last run was successful %d times, but %d success at row required", successCount, successRequired),
-		)
-	}
-
-	for _, o := range r.output {
-		err = o.Process(v, testResult)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return testResult, nil
-}
-
-func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	err := r.checkers.BeforeTest(v)
 	if err != nil {
 		return nil, err
@@ -271,44 +277,43 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		time.Sleep(pause)
 	}
 
-	req, err := NewRequest(r.config.Host, v)
-	if err != nil {
-		return nil, err
+	retryCheckers := checkersList{}
+	if retryCount != 0 {
+		retryCheckers.AddCheckers(response_body.NewChecker(), response_header.NewChecker())
 	}
 
-	var resp *http.Response
-	if strings.HasPrefix(req.URL.Path, endpoint.Prefix) {
-		resp, err = endpoint.SelectEndpoint(r.config.Mocks, r.config.HelperEndpoints, req.URL.Path, req) //nolint:bodyclose // false positive
-	} else {
-		resp, err = r.config.CustomClient.Do(req) //nolint:bodyclose // false positive
-	}
-	if err != nil {
-		return nil, err
-	}
+	var errs []error
+	var result *models.Result
+	var successCount int
+	for i := 0; i < retryCount+1; i++ {
+		if i != 0 {
+			time.Sleep(retryPolicy.Delay())
+		}
 
-	body, err := io.ReadAll(resp.Body)
+		result, err = makeServiceRequest(&r.config, v)
+		if err != nil {
+			return nil, err
+		}
 
-	_ = resp.Body.Close()
+		errs, err = retryCheckers.Check(v, result)
+		if err != nil {
+			return nil, err
+		}
 
-	if err != nil {
-		return nil, err
-	}
-
-	result := &models.Result{
-		Path:                req.URL.Path,
-		Query:               req.URL.RawQuery,
-		RequestBody:         actualRequestBody(req),
-		ResponseBody:        string(body),
-		ResponseContentType: resp.Header.Get("Content-Type"),
-		ResponseStatusCode:  resp.StatusCode,
-		ResponseStatus:      resp.Status,
-		ResponseHeaders:     resp.Header,
-		Test:                v,
+		if len(errs) != 0 {
+			successCount = 0
+		} else {
+			successCount++
+		}
+		if successCount >= successRequired {
+			break
+		}
 	}
 
-	// support for Trailer headers: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Trailer
-	for name, value := range resp.Trailer {
-		result.ResponseHeaders[name] = value
+	if len(errs) == 0 && successCount < successRequired {
+		result.Errors = append(result.Errors,
+			fmt.Errorf("last run was successful %d times, but %d success at row required", successCount, successRequired),
+		)
 	}
 
 	// make pause after request
@@ -330,12 +335,13 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		result.Errors = append(result.Errors, errs...)
 	}
 
+	skipCheckers := false
 	changed, errs := r.setVariablesFromResponse(v, result)
 	if len(errs) != 0 {
 		// we should show response in output, so better to add this error as result error
 		// and skip all checkers
 		result.Errors = append(result.Errors, errs...)
-		return result, nil
+		skipCheckers = true
 	}
 
 	if changed {
@@ -343,12 +349,21 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		v.ApplyVariables(r.config.Variables.Substitute)
 	}
 
-	errs, err = r.checkers.Check(v, result)
-	if err != nil {
-		return nil, err
+	if !skipCheckers {
+		errs, err = r.checkers.Check(v, result)
+		if err != nil {
+			return nil, err
+		}
+
+		result.Errors = append(result.Errors, errs...)
 	}
 
-	result.Errors = append(result.Errors, errs...)
+	for _, o := range r.output {
+		err = o.Process(v, result)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return result, nil
 }
