@@ -1,5 +1,8 @@
 # Gonkex: testing automation tool
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/lansfy/gonkex.svg)](https://pkg.go.dev/github.com/lansfy/gonkex)
+[![coverage](https://raw.githubusercontent.com/lansfy/gonkex/refs/heads/badges/.badges/master/coverage.svg)](https://github.com/lansfy/gonkex/blob/master/.testcoverage.yml)
+
 *NOTE*: You can find a utility that allows you to run gonkex scripts [here](https://github.com/lansfy/gonkex-cli) (in the releases section).
 
 Gonkex will test your services using their API. It can bomb the service with prepared requests and check the responses. Test scenarios are described in YAML-files.
