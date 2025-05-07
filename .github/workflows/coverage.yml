@@ -1,0 +1,46 @@
+name: Go test coverage check
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+
+permissions: write-all
+
+jobs:
+  coverage:
+    name: go-test-coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+      
+      - name: generate test coverage
+        run: go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
+
+      - name: check test coverage
+        id: coverage
+        uses: vladopajic/go-test-coverage@v2
+        continue-on-error: true # Should fail after coverage comment is posted
+        with:
+          config: ./.testcoverage.yml
+
+      - name: post coverage report
+        if: github.event.pull_request.number
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          comment-tag: coverage-report
+          pr-number: ${{ github.event.pull_request.number }}
+          message: |
+            go-test-coverage report:
+            ```
+            ${{ fromJSON(steps.coverage.outputs.report) }}```
+
+      - name: finally check coverage
+        if: steps.coverage.outcome == 'failure'
+        shell: bash
+        run: echo "coverage check failed" && exit 1
