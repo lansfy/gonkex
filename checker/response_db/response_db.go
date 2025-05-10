@@ -15,49 +15,69 @@ import (
 	"github.com/kylelemons/godebug/pretty"
 )
 
-func NewChecker(db storage.StorageInterface) checker.CheckerInterface {
+func NewChecker(aliasedDB map[string]storage.StorageInterface) checker.CheckerInterface {
 	return &responseDbChecker{
-		db: db,
+		aliasedDB: aliasedDB,
 	}
 }
 
 type responseDbChecker struct {
-	db storage.StorageInterface
+	aliasedDB map[string]storage.StorageInterface
 }
 
 func (c *responseDbChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
 	var errors []error
 	for _, dbCheck := range t.GetDatabaseChecks() {
-		errs, err := c.check(dbCheck, result)
-		if err != nil {
-			return nil, err
+		// check expected db query exist
+		if dbCheck.DbQueryString() == "" {
+			return nil, fmt.Errorf("dbQuery not found in the test declaration")
 		}
-		errors = append(errors, errs...)
+
+		// check expected response exist
+		if dbCheck.DbResponseJson() == nil {
+			return nil, fmt.Errorf("dbResponse not found in the test declaration")
+		}
+
+		aliases := dbCheck.DbAliases()
+		if len(aliases) == 0 {
+			aliases = []string{storage.DefaultDBAlias}
+		}
+
+		for _, alias := range aliases {
+			db, ok := c.aliasedDB[alias]
+			if !ok {
+				return nil, fmt.Errorf("unknown database alias '%s'", alias)
+			}
+			if db == nil {
+				continue
+			}
+			errs, err := c.check(alias, db, dbCheck, result)
+			if err != nil {
+				return nil, err
+			}
+			errors = append(errors, errs...)
+			break
+		}
 	}
 
 	return errors, nil
 }
 
-func (c *responseDbChecker) check(t models.DatabaseCheck, result *models.Result) ([]error, error) {
-	// check expected db query exist
-	if t.DbQueryString() == "" {
-		return nil, fmt.Errorf("dbQuery not found in the test declaration")
-	}
-
-	// check expected response exist
-	if t.DbResponseJson() == nil {
-		return nil, fmt.Errorf("dbResponse not found in the test declaration")
-	}
-
+func (c *responseDbChecker) check(alias string, db storage.StorageInterface,
+	t models.DatabaseCheck, result *models.Result) ([]error, error) {
 	// get DB response
-	actualDbResponse, err := newQuery(t.DbQueryString(), c.db)
+	actualDbResponse, err := newQuery(t.DbQueryString(), db)
 	if err != nil {
 		return nil, err
 	}
 
 	result.DatabaseResult = append(
 		result.DatabaseResult,
-		models.DatabaseResult{Query: t.DbQueryString(), Response: actualDbResponse},
+		models.DatabaseResult{
+			Query: t.DbQueryString(),
+			Response: actualDbResponse,
+			Alias: alias,
+		},
 	)
 
 	// compare responses length

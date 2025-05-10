@@ -33,6 +33,7 @@ type RunWithTestingOpts struct {
 	Mocks *mocks.Mocks
 	// DB is the storage interface used for interacting with the database during tests.
 	DB storage.StorageInterface
+	AliasedDB map[string]storage.StorageInterface
 	// MainOutputFunc is the primary output handler for the testing run.
 	MainOutputFunc output.OutputInterface
 	// Outputs is a collection of additional output handlers to process test results.
@@ -91,6 +92,7 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 			}),
 			FixturesDir:     opts.FixturesDir,
 			DB:              opts.DB,
+			AliasedDB:       opts.AliasedDB,
 			Variables:       variables.New(),
 			HTTPProxyURL:    proxyURL,
 			HelperEndpoints: opts.HelperEndpoints,

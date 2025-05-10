@@ -27,6 +27,7 @@ type ComparisonParams interface {
 type DatabaseCheck interface {
 	DbQueryString() string                 // Storage query to execute against the database
 	DbResponseJson() []string              // Expected records as serialized JSON strings
+	DbAliases() []string
 	GetComparisonParams() ComparisonParams // Comparison parameters for database response
 }
 

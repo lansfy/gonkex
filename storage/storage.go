@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 )
 
+const DefaultDBAlias = "default"
+
 // StorageInterface defines a storage abstraction that supports querying and loading fixtures.
 type StorageInterface interface {
 	// GetType returns the type of storage being used (e.g., "postgresql", "redis", etc.).

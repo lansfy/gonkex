@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -46,6 +48,7 @@ type RunnerOpts struct {
 	Host            string                                         // The base URL of the server being tested.
 	FixturesDir     string                                         // Directory containing fixture files.
 	DB              storage.StorageInterface                       // Database interface for test storage.
+	AliasedDB       map[string]storage.StorageInterface
 	Mocks           *mocks.Mocks                                   // Mock implementations for external dependencies.
 	MocksLoader     mocks.Loader                                   // Loader for mock configurations.
 	Variables       *variables.Variables                           // Variables used in test execution.
@@ -83,6 +86,14 @@ func New(loader testloader.LoaderInterface, opts *RunnerOpts) *Runner {
 	}
 	if r.config.TestHandler == nil {
 		r.config.TestHandler = r.defaultTestHandler
+	}
+
+	if r.config.AliasedDB == nil {
+		r.config.AliasedDB = map[string]storage.StorageInterface{}
+	}
+
+	if _, ok := r.config.AliasedDB[storage.DefaultDBAlias]; !ok {
+		r.config.AliasedDB[storage.DefaultDBAlias] = r.config.DB
 	}
 
 	r.AddCheckers(response_body.NewChecker())
@@ -197,6 +208,45 @@ func makeServiceRequest(config *RunnerOpts, v models.TestInterface) (*models.Res
 	return result, nil
 }
 
+var fixtureAliasedDBPrefixRegex = regexp.MustCompile(`^\[([^\]]+)\]`)
+
+// categorizeFilesByPrefix takes a list of file paths and categorizes them
+// based on their prefix enclosed in square brackets.
+// Files with names like "[prefix]..." will be categorized under the "prefix" key.
+// Files without such prefix will be categorized under an empty string key.
+func categorizeFixturesByPrefix(names []string) map[string][]string {
+	result := map[string][]string{}
+	for _, name := range names {
+		baseName := filepath.Base(name)
+		matches := fixtureAliasedDBPrefixRegex.FindStringSubmatch(baseName)
+		prefix := storage.DefaultDBAlias
+		if len(matches) > 1 {
+			prefix = matches[1]
+		}
+		result[prefix] = append(result[prefix], name)
+	}
+	return result
+}
+
+func ApplyFixtures(aliasedDB map[string]storage.StorageInterface,
+	location string, names []string) error {
+	named := categorizeFixturesByPrefix(names)
+	for name, files := range named {
+		store, ok := aliasedDB[name]
+		if !ok {
+			return fmt.Errorf("unknown storage '%s' in fixture '%s'", name, files[0])
+		}
+		if store == nil {
+			continue
+		}
+		err := store.LoadFixtures(location, files)
+		if err != nil {
+			return fmt.Errorf("load fixtures %v: %w", files, err)
+		}
+	}
+	return nil
+}
+
 func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	retryPolicy := v.GetRetryPolicy()
 
@@ -240,10 +290,10 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 		v.ApplyVariables(r.config.Variables.Substitute)
 	}
 
-	if r.config.DB != nil && len(v.Fixtures()) != 0 {
-		err = r.config.DB.LoadFixtures(r.config.FixturesDir, v.Fixtures())
+	if r.config.AliasedDB[storage.DefaultDBAlias] != nil && len(v.Fixtures()) != 0 {
+		err = ApplyFixtures(r.config.AliasedDB, r.config.FixturesDir, v.Fixtures())
 		if err != nil {
-			return nil, fmt.Errorf("load fixtures %v: %w", v.Fixtures(), err)
+			return nil, err
 		}
 	}
 

@@ -240,9 +240,9 @@ func Test_status(t *testing.T) {
 				TestsDir: "testdata/status/" + tt.name,
 				Outputs:  []output.OutputInterface{obj},
 			})
-			require.Equal(t, tt.total, obj.totalTests)
-			require.Equal(t, tt.skipped, obj.skippedTests)
-			require.Equal(t, tt.broken, obj.brokenTests)
+			require.Equal(t, tt.total, obj.totalTests, "not expected total number of test")
+			require.Equal(t, tt.skipped, obj.skippedTests, "not expected number of skipped test")
+			require.Equal(t, tt.broken, obj.brokenTests, "not expected number of broken test")
 		})
 	}
 }

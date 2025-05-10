@@ -11,6 +11,7 @@ import (
 type dbCheck struct {
 	query    string
 	response []string
+	aliases  []string
 	params   compare.Params
 }
 
@@ -20,6 +21,10 @@ func (c *dbCheck) DbQueryString() string {
 
 func (c *dbCheck) DbResponseJson() []string {
 	return c.response
+}
+
+func (c *dbCheck) DbAliases() []string {
+	return c.aliases
 }
 
 func (c *dbCheck) GetComparisonParams() models.ComparisonParams {

@@ -5,6 +5,7 @@ package models
 type DatabaseResult struct {
 	Query    string   // The storage query that was executed
 	Response []string // The records returned from the database as JSON items serialized to strings
+	Alias    string
 }
 
 // Result contains the complete results of a test execution

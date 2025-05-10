@@ -55,6 +55,7 @@ type Form struct {
 type DatabaseCheck struct {
 	DbQueryTmpl      string         `json:"dbQuery" yaml:"dbQuery"`
 	DbResponseTmpl   []string       `json:"dbResponse" yaml:"dbResponse"`
+	DbAliases        []string       `json:"dbAliases" yaml:"dbAliases"`
 	ComparisonParams compare.Params `json:"comparisonParams" yaml:"comparisonParams"`
 }
 
