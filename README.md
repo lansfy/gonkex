@@ -30,6 +30,9 @@ Capabilities:
 - [Pattern matching](#pattern-matching)
    * [$matchRegexp](#matchregexp)
    * [$matchTime](#matchtime)
+      + [Basic Format Matching](#basic-format-matching)
+      + ['accuracy' parameter](#accuracy-parameter)
+      + ['value' parameter](#value-parameter)
    * [$matchArray](#matcharray)
       + [$matchArray(pattern)](#matcharray-pattern)
       + [$matchArray(subset+pattern)](#matcharray-subset-pattern)
@@ -387,16 +390,21 @@ Example:
 
 The `$matchTime` function is allows you to validate timestamp strings in response, mock request, DB query results according to specific time format patterns.
 Unlike the more general `$matchRegexp`, `$matchTime` is designed specifically for time validation.
+This feature is used when you cannot specify the exact time (for example, the time in the response depends on the current time).
 
 The basic syntax for using `$matchTime` is:
 
 ```yaml
-$matchTime(format_string)
+$matchTime(format_string[, parameter=value][, ...])
 ```
 
-where `format_string` is a valid [Go time format](https://pkg.go.dev/time#pkg-constants) or [Python time format](https://docs.python.org/3/library/datetime.html#format-codes) pattern.
+where:
+- `format_string` is a valid [Go time format](https://pkg.go.dev/time#pkg-constants) or [strftime time format](https://pkg.go.dev/github.com/ncruces/go-strftime#pkg-overview) pattern
+- optional parameters can be added to customize the time matching behavior
 
-Example:
+#### Basic Format Matching
+
+The simplest usage of `$matchTime` validates that a timestamp string matches the specified format:
 
 ```yaml
   ...
@@ -412,7 +420,49 @@ Example:
   ...
 ```
 
-*NOTE*: For consistency, try to stick to one format style (Go or Python format) in all tests.
+*NOTE*: For consistency, try to stick to one format style (Go or Strftime format) in all tests.
+
+#### `accuracy` parameter
+
+Defines the acceptable time difference when using the `value` parameter:
+
+- `accuracy=duration` - sets a bidirectional time window (e.g., `accuracy=5m` for ±5 minutes)
+- `accuracy=+duration` - sets a forward-only time window (e.g., `accuracy=+10m` for 0 to +10 minutes)
+- `accuracy=-duration` - sets a backward-only time window (e.g., `accuracy=-10m` for -10 to 0 minutes)
+
+By default, `accuracy` is set to ±5 minutes when using any `value`.
+
+```yaml
+response:
+  200: >
+    {
+      "timestamp_precise": "$matchTime(%Y-%m-%d %H:%M:%S, value=now, accuracy=1m)",
+      "timestamp_future": "$matchTime(%Y-%m-%d %H:%M:%S, value=now, accuracy=+30m)",
+      "timestamp_past": "$matchTime(%Y-%m-%d %H:%M:%S, value=now, accuracy=-30m)"
+    }
+```
+
+*NOTE*: `duration` should be defined using Go [time duration string](https://pkg.go.dev/time#ParseDuration). For convenience, days (`d`) and weeks (`w`) are also supported.
+
+#### `value` parameter
+
+Allows you to specify an expected time value to match against:
+
+- `value=now` or `value=now()` - matches times around the current system time
+- `value=now±offset` - matches times offset from the current time (e.g., `value=now-1h`, `value=now+30m`)
+- `value=specific_time`- matches a specific time in the same format as the pattern (e.g., `value=25-12-2023 10:20:30` for format `%d-%m-%Y %H:%M:%S`)
+
+```yaml
+response:
+  200: >
+    {
+      "last_login": "$matchTime(%Y-%m-%d %H:%M:%S, value=now-1h)",
+      "next_scheduled": "$matchTime(%Y-%m-%d %H:%M:%S, value=now+24h)",
+      "specific_date": "$matchTime(%d-%m-%Y %H:%M:%S, value=25-12-2023 10:20:30)"
+    }
+```
+
+*NOTE*: `offset` should be defined using Go [time duration string](https://pkg.go.dev/time#ParseDuration). For convenience, days (`d`) and weeks (`w`) are also supported.
 
 ### $matchArray
 
