@@ -53,6 +53,7 @@ var timeDefaultParams = map[string]string{
 }
 
 var valueFormatExpr = regexp.MustCompile(`^(.+?)([+-](\d+[wdhmnus]+)+)?$`)
+var millisecondsNormalizationExpr = regexp.MustCompile(`\.0{3,9}`)
 var nowTimeFunc = time.Now
 
 func parseValue(args *timeParamsData, value string) (time.Time, error) {
@@ -92,6 +93,10 @@ type timeParamsData struct {
 	fromTime, toTime time.Time
 }
 
+func replaceZeroes(s string) string {
+	return strings.ReplaceAll(s, "0", "9")
+}
+
 func extractTimeArgs(data string) (*timeParamsData, error) {
 	result := &timeParamsData{}
 
@@ -110,6 +115,7 @@ func extractTimeArgs(data string) (*timeParamsData, error) {
 		if err != nil {
 			return nil, colorize.NewEntityError("pattern %s", value).SetSubError(err)
 		}
+		result.layout = millisecondsNormalizationExpr.ReplaceAllStringFunc(result.layout, replaceZeroes)
 	}
 
 	accuracyStr := params["accuracy"]
