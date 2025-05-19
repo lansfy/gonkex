@@ -43,6 +43,11 @@ func Test_TimeMatcher_MatchValues(t *testing.T) {
 			actual:      "2025-05-05T01:01:01Z",
 		},
 		{
+			description: "strftime pattern MUST support absent milliseconds part",
+			matcher:     &timeMatcher{data: "%Y-%m-%dT%H:%M:%S.%fZ%z"},
+			actual:      "2025-05-19T22:41:14.309131Z",
+		},
+		{
 			description: "matchTime MUST support 'now' function",
 			matcher:     &timeMatcher{data: "%d-%m-%Y %H:%M:%S, value=now"},
 			actual:      "25-12-2023 10:20:30",
