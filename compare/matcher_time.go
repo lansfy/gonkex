@@ -2,10 +2,14 @@ package compare
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/lansfy/gonkex/colorize"
+	"github.com/ncruces/go-strftime"
+	"github.com/xhit/go-str2duration/v2"
 )
 
 type timeMatcher struct {
@@ -13,50 +17,128 @@ type timeMatcher struct {
 }
 
 func (m *timeMatcher) MatchValues(description, entity string, actual interface{}) error {
-	layout := convertPythonToGoFormat(m.data)
-	value := fmt.Sprintf("%v", actual)
-	_, err := time.Parse(layout, value)
+	actualStr, ok := actual.(string)
+	if !ok {
+		return colorize.NewNotEqualError(description+" type mismatch:", entity, "string", reflect.TypeOf(actual))
+	}
+
+	args, err := extractTimeArgs(m.data)
+	if err != nil {
+		return colorize.NewEntityError(description, entity).SetSubError(err)
+	}
+
+	parsed, err := time.ParseInLocation(args.layout, actualStr, time.Local)
 	if err != nil {
 		return colorize.NewNotEqualError(description+" time does not match the template:",
-			entity, fmt.Sprintf("$matchTime(%s)", m.data), value)
+			entity, fmt.Sprintf("$matchTime(%s)", m.data), actualStr)
 	}
+
+	if args.fromTime.Equal(time.Time{}) {
+		return nil
+	}
+
+	fromTime := args.fromTime.In(parsed.Location())
+	toTime := args.toTime.In(parsed.Location())
+	if parsed.Before(fromTime) || parsed.After(toTime) {
+		expected := fmt.Sprintf("%s ... %s", fromTime.Format(args.layout), toTime.Format(args.layout))
+		return colorize.NewNotEqualError(description+" values do not match:", entity, expected, actualStr)
+	}
+
 	return nil
 }
 
-var (
-	timeFormatExprRx  = regexp.MustCompile("%[a-zA-Z]")
-	pythonToGoFormats = map[string]string{
-		"%Y": "2006",
-		"%y": "06",
-		"%m": "01",
-		"%d": "02",
-		"%H": "15",
-		"%I": "03",
-		"%M": "04",
-		"%S": "05",
-		"%f": "999999",
-		"%p": "PM",
-		"%z": "-0700",
-		"%Z": "MST",
-		"%j": "002",
-		"%U": "__WEEK_NUMBER__",
-		"%W": "__ISO_WEEK__",
-		"%a": "Mon",
-		"%A": "Monday",
-		"%b": "Jan",
-		"%B": "January",
-		"%c": "Mon Jan 2 15:04:05 2006",
-		"%x": "01/02/06",
-		"%X": "15:04:05",
-	}
-)
+var timeDefaultParams = map[string]string{
+	"value":    "",
+	"accuracy": "5m",
+}
 
-func convertPythonToGoFormat(pyFormat string) string {
-	return timeFormatExprRx.ReplaceAllStringFunc(pyFormat, func(match string) string {
-		goFmt, ok := pythonToGoFormats[match]
-		if ok {
-			return goFmt
+var valueFormatExpr = regexp.MustCompile(`^(.+?)([+-](\d+[wdhmnus]+)+)?$`)
+var nowTimeFunc = time.Now
+
+func parseValue(args *timeParamsData, value string) (time.Time, error) {
+	if value == "" {
+		return time.Time{}, nil
+	}
+	// any expression matched by this regexp
+	matches := valueFormatExpr.FindStringSubmatch(value)
+
+	baseStr := matches[1]
+	shiftStr := matches[2]
+
+	var shift time.Duration
+	var err error
+	if shiftStr != "" {
+		shift, err = str2duration.ParseDuration(shiftStr)
+		if err != nil {
+			return time.Time{}, fmt.Errorf("wrong duration value '%s'", shiftStr)
 		}
-		return match
-	})
+	}
+
+	if baseStr == "now" || baseStr == "now()" {
+		return nowTimeFunc().Add(shift), nil
+	}
+
+	base, err := time.ParseInLocation(args.layout, baseStr, time.Local)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("time value '%s' doesn't match pattern '%s'", baseStr, args.origLayout)
+	}
+
+	return base.Add(shift), nil
+}
+
+type timeParamsData struct {
+	origLayout       string
+	layout           string
+	fromTime, toTime time.Time
+}
+
+func extractTimeArgs(data string) (*timeParamsData, error) {
+	result := &timeParamsData{}
+
+	value, params, err := extractArgs(data, timeDefaultParams)
+	if err != nil {
+		return nil, err
+	}
+
+	result.origLayout = value
+	if strings.ContainsAny(value, "0123456789") {
+		// golang time pattern
+		result.layout = value
+	} else {
+		// strftime time pattern
+		result.layout, err = strftime.Layout(value)
+		if err != nil {
+			return nil, colorize.NewEntityError("pattern %s", value).SetSubError(err)
+		}
+	}
+
+	accuracyStr := params["accuracy"]
+	accuracy, err := str2duration.ParseDuration(accuracyStr)
+	if err != nil {
+		return nil,
+			colorize.NewEntityError("parameter %s", "accuracy").SetSubError(
+				fmt.Errorf("wrong duration value '%s'", accuracyStr))
+	}
+
+	if accuracy < 0 {
+		accuracy = -1 * accuracy
+	}
+
+	initial, err := parseValue(result, params["value"])
+	if err != nil {
+		return nil, colorize.NewEntityError("parameter %s", "value").SetSubError(err)
+	}
+
+	if !initial.Equal(time.Time{}) {
+		result.fromTime = initial
+		result.toTime = initial
+		if accuracyStr[0] != '+' {
+			result.fromTime = initial.Add(-1 * accuracy)
+		}
+		if accuracyStr[0] != '-' {
+			result.toTime = initial.Add(accuracy)
+		}
+	}
+
+	return result, nil
 }
