@@ -102,6 +102,16 @@ func Test_TimeMatcher_MatchValues(t *testing.T) {
 			matcher:     &timeMatcher{data: "%d-%m-%Y %H:%M:%S, value=25-12-2023 20:30:00"},
 			actual:      "25-12-2023 20:30:40",
 		},
+		{
+			description: "matchTime MUST support timezone specification with direct value",
+			matcher:     &timeMatcher{data: "%d-%m-%Y %H:%M:%S, value=25-12-2023 20:30:00, timezone=utc"},
+			actual:      "25-12-2023 20:30:00",
+		},
+		{
+			description: "matchTime MUST support timezone specification with now() value",
+			matcher:     &timeMatcher{data: "%Y-%m-%d %H:%M:%S, value=now(), timezone=utc"},
+			actual:      time.Date(2023, 12, 25, 10, 20, 30, 0, time.Local).In(time.UTC).Format("2006-01-02 15:04:05"),
+		},
 	}
 
 	for _, tt := range tests {
@@ -122,7 +132,7 @@ func Test_TimeMatcher_MatchValues_Errors(t *testing.T) {
 	}()
 
 	makeMatchError := func(text, expected, actual string) string {
-		return fmt.Sprintf("at 'error-prefix' %s:\n     expected: %s\n       actual: %s",
+		return fmt.Sprintf("at 'error-prefix'%s:\n     expected: %s\n       actual: %s",
 			text, expected, actual)
 	}
 
@@ -136,7 +146,7 @@ func Test_TimeMatcher_MatchValues_Errors(t *testing.T) {
 			description: "invalid actual type",
 			matcher:     &timeMatcher{data: "%Y-%m-%d"},
 			actual:      nil,
-			wantErr:     makeMatchError("type mismatch", "string", "<nil>"),
+			wantErr:     makeMatchError(" type mismatch", "string", "<nil>"),
 		},
 		{
 			description: "invalid strftime format specified",
@@ -148,13 +158,13 @@ func Test_TimeMatcher_MatchValues_Errors(t *testing.T) {
 			description: "time doesn't match to specified strftime format",
 			matcher:     &timeMatcher{data: "%Y-%m-%d"},
 			actual:      "12-25-2023",
-			wantErr:     makeMatchError("time does not match the template", "$matchTime(%Y-%m-%d)", "12-25-2023"),
+			wantErr:     makeMatchError(" time does not match the template", "$matchTime(%Y-%m-%d)", "12-25-2023"),
 		},
 		{
 			description: "time doesn't match to specified golang format",
 			matcher:     &timeMatcher{data: "2006-01-02"},
 			actual:      "12-25-2023",
-			wantErr:     makeMatchError("time does not match the template", "$matchTime(2006-01-02)", "12-25-2023"),
+			wantErr:     makeMatchError(" time does not match the template", "$matchTime(2006-01-02)", "12-25-2023"),
 		},
 		{
 			description: "invalid duration format in accuracy parameter",
@@ -169,6 +179,12 @@ func Test_TimeMatcher_MatchValues_Errors(t *testing.T) {
 			wantErr:     "at 'error-prefix': parameter 'value': wrong duration value '-1dddd'",
 		},
 		{
+			description: "invalid timezone value parameter",
+			matcher:     &timeMatcher{data: "%Y-%m-%d, value=now, timezone=wrong"},
+			actual:      "2023-12-25",
+			wantErr:     makeMatchError(": wrong 'timezone' value", "local / utc", "wrong"),
+		},
+		{
 			description: "invalid parameter name",
 			matcher:     &timeMatcher{data: "%Y-%m-%d,fakeparam=aaaa"},
 			actual:      "12-25-2023",
@@ -178,25 +194,25 @@ func Test_TimeMatcher_MatchValues_Errors(t *testing.T) {
 			description: "WHEN actual time before (expected-accuracy) MUST fail with error",
 			matcher:     &timeMatcher{data: "%d-%m-%Y %H:%M:%S, value=now()"},
 			actual:      "25-12-2023 10:15:00",
-			wantErr:     makeMatchError("values do not match", "25-12-2023 10:15:30 ... 25-12-2023 10:25:30", "25-12-2023 10:15:00"),
+			wantErr:     makeMatchError(" values do not match", "25-12-2023 10:15:30 ... 25-12-2023 10:25:30", "25-12-2023 10:15:00"),
 		},
 		{
 			description: "WHEN actual time after (expected+accuracy) MUST fail with error",
 			matcher:     &timeMatcher{data: "%d-%m-%Y %H:%M:%S, value=now()"},
 			actual:      "25-12-2023 10:26:00",
-			wantErr:     makeMatchError("values do not match", "25-12-2023 10:15:30 ... 25-12-2023 10:25:30", "25-12-2023 10:26:00"),
+			wantErr:     makeMatchError(" values do not match", "25-12-2023 10:15:30 ... 25-12-2023 10:25:30", "25-12-2023 10:26:00"),
 		},
 		{
 			description: "WHEN custom accuracy has explicit + actual time before expected MUST fail with error",
 			matcher:     &timeMatcher{data: "%d-%m-%Y %H:%M:%S, value=now(), accuracy=+10m"},
 			actual:      "25-12-2023 10:20:00",
-			wantErr:     makeMatchError("values do not match", "25-12-2023 10:20:30 ... 25-12-2023 10:30:30", "25-12-2023 10:20:00"),
+			wantErr:     makeMatchError(" values do not match", "25-12-2023 10:20:30 ... 25-12-2023 10:30:30", "25-12-2023 10:20:00"),
 		},
 		{
 			description: "WHEN custom accuracy has explicit - actual time after expected MUST fail with error",
 			matcher:     &timeMatcher{data: "%d-%m-%Y %H:%M:%S, value=now(), accuracy=-10m"},
 			actual:      "25-12-2023 10:21:00",
-			wantErr:     makeMatchError("values do not match", "25-12-2023 10:10:30 ... 25-12-2023 10:20:30", "25-12-2023 10:21:00"),
+			wantErr:     makeMatchError(" values do not match", "25-12-2023 10:10:30 ... 25-12-2023 10:20:30", "25-12-2023 10:21:00"),
 		},
 		{
 			description: "WHEN value parameter doesn't match pattern check MUST fail",

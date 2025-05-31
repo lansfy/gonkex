@@ -27,7 +27,7 @@ func (m *timeMatcher) MatchValues(description, entity string, actual interface{}
 		return colorize.NewEntityError(description, entity).SetSubError(err)
 	}
 
-	parsed, err := time.ParseInLocation(args.layout, actualStr, time.Local)
+	parsed, err := time.ParseInLocation(args.layout, actualStr, args.tzLocation)
 	if err != nil {
 		return colorize.NewNotEqualError(description+" time does not match the template:",
 			entity, fmt.Sprintf("$matchTime(%s)", m.data), actualStr)
@@ -47,15 +47,10 @@ func (m *timeMatcher) MatchValues(description, entity string, actual interface{}
 	return nil
 }
 
-var timeDefaultParams = map[string]string{
-	"value":    "",
-	"accuracy": "5m",
-}
-
 var valueFormatExpr = regexp.MustCompile(`^(.+?)([+-](\d+[wdhmnus]+)+)?$`)
 var nowTimeFunc = time.Now
 
-func parseValue(args *timeParamsData, value string) (time.Time, error) {
+func parseValue(args *timeParamsData, value string, loc *time.Location) (time.Time, error) {
 	if value == "" {
 		return time.Time{}, nil
 	}
@@ -78,7 +73,7 @@ func parseValue(args *timeParamsData, value string) (time.Time, error) {
 		return nowTimeFunc().Add(shift), nil
 	}
 
-	base, err := time.ParseInLocation(args.layout, baseStr, time.Local)
+	base, err := time.ParseInLocation(args.layout, baseStr, loc)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("time value '%s' doesn't match pattern '%s'", baseStr, args.origLayout)
 	}
@@ -90,6 +85,7 @@ type timeParamsData struct {
 	origLayout       string
 	layout           string
 	fromTime, toTime time.Time
+	tzLocation       *time.Location
 }
 
 var millisecondsFixExpr = regexp.MustCompile(`\.0{3,9}`)
@@ -103,8 +99,16 @@ func patternNormalization(pattern string) string {
 	return pattern
 }
 
+var timeDefaultParams = map[string]string{
+	"value":    "",
+	"accuracy": "5m",
+	"timezone": "local",
+}
+
 func extractTimeArgs(data string) (*timeParamsData, error) {
-	result := &timeParamsData{}
+	result := &timeParamsData{
+		tzLocation: time.Local,
+	}
 
 	value, params, err := extractArgs(data, timeDefaultParams)
 	if err != nil {
@@ -136,7 +140,17 @@ func extractTimeArgs(data string) (*timeParamsData, error) {
 		accuracy = -1 * accuracy
 	}
 
-	initial, err := parseValue(result, params["value"])
+	tz := params["timezone"]
+	switch tz {
+	case "local":
+		// default
+	case "utc":
+		result.tzLocation = time.UTC
+	default:
+		return nil, colorize.NewNotEqualError("wrong %s value:", "timezone", "local / utc", tz)
+	}
+
+	initial, err := parseValue(result, params["value"], result.tzLocation)
 	if err != nil {
 		return nil, colorize.NewEntityError("parameter %s", "value").SetSubError(err)
 	}

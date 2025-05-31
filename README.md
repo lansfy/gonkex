@@ -464,6 +464,13 @@ response:
 
 *NOTE*: `offset` should be defined using Go [time duration string](https://pkg.go.dev/time#ParseDuration). For convenience, days (`d`) and weeks (`w`) are also supported.
 
+#### `timezone` parameter
+
+Allows you to specify timezone for values without specified timezone:
+
+- `timezone=local` - use local timezone (default)
+- `timezone=utc` - use UTC timezone
+
 ### $matchArray
 
 The `$matchArray` feature allows you to validate that all elements in an array match a specific pattern. This is especially useful when:
