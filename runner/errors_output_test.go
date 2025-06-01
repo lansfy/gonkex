@@ -56,12 +56,12 @@ func normalize(s string) string {
 	return s
 }
 
-func testHandler(test models.TestInterface, executeTest TestExecutor) error {
+func testHandler(test models.TestInterface, executeTest TestExecutor) (bool, error) {
 	_, err := executeTest(test)
 	if err != nil && !isTestWasSkipped(err) {
-		return err
+		return false, err
 	}
-	return nil
+	return false, nil
 }
 
 func Test_Error_Examples(t *testing.T) {
