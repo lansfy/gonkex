@@ -43,17 +43,43 @@ type HTTPClient interface {
 
 // RunnerOpts holds configuration options for the test runner.
 type RunnerOpts struct {
-	Host            string                                         // The base URL of the server being tested.
-	FixturesDir     string                                         // Directory containing fixture files.
-	DB              storage.StorageInterface                       // Database interface for test storage.
-	Mocks           *mocks.Mocks                                   // Mock implementations for external dependencies.
-	MocksLoader     mocks.Loader                                   // Loader for mock configurations.
-	Variables       *variables.Variables                           // Variables used in test execution.
-	CustomClient    HTTPClient                                     // Custom HTTP client for making requests.
-	HTTPProxyURL    *url.URL                                       // Proxy URL for HTTP requests.
-	HelperEndpoints endpoint.EndpointMap                           // Map of helper endpoints for testing.
-	TestHandler     func(models.TestInterface, TestExecutor) error // Handler function for executing tests.
-	OnFailPolicy    OnFailPolicy                                   // Policy defining what happens when a step fails.
+	// Host is the base URL of the server being tested.
+	// It should include the protocol (http/https) and port if non-standard.
+	Host string
+
+	// FixturesDir is the directory path containing test fixture files.
+	FixturesDir string
+
+	// DB provides the interface for test storage.
+	DB storage.StorageInterface
+
+	// Mocks contains mock implementations for external dependencies.
+	Mocks *mocks.Mocks
+
+	// MocksLoader loads and configures mocks.
+	MocksLoader mocks.Loader
+
+	// Variables holds test execution variables that can be referenced
+	// and modified during test runs for dynamic test behavior.
+	Variables *variables.Variables
+
+	// CustomClient is an HTTP client implementation for making test requests.
+	// If nil, a default HTTP client will be used.
+	CustomClient HTTPClient
+
+	// HTTPProxyURL specifies the proxy server URL for HTTP requests.
+	// When set, all HTTP traffic will be routed through this proxy.
+	HTTPProxyURL *url.URL
+
+	// HelperEndpoints maps helper endpoint names to their configurations.
+	HelperEndpoints endpoint.EndpointMap
+
+	// TestHandler defines the function responsible for executing individual tests.
+	TestHandler func(models.TestInterface, TestExecutor) (bool, error)
+
+	// OnFailPolicy determines the behavior when a test step fails.
+	// Use PolicySkipFile if not specified.
+	OnFailPolicy OnFailPolicy
 }
 
 type TestExecutor func(models.TestInterface) (*models.Result, error)
@@ -130,10 +156,10 @@ func (r *Runner) Run() error {
 			}
 		}
 
-		err := r.config.TestHandler(t, r.executeTest)
+		critical, err := r.config.TestHandler(t, r.executeTest)
 		if err != nil {
 			err = colorize.NewEntityError("test %s error", t.GetName()).SetSubError(err)
-			if hasFocused || r.config.OnFailPolicy == PolicyStop {
+			if hasFocused || critical || r.config.OnFailPolicy == PolicyStop {
 				return err
 			}
 			errs = append(errs, err)
@@ -386,21 +412,21 @@ func (r *Runner) setVariablesFromResponse(t models.TestInterface, result *models
 	return true, nil
 }
 
-func (r *Runner) defaultTestHandler(t models.TestInterface, f TestExecutor) error {
+func (r *Runner) defaultTestHandler(t models.TestInterface, f TestExecutor) (bool, error) {
 	result, err := f(t)
 	if err != nil {
 		if isTestWasSkipped(err) {
-			return nil
+			return false, nil
 		}
-		return err
+		return true, err
 	}
 	if len(result.Errors) != 0 {
 		if len(r.output) != 0 {
-			return errors.New("failed")
+			return false, errors.New("failed")
 		}
-		return result.Errors[0]
+		return false, result.Errors[0]
 	}
-	return nil
+	return false, nil
 }
 
 // checkHasFocused checks if any test has a "focus" status, indicating prioritized execution.

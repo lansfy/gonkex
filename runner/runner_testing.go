@@ -124,7 +124,8 @@ type testingHandler struct {
 	t *testing.T
 }
 
-func (h *testingHandler) HandleTest(test models.TestInterface, executor TestExecutor) error {
+func (h *testingHandler) HandleTest(test models.TestInterface, executor TestExecutor) (bool, error) {
+	var critical bool
 	var returnErr error
 	h.t.Run(test.GetName(), func(t *testing.T) {
 		result, err := executor(test)
@@ -133,6 +134,7 @@ func (h *testingHandler) HandleTest(test models.TestInterface, executor TestExec
 				t.Skip()
 			} else {
 				returnErr = err
+				critical = true
 				t.Fatal(err)
 			}
 		}
@@ -143,5 +145,5 @@ func (h *testingHandler) HandleTest(test models.TestInterface, executor TestExec
 		}
 	})
 
-	return returnErr
+	return critical, returnErr
 }

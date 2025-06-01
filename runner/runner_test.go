@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -190,6 +191,13 @@ type statusServer struct {
 	totalTests   int
 	skippedTests int
 	brokenTests  int
+	output       map[string]string
+}
+
+func newStatusServer() *statusServer {
+	return &statusServer{
+		output: map[string]string{},
+	}
 }
 
 func (s *statusServer) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
@@ -203,15 +211,31 @@ func (s *statusServer) BeforeTest(v models.TestInterface) error {
 	s.totalTests++
 	if v.GetStatus() == models.StatusBroken {
 		s.brokenTests++
+		s.addTestResult(v, "b")
 	}
 	if v.GetStatus() == models.StatusSkipped {
 		s.skippedTests++
+		s.addTestResult(v, "s")
 	}
 	return nil
 }
 
-func (s *statusServer) Process(models.TestInterface, *models.Result) error {
+func (s *statusServer) Process(v models.TestInterface, res *models.Result) error {
+	mark := "."
+	if !res.Passed() {
+		mark = "e"
+	}
+	s.addTestResult(v, mark)
 	return nil
+}
+
+func (s *statusServer) addTestResult(v models.TestInterface, result string) {
+	filename := v.GetFileName()
+	filename = filepath.Base(filename)
+	if _, ok := s.output[filename]; !ok {
+		s.output[filename] = ""
+	}
+	s.output[filename] += result
 }
 
 func Test_status(t *testing.T) {
@@ -232,7 +256,7 @@ func Test_status(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			obj := &statusServer{}
+			obj := newStatusServer()
 			srv := httptest.NewServer(obj)
 			defer srv.Close()
 
@@ -247,25 +271,57 @@ func Test_status(t *testing.T) {
 	}
 }
 
-func Test_on_fail_policy(t *testing.T) {
+func Test_on_fail_policy_with_test_error(t *testing.T) {
 	testCases := []struct {
 		policy  OnFailPolicy
 		postfix string
 		total   int
-		skipped int
+		result  map[string]string
 		wantErr string
 	}{
-		{PolicySkipFile, "", 6, 3, "some steps failed"},
-		{PolicyStop, "", 1, 0, "test 'test with error 11' error: failed"},
-		{PolicyContinue, "", 6, 0, "some steps failed"},
-		{PolicySkipFile, "fail3.yaml", 3, 2, "test 'test with error 31' error: failed"},
-		{PolicyStop, "fail3.yaml", 1, 0, "test 'test with error 31' error: failed"},
-		{PolicyContinue, "fail3.yaml", 3, 0, "some steps failed"},
+		{
+			policy:  PolicySkipFile,
+			total:   6,
+			result:  map[string]string{"fail1.yaml": "e", "fail2.yaml": "es", "fail3.yaml": "ess"},
+			wantErr: "some steps failed",
+		},
+		{
+			policy:  PolicyStop,
+			total:   1,
+			result:  map[string]string{"fail1.yaml": "e"},
+			wantErr: "test 'test with error 11' error: failed",
+		},
+		{
+			policy:  PolicyContinue,
+			total:   6,
+			result:  map[string]string{"fail1.yaml": "e", "fail2.yaml": "ee", "fail3.yaml": "eee"},
+			wantErr: "some steps failed",
+		},
+		{
+			policy:  PolicySkipFile,
+			postfix: "fail3.yaml",
+			total:   3,
+			result:  map[string]string{"fail3.yaml": "ess"},
+			wantErr: "test 'test with error 31' error: failed",
+		},
+		{
+			policy:  PolicyStop,
+			postfix: "fail3.yaml",
+			total:   1,
+			result:  map[string]string{"fail3.yaml": "e"},
+			wantErr: "test 'test with error 31' error: failed",
+		},
+		{
+			policy:  PolicyContinue,
+			postfix: "fail3.yaml",
+			total:   3,
+			result:  map[string]string{"fail3.yaml": "eee"},
+			wantErr: "some steps failed",
+		},
 	}
-
 	for _, tt := range testCases {
 		t.Run(string(tt.policy), func(t *testing.T) {
-			obj := &statusServer{}
+			obj := newStatusServer()
 			srv := httptest.NewServer(obj)
 			defer srv.Close()
 
@@ -284,7 +340,65 @@ func Test_on_fail_policy(t *testing.T) {
 			require.Error(t, err)
 			require.Equal(t, tt.wantErr, err.Error())
 			require.Equal(t, tt.total, obj.totalTests, "total number of test is different")
-			require.Equal(t, tt.skipped, obj.skippedTests, "skipped number of test is different")
+			require.Equal(t, tt.result, obj.output, "result of tests is different")
+		})
+	}
+}
+
+func Test_on_fail_policy_with_critical_error(t *testing.T) {
+	testCases := []struct {
+		policy  OnFailPolicy
+		postfix string
+		wantErr string
+	}{
+		{
+			policy:  PolicySkipFile,
+			wantErr: "test 'test with error 11' error: Get \"aaaa/endpoint\": unsupported protocol scheme \"\"",
+		},
+		{
+			policy:  PolicyStop,
+			wantErr: "test 'test with error 11' error: Get \"aaaa/endpoint\": unsupported protocol scheme \"\"",
+		},
+		{
+			policy:  PolicyContinue,
+			wantErr: "test 'test with error 11' error: Get \"aaaa/endpoint\": unsupported protocol scheme \"\"",
+		},
+		{
+			policy:  PolicySkipFile,
+			postfix: "fail3.yaml",
+			wantErr: "test 'test with error 31' error: Get \"aaaa/endpoint\": unsupported protocol scheme \"\"",
+		},
+		{
+			policy:  PolicyStop,
+			postfix: "fail3.yaml",
+			wantErr: "test 'test with error 31' error: Get \"aaaa/endpoint\": unsupported protocol scheme \"\"",
+		},
+		{
+			policy:  PolicyContinue,
+			postfix: "fail3.yaml",
+			wantErr: "test 'test with error 31' error: Get \"aaaa/endpoint\": unsupported protocol scheme \"\"",
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(string(tt.policy), func(t *testing.T) {
+			obj := newStatusServer()
+
+			yamlLoader := yaml_file.NewLoader("testdata/on-fail-policy/" + tt.postfix)
+			runner := New(
+				yamlLoader,
+				&RunnerOpts{
+					Host:         "aaaa",
+					OnFailPolicy: tt.policy,
+				},
+			)
+
+			runner.AddOutput(obj)
+
+			err := runner.Run()
+			require.Error(t, err)
+			assert.Equal(t, tt.wantErr, err.Error())
+			assert.Equal(t, 1, obj.totalTests, "total number of test is different")
+			assert.Equal(t, map[string]string{}, obj.output, "result of tests is different")
 		})
 	}
 }
