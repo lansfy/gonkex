@@ -11,13 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const requestOriginal = `{"reqParam": "{{ $reqParam }}"}`
-const requestApplied = `{"reqParam": "reqParam_value"}`
-
-const envFile = "testdata/test.env"
-
 func TestParse_EniromentVariables(t *testing.T) {
-	err := godotenv.Load(envFile)
+	err := godotenv.Load("testdata/test.env")
 	require.NoError(t, err)
 
 	tests, err := parseTestDefinitionFile("testdata/variables-enviroment.yaml")
@@ -78,7 +73,7 @@ func checkOriginal(t *testing.T, test models.TestInterface, combined bool) {
 	t.Helper()
 
 	req := test.GetRequest()
-	assert.Equal(t, requestOriginal, req)
+	assert.Equal(t, `{"reqParam": "{{ $reqParam }}"}`, req)
 
 	assert.Equal(t, "{{ $method }}", test.GetMethod())
 	assert.Equal(t, "/some/path/{{ $pathPart }}", test.Path())
@@ -104,7 +99,7 @@ func checkApplied(t *testing.T, test models.TestInterface, combined bool) {
 	t.Helper()
 
 	req := test.GetRequest()
-	assert.Equal(t, requestApplied, req)
+	assert.Equal(t, `{"reqParam": "reqParam_value"}`, req)
 
 	assert.Equal(t, "POST", test.GetMethod())
 	assert.Equal(t, "/some/path/part_of_path", test.Path())
