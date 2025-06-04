@@ -1,11 +1,15 @@
 package yaml_file
 
 import (
-	"os"
+	"io/fs"
+	"path/filepath"
 	"strings"
 
 	"github.com/lansfy/gonkex/models"
+	"github.com/lansfy/gonkex/testloader"
 )
+
+var _ testloader.LoaderInterface = (*YamlInMemoryLoader)(nil)
 
 type YamlFileLoader struct {
 	testsLocation string
@@ -19,65 +23,33 @@ func NewLoader(testsLocation string) *YamlFileLoader {
 }
 
 func (l *YamlFileLoader) Load() ([]models.TestInterface, error) {
-	fileTests, err := l.parseTestsWithCases(l.testsLocation)
-	if err != nil {
-		return nil, err
-	}
+	var tests []models.TestInterface
+	err := filepath.WalkDir(l.testsLocation, func(relpath string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
 
-	ret := make([]models.TestInterface, len(fileTests))
-	for i := range fileTests {
-		test := fileTests[i]
-		ret[i] = &test
-	}
+		if d.IsDir() || !isYmlFile(relpath) || !l.fitsFilter(relpath) {
+			return nil
+		}
 
-	return ret, nil
+		moreTests, err := parseTestDefinitionFile(relpath)
+		if err != nil {
+			return err
+		}
+
+		for i := range moreTests {
+			tests = append(tests, &moreTests[i])
+		}
+
+		return nil
+	})
+
+	return tests, err
 }
 
 func (l *YamlFileLoader) SetFileFilter(f string) {
 	l.fileFilter = f
-}
-
-func (l *YamlFileLoader) parseTestsWithCases(path string) ([]Test, error) {
-	stat, err := os.Stat(path)
-	if err != nil {
-		return nil, err
-	}
-
-	return l.lookupPath(path, stat)
-}
-
-// lookupPath recursively walks over the directory and parses YML files it finds
-func (l *YamlFileLoader) lookupPath(path string, fi os.FileInfo) ([]Test, error) {
-	if !fi.IsDir() {
-		if !l.fitsFilter(path) {
-			return []Test{}, nil
-		}
-
-		return parseTestDefinitionFile(path)
-	}
-	files, err := os.ReadDir(path)
-	if err != nil {
-		return nil, err
-	}
-	var tests []Test
-	for _, entry := range files {
-		if !entry.IsDir() && !isYmlFile(entry.Name()) {
-			continue
-		}
-
-		fi, err := entry.Info()
-		if err != nil {
-			return nil, err
-		}
-
-		moreTests, err := l.lookupPath(path+"/"+fi.Name(), fi)
-		if err != nil {
-			return nil, err
-		}
-		tests = append(tests, moreTests...)
-	}
-
-	return tests, nil
 }
 
 func (l *YamlFileLoader) fitsFilter(fileName string) bool {
