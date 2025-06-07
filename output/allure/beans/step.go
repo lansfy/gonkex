@@ -16,29 +16,23 @@ type Step struct {
 }
 
 func NewStep(name string, start time.Time) *Step {
-	test := new(Step)
-	test.Name = name
-
-	if !start.IsZero() {
-		test.Start = start.UnixNano() / 1000
-	} else {
-		test.Start = time.Now().UnixNano() / 1000
+	return &Step{
+		Name:  name,
+		Start: microSeconds(start),
 	}
-
-	return test
 }
 
 func (s *Step) End(status string, end time.Time) {
-	if !end.IsZero() {
-		s.Stop = end.UnixNano() / 1000
-	} else {
-		s.Stop = time.Now().UnixNano() / 1000
-	}
 	s.Status = status
+	s.Stop = microSeconds(end)
 }
 
 func (s *Step) AddStep(step *Step) {
 	if step != nil {
 		s.Steps = append(s.Steps, step)
 	}
+}
+
+func microSeconds(t time.Time) int64 {
+	return t.UnixNano() / 1000
 }

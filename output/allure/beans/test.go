@@ -26,23 +26,11 @@ type TestCase struct {
 	} `xml:"failure,omitempty"`
 }
 
-type Label struct {
-	Name  string `xml:"name,attr"`
-	Value string `xml:"value,attr"`
-}
-
-// start new test case
 func NewTestCase(name string, start time.Time) *TestCase {
-	test := new(TestCase)
-	test.Name = name
-
-	if !start.IsZero() {
-		test.Start = start.UnixNano() / 1000
-	} else {
-		test.Start = time.Now().UnixNano() / 1000
+	return &TestCase{
+		Name:  name,
+		Start: microSeconds(start),
 	}
-
-	return test
 }
 
 func (t *TestCase) SetDescription(desc string) {
@@ -50,10 +38,7 @@ func (t *TestCase) SetDescription(desc string) {
 }
 
 func (t *TestCase) AddLabel(name, value string) {
-	t.addLabel(&Label{
-		Name:  name,
-		Value: value,
-	})
+	t.Labels.Label = append(t.Labels.Label, NewLabel(name, value))
 }
 
 func (t *TestCase) AddStep(step *Step) {
@@ -65,19 +50,11 @@ func (t *TestCase) AddAttachment(attach *Attachment) {
 }
 
 func (t *TestCase) End(status string, err error, end time.Time) {
-	if !end.IsZero() {
-		t.Stop = end.UnixNano() / 1000
-	} else {
-		t.Stop = time.Now().UnixNano() / 1000
-	}
 	t.Status = status
+	t.Stop = microSeconds(end)
 	if err != nil {
 		msg := strings.Split(err.Error(), "\trace")
 		t.Failure.Msg = msg[0]
 		t.Failure.Trace = strings.Join(msg[1:], "\n")
 	}
-}
-
-func (t *TestCase) addLabel(label *Label) {
-	t.Labels.Label = append(t.Labels.Label, label)
 }

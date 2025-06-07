@@ -1,0 +1,22 @@
+<ns2:test-suite xmlns:ns2="urn:model.allure.qatools.yandex.ru" start="1100" stop="1400">
+  <name>testset1</name>
+  <title>testset1</title>
+  <test-cases>
+    <test-case status="failed" start="1200" stop="1300">
+      <name>WHEN the list of orders is requested service MUST return selected order</name>
+      <steps></steps>
+      <labels>
+        <label name="story" value="/test/1/path"></label>
+      </labels>
+      <attachments>
+        <attachment title="Request" type="text/plain" size="38" source="[uuid2]-attachment.txt"></attachment>
+        <attachment title="Response" type="text/plain" size="15" source="[uuid3]-attachment.txt"></attachment>
+      </attachments>
+      <description>No description</description>
+      <failure>
+        <message>some error1&#xA;</message>
+        <stack-trace></stack-trace>
+      </failure>
+    </test-case>
+  </test-cases>
+</ns2:test-suite>
