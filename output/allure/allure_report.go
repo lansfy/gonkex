@@ -3,37 +3,35 @@ package allure
 import (
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/lansfy/gonkex/models"
 )
 
 type Output struct {
-	reportLocation string
-	allure         Allure
+	location string
+	allure   Allure
 }
 
-func NewOutput(suiteName, reportLocation string) (*Output, error) {
-	resultsDir, err := filepath.Abs(reportLocation)
+func NewOutput(suiteName, location string) (*Output, error) {
+	resultsDir, err := filepath.Abs(location)
 	if err != nil {
 		return nil, err
 	}
-	err = os.Mkdir(resultsDir, 0o777)
+
+	err = mkDir(resultsDir, 0o777)
 	if err != nil {
 		return nil, err
 	}
 
 	a := Allure{
-		Suites:    nil,
-		TargetDir: resultsDir,
+		TargetDir: location,
 	}
-	a.StartSuite(suiteName, time.Now())
+	a.StartSuite(suiteName, timeNow())
 
 	return &Output{
-		reportLocation: reportLocation,
-		allure:         a,
+		location: resultsDir,
+		allure:   a,
 	}, nil
 }
 
@@ -43,7 +41,7 @@ func (o *Output) Process(t models.TestInterface, result *models.Result) error {
 		description = "No description"
 	}
 
-	testCase := o.allure.StartCase(t.GetName(), time.Now())
+	testCase := o.allure.StartCase(t.GetName(), timeNow())
 	testCase.SetDescription(description)
 	testCase.AddLabel("story", result.Path)
 
@@ -58,12 +56,12 @@ func (o *Output) Process(t models.TestInterface, result *models.Result) error {
 	}
 
 	status, err := getAllureStatus(result)
-	o.allure.EndCase(status, err, time.Now())
+	o.allure.EndCase(status, err, timeNow())
 	return nil
 }
 
 func (o *Output) Finalize() error {
-	return o.allure.EndSuite(time.Now())
+	return o.allure.EndSuite(timeNow())
 }
 
 func notRunnedStatus(status models.Status) bool {

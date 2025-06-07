@@ -42,6 +42,16 @@ func (a *Allure) EndSuite(end time.Time) error {
 	return nil
 }
 
+// redefined in tests
+var (
+	writeFile  = os.WriteFile
+	mkDir      = os.Mkdir
+	timeNow    = time.Now
+	createUUID = func() string {
+		return uuid.New().String()
+	}
+)
+
 var (
 	currentState = map[*beans.Suite]*beans.TestCase{}
 	currentStep  = map[*beans.Suite]*beans.Step{}
@@ -68,11 +78,11 @@ func (a *Allure) EndCase(status string, err error, end time.Time) {
 
 func (a *Allure) CreateStep(name string, stepFunc func()) {
 	status := "passed"
-	a.StartStep(name, time.Now())
+	a.StartStep(name, timeNow())
 	// if test error
 	stepFunc()
 	// end
-	a.EndStep(status, time.Now())
+	a.EndStep(status, timeNow())
 }
 
 func (a *Allure) StartStep(stepName string, start time.Time) {
@@ -109,17 +119,17 @@ func (a *Allure) PendingCase(testName string, start time.Time) {
 }
 
 func writeAttachment(pathDir string, content string, ext string) (string, error) {
-	fileName := uuid.New().String() + "-attachment." + ext
-	err := os.WriteFile(filepath.Join(pathDir, fileName), []byte(content), 0o644)
+	fileName := createUUID() + "-attachment." + ext
+	err := writeFile(filepath.Join(pathDir, fileName), []byte(content), 0o644)
 	return fileName, err
 }
 
 func writeSuite(pathDir string, suite *beans.Suite) (string, error) {
-	fileName := uuid.New().String() + "-testsuite.xml"
-	b, err := xml.Marshal(suite)
+	fileName := createUUID() + "-testsuite.xml"
+	b, err := xml.MarshalIndent(suite, "", "  ")
 	if err != nil {
 		return fileName, err
 	}
-	err = os.WriteFile(filepath.Join(pathDir, fileName), b, 0o644)
+	err = writeFile(filepath.Join(pathDir, fileName), b, 0o644)
 	return fileName, err
 }

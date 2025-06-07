@@ -1,0 +1,23 @@
+- name: WHEN the list of orders is requested service MUST return selected order
+  method: GET
+  path: /jsonrpc/v2/order.getBriefList
+  query: ?id=11111111-1111-1111-1111-aaaaaaaaaaaa&jsonrpc=2.0&user_id=00001
+
+  fixtures:
+    - order_0001
+
+  response:
+    200: |
+      {
+        "id": "11111111-1111-1111-1111-aaaaaaaaaaaa",
+        "jsonrpc": "2.0"
+      }
+
+- name: WHEN order information is requested, service MUST return valid order data
+  method: GET
+  path: /api/orders/12345
+  response:
+    200: >
+      {
+        "order_id": "$matchRegexp(^\\d{5,7}$)"
+      }

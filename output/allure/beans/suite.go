@@ -20,29 +20,17 @@ type Suite struct {
 }
 
 func NewSuite(name string, start time.Time) *Suite {
-	s := new(Suite)
-
-	s.NsAttr = NsModel
-	s.Name = name
-	s.Title = name
-
-	if !start.IsZero() {
-		s.Start = start.UTC().UnixNano() / 1000
-	} else {
-		s.Start = time.Now().UTC().UnixNano() / 1000
+	return &Suite{
+		NsAttr: NsModel,
+		Name:   name,
+		Title:  name,
+		Start:  microSeconds(start),
 	}
-
-	return s
 }
 
 // SetEnd set end time for suite
 func (s *Suite) SetEnd(endTime time.Time) {
-	if !endTime.IsZero() {
-		// strict UTC
-		s.End = endTime.UTC().UnixNano() / 1000
-	} else {
-		s.End = time.Now().UTC().UnixNano() / 1000
-	}
+	s.End = microSeconds(endTime)
 }
 
 // suite has test-cases?
