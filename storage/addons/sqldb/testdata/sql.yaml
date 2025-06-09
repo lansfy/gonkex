@@ -12,3 +12,4 @@ tables:
       field5:
         - 1
         - '2'
+    - field1: $eval(NOW())
