@@ -1,0 +1,13 @@
+table1:
+- f1: value1
+  f2: value2
+table2:
+- f1: value1 overwritten
+  f2: value2
+  f3: RAW="1" || "2" || 3 + 5
+table3:
+- f1: value1 overwritten
+  f2: value2
+  f3: RAW="1" || "2" || 3 + 5
+- f1: tplVal1
+  f2: tplVal2

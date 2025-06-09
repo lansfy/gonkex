@@ -41,24 +41,9 @@ type loadContext struct {
 }
 
 func LoadFixtures(dialect SQLType, db *sql.DB, location string, names []string) error {
-	ctx := &loadContext{
-		location:       location,
-		files:          map[string]bool{},
-		refsDefinition: map[string]tableRow{},
-		refsInserted:   map[string]tableRow{},
-	}
-
-	// gather data from files
-	for _, name := range names {
-		err := ctx.loadFile(name)
-		if err != nil {
-			return fmt.Errorf("parse file for fixture %q: %w", name, err)
-		}
-	}
-
-	data, err := ctx.generateTestFixtures()
+	data, err := convertToTestFixtures(location, names)
 	if err != nil {
-		return fmt.Errorf("generate global fixtures: %w", err)
+		return err
 	}
 
 	fixtures, err := testfixtures.New(
@@ -74,6 +59,30 @@ func LoadFixtures(dialect SQLType, db *sql.DB, location string, names []string) 
 		return err
 	}
 	return fixtures.Load()
+}
+
+func convertToTestFixtures(location string, names []string) ([]byte, error) {
+	ctx := &loadContext{
+		location:       location,
+		files:          map[string]bool{},
+		refsDefinition: map[string]tableRow{},
+		refsInserted:   map[string]tableRow{},
+	}
+
+	// gather data from files
+	for _, name := range names {
+		err := ctx.loadFile(name)
+		if err != nil {
+			return nil, fmt.Errorf("parse file for fixture %q: %w", name, err)
+		}
+	}
+
+	data, err := ctx.generateTestFixtures()
+	if err != nil {
+		return nil, fmt.Errorf("generate global fixtures: %w", err)
+	}
+
+	return data, nil
 }
 
 func findFixturePath(location, name string) (string, error) {
@@ -186,7 +195,7 @@ func (ctx *loadContext) generateTestFixtures() ([]byte, error) {
 	for _, lt := range ctx.tables {
 		items, err := ctx.processTableContent(lt.rows)
 		if err != nil {
-			return nil, fmt.Errorf("processing table %s: %w", lt.name, err)
+			return nil, fmt.Errorf("processing table '%s': %w", lt.name, err)
 		}
 		// append rows to global tables
 		found := false
@@ -243,7 +252,7 @@ func (ctx *loadContext) processTableContent(rows table) ([]yaml.MapSlice, error)
 
 	items := []yaml.MapSlice{}
 	for _, row := range rows {
-		values, err := loadRow(row)
+		values, err := ctx.loadRow(row)
 		if err != nil {
 			return nil, err
 		}
@@ -252,7 +261,7 @@ func (ctx *loadContext) processTableContent(rows table) ([]yaml.MapSlice, error)
 	return items, nil
 }
 
-func loadRow(row tableRow) (yaml.MapSlice, error) {
+func (ctx *loadContext) loadRow(row tableRow) (yaml.MapSlice, error) {
 	fields := make([]string, 0, len(row))
 	for name := range row {
 		if !strings.HasPrefix(name, "$") {
@@ -262,9 +271,10 @@ func loadRow(row tableRow) (yaml.MapSlice, error) {
 
 	sort.Strings(fields)
 
+	rowValues := tableRow{}
 	values := yaml.MapSlice{}
 	for _, name := range fields {
-		val, err := resolveExpression(row[name])
+		val, err := ctx.resolveExpression(row[name])
 		if err != nil {
 			return values, err
 		}
@@ -272,35 +282,52 @@ func loadRow(row tableRow) (yaml.MapSlice, error) {
 			Key:   name,
 			Value: val,
 		})
+		rowValues[name] = val
 	}
+
+	if name, ok := row["$name"]; ok {
+		name := name.(string)
+		if _, ok := ctx.refsDefinition[name]; ok {
+			return nil, fmt.Errorf("duplicating ref name %s", name)
+		}
+		// add to references
+		ctx.refsDefinition[name] = row
+		ctx.refsInserted[name] = rowValues
+	}
+
 	return values, nil
 }
 
 // resolveExpression converts expressions starting with dollar sign into a value
 // supporting expressions:
-// $eval() - executes an SQL expression, e.g. $eval(CURRENT_DATE)
-func resolveExpression(value interface{}) (interface{}, error) {
+// - $eval()               - executes an SQL expression, e.g. $eval(CURRENT_DATE)
+// - $recordName.fieldName - using value of previously inserted named record
+func (ctx *loadContext) resolveExpression(value interface{}) (interface{}, error) {
 	expr, ok := value.(string)
 	if !ok || !strings.HasPrefix(expr, "$") {
 		return value, nil
 	}
 
-	if !strings.HasPrefix(expr, actionEval+"(") {
-		return "", fmt.Errorf("incorrect $ prefix: %s", expr)
+	if strings.HasPrefix(expr, actionEval+"(") {
+		if !strings.HasSuffix(expr, ")") {
+			return "", fmt.Errorf("incorrect %s() usage: %s", actionEval, expr)
+		}
+		return "RAW=" + expr[len(actionEval)+1:len(expr)-1], nil
 	}
 
-	if !strings.HasSuffix(expr, ")") {
-		return "", fmt.Errorf("incorrect %s() usage: %s", actionEval, expr)
+	value, err := resolveFieldReference(ctx.refsInserted, expr)
+	if err != nil {
+		return "", err
 	}
 
-	return "RAW=" + expr[len(actionEval)+1:len(expr)-1], nil
+	return value, nil
 }
 
 // resolveReference finds previously stored reference by its name
 func resolveReference(refs map[string]tableRow, refName string) (tableRow, error) {
 	target, ok := refs[refName]
 	if !ok {
-		return nil, fmt.Errorf("undefined reference %s", refName)
+		return nil, fmt.Errorf("undefined reference '%s'", refName)
 	}
 	// make a copy of referencing data to prevent spoiling the source
 	// by the way removing $-records from base row
@@ -312,4 +339,27 @@ func resolveReference(refs map[string]tableRow, refName string) (tableRow, error
 	}
 
 	return targetCopy, nil
+}
+
+// resolveFieldReference finds previously stored reference by name
+// and return value of its field
+func resolveFieldReference(refs map[string]tableRow, ref string) (interface{}, error) {
+	parts := strings.SplitN(ref, ".", 2)
+	if len(parts) < 2 || len(parts[0]) < 2 || len(parts[1]) < 1 {
+		return nil, fmt.Errorf("invalid reference '%s', correct form is '$refName.field'", ref)
+	}
+
+	// remove leading $
+	refName := parts[0][1:]
+	target, ok := refs[refName]
+	if !ok {
+		return nil, fmt.Errorf("undefined reference '%s' in '%s'", refName, ref)
+	}
+
+	value, ok := target[parts[1]]
+	if !ok {
+		return nil, fmt.Errorf("undefined reference field '%s'", parts[1])
+	}
+
+	return value, nil
 }
