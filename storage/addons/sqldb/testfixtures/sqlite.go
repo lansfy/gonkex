@@ -13,7 +13,7 @@ func (*sqlite) paramType() int {
 	return paramTypeQuestion
 }
 
-func (*sqlite) databaseName(q queryable) (string, error) {
+func (*sqlite) databaseName(q Queryable) (string, error) {
 	var seq int
 	var main, dbName string
 	err := q.QueryRow("PRAGMA database_list").Scan(&seq, &main, &dbName)
@@ -24,7 +24,7 @@ func (*sqlite) databaseName(q queryable) (string, error) {
 	return dbName, nil
 }
 
-func (*sqlite) tableNames(q queryable) ([]string, error) {
+func (*sqlite) tableNames(q Queryable) ([]string, error) {
 	query := `
 		SELECT name
 		FROM sqlite_master
@@ -34,7 +34,9 @@ func (*sqlite) tableNames(q queryable) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	var tables []string
 	for rows.Next() {
