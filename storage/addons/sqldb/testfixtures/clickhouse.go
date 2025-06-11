@@ -25,13 +25,13 @@ func (*clickhouse) paramType() int {
 	return paramTypeDollar
 }
 
-func (*clickhouse) databaseName(q queryable) (string, error) {
+func (*clickhouse) databaseName(q Queryable) (string, error) {
 	var dbName string
 	err := q.QueryRow("SELECT DATABASE()").Scan(&dbName)
 	return dbName, err
 }
 
-func (h *clickhouse) tableNames(q queryable) ([]string, error) {
+func (h *clickhouse) tableNames(q Queryable) ([]string, error) {
 	query := `
 		SELECT name
 		FROM system.tables
