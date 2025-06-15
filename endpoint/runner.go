@@ -11,7 +11,7 @@ import (
 	"github.com/tidwall/match"
 )
 
-func runEndpoint(path string, services *mocks.Mocks, e Endpoint, req *http.Request) (*http.Response, error) {
+func runEndpoint(e Endpoint, path string, req *http.Request, services *mocks.Mocks, meta MetaProvider) (*http.Response, error) {
 	requestBytes, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, err
@@ -19,7 +19,7 @@ func runEndpoint(path string, services *mocks.Mocks, e Endpoint, req *http.Reque
 
 	_ = req.Body.Close()
 
-	helper := newHelper(path, requestBytes, services)
+	helper := newHelper(path, requestBytes, services, meta)
 	err = e(helper)
 	if err != nil {
 		var data struct {
@@ -32,13 +32,14 @@ func runEndpoint(path string, services *mocks.Mocks, e Endpoint, req *http.Reque
 	return helper.createHTTPResponse(), nil
 }
 
-func SelectEndpoint(services *mocks.Mocks, m EndpointMap, path string, req *http.Request) (*http.Response, error) {
+func SelectEndpoint(m EndpointMap, path string, req *http.Request,
+	services *mocks.Mocks, meta MetaProvider) (*http.Response, error) {
 	path = path[len(Prefix):]
 	for name, endpoint := range m {
 		if !match.Match(path, name) {
 			continue
 		}
-		return runEndpoint(path, services, endpoint, req)
+		return runEndpoint(endpoint, path, req, services, meta)
 	}
 	available := []string{}
 	for name := range m {
