@@ -187,7 +187,7 @@ func makeServiceRequest(config *RunnerOpts, v models.TestInterface) (*models.Res
 
 	var resp *http.Response
 	if strings.HasPrefix(req.URL.Path, endpoint.Prefix) {
-		resp, err = endpoint.SelectEndpoint(config.Mocks, config.HelperEndpoints, req.URL.Path, req) //nolint:bodyclose // false positive
+		resp, err = endpoint.SelectEndpoint(config.HelperEndpoints, req.URL.Path, req, config.Mocks, v) //nolint:bodyclose // false positive
 	} else {
 		resp, err = config.CustomClient.Do(req) //nolint:bodyclose // false positive
 	}

@@ -10,6 +10,7 @@ type Helper interface {
 	GetRequestAsBytes() ([]byte, error)
 
 	GetMockAddr(name string) string
+	GetMeta(key string) interface{}
 
 	SetResponseAsJson(response interface{}) error
 	SetResponseAsYaml(response interface{}) error

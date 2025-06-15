@@ -12,6 +12,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type MetaProvider interface {
+	GetMeta(key string) interface{}
+}
+
 type helperImpl struct {
 	path          string
 	requestBytes  []byte
@@ -19,15 +23,17 @@ type helperImpl struct {
 	responseCode  int
 	contentType   string
 	services      *mocks.Mocks
+	provider      MetaProvider
 }
 
-func newHelper(path string, requestBytes []byte, services *mocks.Mocks) *helperImpl {
+func newHelper(path string, requestBytes []byte, services *mocks.Mocks, provider MetaProvider) *helperImpl {
 	return &helperImpl{
 		path:         path,
 		requestBytes: requestBytes,
 		responseCode: http.StatusNoContent,
 		contentType:  "application/json",
 		services:     services,
+		provider:     provider,
 	}
 }
 
@@ -71,6 +77,10 @@ func (h *helperImpl) GetMockAddr(name string) string {
 		panic(fmt.Sprintf("mock with name %q not exists", name))
 	}
 	return "http://" + h.services.Service(name).ServerAddr()
+}
+
+func (h *helperImpl) GetMeta(key string) interface{} {
+	return h.provider.GetMeta(key)
 }
 
 // SetResponseAsJson marshals the provided object into JSON and stores it as the response.
