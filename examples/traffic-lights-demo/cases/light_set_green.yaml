@@ -1,9 +1,9 @@
-- name: WHEN set is requested MUST return no response
+- name: WHEN set of green light is requested MUST return success response
   method: POST
   path: /light/set
   request: >
     {
-        "currentLight": "green"
+       "currentLight": "green"
     }
   response:
     200: ''
@@ -14,5 +14,5 @@
   response:
     200: >
         {
-            "currentLight": "green"
+           "currentLight": "green"
         }

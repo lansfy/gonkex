@@ -1,0 +1,18 @@
+- name: WHEN set of yellow light is requested MUST return success response
+  method: POST
+  path: /light/set
+  request: >
+    {
+       "currentLight": "yellow"
+    }
+  response:
+    200: ''
+
+- name: WHEN get is requested MUST return yellow
+  method: GET
+  path: /light/get
+  response:
+    200: >
+        {
+           "currentLight": "yellow"
+        }
