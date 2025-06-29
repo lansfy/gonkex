@@ -1,0 +1,9 @@
+# gonkex sort test in alphabetical order, so it will run this test first
+- name: WHEN server started it MUST return red color by default
+  method: GET
+  path: /light/get
+  response:
+    200: >
+      {
+         "currentLight": "red"
+      }

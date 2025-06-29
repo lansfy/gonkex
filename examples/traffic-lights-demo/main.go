@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"sync"
@@ -16,19 +15,19 @@ const (
 	lightGreen  = "green"
 )
 
-type data struct {
+type trafficLights struct {
 	CurrentLight string `json:"currentLight"`
 }
 
 // structure for storing traffic light status
-type trafficLights struct {
-	data
+type serverState struct {
+	trafficLights
 	mutex sync.RWMutex
 }
 
 // traffic light instance
-var lights = trafficLights{
-	data: data{
+var lights = serverState{
+	trafficLights: trafficLights{
 		CurrentLight: lightRed,
 	},
 }
@@ -40,51 +39,50 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func initServer() {
-	// method for obtaining the current state of the traffic light
-	http.HandleFunc("/light/get", func(w http.ResponseWriter, r *http.Request) {
-		lights.mutex.RLock()
-		defer lights.mutex.RUnlock()
+// handlerGetLight used for obtaining the current state of the traffic light
+func handlerGetLight(w http.ResponseWriter, r *http.Request) {
+	lights.mutex.RLock()
+	defer lights.mutex.RUnlock()
 
-		resp, err := json.Marshal(lights.data)
-		if err != nil {
-			log.Fatal(err)
-		}
+	w.Header().Add("Content-Type", "application/json")
+	resp, _ := json.Marshal(lights.trafficLights)
+	_, _ = w.Write(resp)
+}
 
-		w.Header().Add("Content-Type", "application/json")
-		_, _ = w.Write(resp)
-	})
+// handlerSetLight used for setting a new traffic light state
+func handlerSetLight(w http.ResponseWriter, r *http.Request) {
+	lights.mutex.Lock()
+	defer lights.mutex.Unlock()
 
-	// method for setting a new traffic light state
-	http.HandleFunc("/light/set", func(w http.ResponseWriter, r *http.Request) {
-		lights.mutex.Lock()
-		defer lights.mutex.Unlock()
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
 
-		request, err := io.ReadAll(r.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
+	var newTrafficLights trafficLights
+	err := decoder.Decode(&newTrafficLights)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-		var newTrafficLights trafficLights
-		if err := json.Unmarshal(request, &newTrafficLights); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+	err = validateRequest(&newTrafficLights)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-		if err := validateRequest(&newTrafficLights); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		lights.CurrentLight = newTrafficLights.CurrentLight
-	})
+	lights.CurrentLight = newTrafficLights.CurrentLight
 }
 
 func validateRequest(lights *trafficLights) error {
-	if lights.CurrentLight != lightRed &&
-		lights.CurrentLight != lightYellow &&
-		lights.CurrentLight != lightGreen {
-		return fmt.Errorf("incorrect current light: %s", lights.CurrentLight)
+	switch lights.CurrentLight {
+	case lightRed, lightYellow, lightGreen:
+		return nil
+	default:
+		return fmt.Errorf("incorrect current light: '%s'", lights.CurrentLight)
 	}
-	return nil
+}
+
+func initServer() {
+	http.HandleFunc("/light/get", handlerGetLight)
+	http.HandleFunc("/light/set", handlerSetLight)
 }
