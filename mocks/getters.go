@@ -72,24 +72,27 @@ func getOptionalIntKey(def map[interface{}]interface{}, name string, defaultValu
 }
 
 func loadHeaders(def map[interface{}]interface{}) (map[string]string, error) {
-	var headers map[string]string
-	if h, ok := def["headers"]; ok {
-		hMap, ok := h.(map[interface{}]interface{})
+	h, ok := def["headers"]
+	if !ok {
+		return nil, nil
+	}
+
+	hMap, ok := h.(map[interface{}]interface{})
+	if !ok {
+		return nil, errors.New("map under 'headers' key required")
+	}
+
+	headers := map[string]string{}
+	for k, v := range hMap {
+		key, ok := k.(string)
 		if !ok {
-			return nil, errors.New("'headers' must be a map")
+			return nil, errors.New("'headers' requires string keys")
 		}
-		headers = make(map[string]string, len(hMap))
-		for k, v := range hMap {
-			key, ok := k.(string)
-			if !ok {
-				return nil, errors.New("'headers' requires string keys")
-			}
-			value, ok := v.(string)
-			if !ok {
-				return nil, errors.New("'headers' requires string values")
-			}
-			headers[key] = value
+		value, ok := v.(string)
+		if !ok {
+			return nil, errors.New("'headers' requires string values")
 		}
+		headers[key] = value
 	}
 	return headers, nil
 }

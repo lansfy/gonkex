@@ -9,19 +9,19 @@ import (
 
 func (l *loaderImpl) loadSequenceReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
 	if _, ok := def["sequence"]; !ok {
-		return nil, errors.New("`sequence` key required")
+		return nil, errors.New("'sequence' key required")
 	}
 	seqSlice, ok := def["sequence"].([]interface{})
 	if !ok {
-		return nil, errors.New("`sequence` must be a list")
+		return nil, errors.New("list under 'sequence' key required")
 	}
-	strategies := make([]*Definition, len(seqSlice))
+	strategies := []*Definition{}
 	for i, v := range seqSlice {
 		def, err := l.loadDefinition(path+"."+strconv.Itoa(i), v)
 		if err != nil {
 			return nil, err
 		}
-		strategies[i] = def
+		strategies = append(strategies, def)
 	}
 	return NewSequentialReply(strategies), nil
 }

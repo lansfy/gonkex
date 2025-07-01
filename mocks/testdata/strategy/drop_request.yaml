@@ -1,0 +1,11 @@
+- name: WHEN make request to dropRequest strategy request MUST fail with EOF error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: dropRequest
+  meta:
+    expected: |
+       Get "http://127.0.0.1:80/test/path": EOF

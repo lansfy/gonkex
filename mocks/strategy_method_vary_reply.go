@@ -8,25 +8,29 @@ import (
 )
 
 func (l *loaderImpl) loadMethodVaryStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
-	var methods map[string]*Definition
-	if u, ok := def["methods"]; ok {
-		methodsMap, ok := u.(map[interface{}]interface{})
-		if !ok {
-			return nil, errors.New("map under `methods` key required")
-		}
-		methods = make(map[string]*Definition, len(methodsMap))
-		for method, v := range methodsMap {
-			methodStr, ok := method.(string)
-			if !ok {
-				return nil, fmt.Errorf("under path %s method %v has non-string name", path, method)
-			}
-			def, err := l.loadDefinition(path+"."+methodStr, v)
-			if err != nil {
-				return nil, err
-			}
-			methods[methodStr] = def
-		}
+	u, ok := def["methods"]
+	if !ok {
+		return nil, errors.New("'methods' key required")
 	}
+
+	methodsMap, ok := u.(map[interface{}]interface{})
+	if !ok {
+		return nil, errors.New("map under 'methods' key required")
+	}
+
+	methods := map[string]*Definition{}
+	for method, v := range methodsMap {
+		methodStr, ok := method.(string)
+		if !ok {
+			return nil, fmt.Errorf("method '%v' has non-string name", method)
+		}
+		def, err := l.loadDefinition(path+"."+methodStr, v)
+		if err != nil {
+			return nil, err
+		}
+		methods[methodStr] = def
+	}
+
 	return NewMethodVaryReply(methods), nil
 }
 

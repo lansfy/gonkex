@@ -1,0 +1,95 @@
+- name: WHEN 'body' key absent in 'template' strategy load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: template
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'template': 'body' key required
+
+- name: WHEN 'statusCode' key has invalid value in 'template' strategy load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: template
+      body: ""
+      statusCode: invalid
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'template': value for key 'statusCode' cannot be converted to integer
+
+- name: WHEN 'headers' key has invalid value in 'template' strategy load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: template
+      body: ""
+      headers: []
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'template': map under 'headers' key required
+
+- name: WHEN 'template' strategy has invalid template strategy MUST fail with error
+  method: POST
+  path: /test/case
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: template
+      body: |
+        {
+          "value": "{{ .request.Query"
+        }
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'template': template syntax error: template: :2: bad character U+0022 '"'
+
+- name: WHEN strategy requires Json body, but body is plain strategy MUST fail with error
+  method: POST
+  path: /test/case
+  request: "plain content"
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: template
+      body: |
+        {
+          "data-from-body": "{{ .request.Json.data }}"
+        }
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': template mock error: template: :2:32: executing "" at <.request.Json.data>: error calling Json: failed to parse request as Json: invalid character 'p' looking for beginning of value
+
+- name: WHEN 'template' strategy has unknown key load definition MUST fail with error
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "data": "from_body"
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: template
+      invalid: invalid
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'template': unexpected key 'invalid' (allowed only [requestConstraints strategy calls order body statusCode headers])

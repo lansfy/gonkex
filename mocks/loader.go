@@ -58,13 +58,13 @@ func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definitio
 		if !ok || len(constraints) == 0 {
 			return nil, wrap(colorize.NewEntityError("%s requires array", "requestConstraints"))
 		}
-		requestConstraints = make([]verifier, len(constraints))
+		requestConstraints = []verifier{}
 		for i, c := range constraints {
 			constraint, err := loadConstraint(c)
 			if err != nil {
 				return nil, wrap(fmt.Errorf("unable to load constraint %d: %w", i+1, err))
 			}
-			requestConstraints[i] = constraint
+			requestConstraints = append(requestConstraints, constraint)
 		}
 	}
 

@@ -1,0 +1,75 @@
+- name: WHEN key 'methods' absent in methodVary strategy MUST fail with error
+  method: get
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: methodVary
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'methodVary': 'methods' key required
+
+- name: WHEN key 'methods' has wrong type in methodVary strategy MUST fail with error
+  method: get
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: methodVary
+      methods: []
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'methodVary': map under 'methods' key required
+
+- name: WHEN method name in 'methods' has wrong type in methodVary strategy MUST fail with error
+  method: get
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: methodVary
+      methods:
+        42:
+          strategy: constant
+          body: ""
+          statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'methodVary': method '42' has non-string name
+
+- name: WHEN parsing of methodVary internals fail parser MUST fail with error
+  method: get
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: methodVary
+      methods:
+        POST:
+          strategy: constant
+          statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'methodVary': strategy 'constant': 'body' key required
+
+- name: WHEN 'methodVary' strategy has unknown key load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: methodVary
+      invalid: invalid
+      methods:
+        POST:
+          strategy: constant
+          body: ""
+          statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'methodVary': unexpected key 'invalid' (allowed only [requestConstraints strategy calls order methods])

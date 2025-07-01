@@ -8,24 +8,27 @@ import (
 )
 
 func (l *loaderImpl) loadBasedOnRequestReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
-	var uris []*Definition
-	if u, ok := def["uris"]; ok {
-		urisList, ok := u.([]interface{})
+	u, ok := def["uris"]
+	if !ok {
+		return nil, errors.New("'uris' key required")
+	}
+
+	urisList, ok := u.([]interface{})
+	if !ok {
+		return nil, errors.New("list under 'uris' key required")
+	}
+
+	uris := []*Definition{}
+	for i, v := range urisList {
+		v, ok := v.(map[interface{}]interface{})
 		if !ok {
-			return nil, errors.New("list under `uris` key required")
+			return nil, errors.New("'uris' list item must be a map")
 		}
-		uris = make([]*Definition, 0, len(urisList))
-		for i, v := range urisList {
-			v, ok := v.(map[interface{}]interface{})
-			if !ok {
-				return nil, errors.New("`uris` list item must be a map")
-			}
-			def, err := l.loadDefinition(path+"."+strconv.Itoa(i), v)
-			if err != nil {
-				return nil, err
-			}
-			uris = append(uris, def)
+		def, err := l.loadDefinition(path+"."+strconv.Itoa(i), v)
+		if err != nil {
+			return nil, err
 		}
+		uris = append(uris, def)
 	}
 	return NewBasedOnRequestReply(uris), nil
 }

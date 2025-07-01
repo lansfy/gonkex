@@ -1,0 +1,70 @@
+- name: WHEN 'statusCode' key has invalid value in 'file' strategy load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: file
+      filename: "testdata/body.txt"
+      statusCode: invalid
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'file': value for key 'statusCode' cannot be converted to integer
+
+- name: WHEN 'headers' key has invalid value in 'file' strategy load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: file
+      filename: "testdata/body.txt"
+      headers: []
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'file': map under 'headers' key required
+
+- name: WHEN 'filename' key absent in 'file' strategy load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: file
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'file': 'filename' key required
+
+- name: WHEN 'filename' key has name of wrong file in 'file' strategy load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: file
+      filename: "testdata/invalid.txt"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'file': open testdata/invalid.txt: no such file or directory
+
+- name: WHEN 'file' strategy has unknown key load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: file
+      filename: "testdata/body.txt"
+      statusCode: 200
+      invalid: invalid
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'file': unexpected key 'invalid' (allowed only [requestConstraints strategy calls order filename statusCode headers])

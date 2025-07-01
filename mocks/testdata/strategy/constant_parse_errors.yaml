@@ -1,0 +1,56 @@
+- name: WHEN 'body' key absent in 'constant' strategy load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: constant
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'constant': 'body' key required
+
+- name: WHEN 'statusCode' key has invalid value in 'constant' strategy load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: constant
+      body: ""
+      statusCode: invalid
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'constant': value for key 'statusCode' cannot be converted to integer
+
+- name: WHEN 'headers' key has invalid value in 'constant' strategy load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: constant
+      body: ""
+      headers: []
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'constant': map under 'headers' key required
+
+- name: WHEN 'constant' strategy has unknown key load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: constant
+      body: ""
+      statusCode: 200
+      invalid: invalid
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'constant': unexpected key 'invalid' (allowed only [requestConstraints strategy calls order body statusCode headers])
