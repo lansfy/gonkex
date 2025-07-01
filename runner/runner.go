@@ -276,8 +276,8 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	// reset mocks
 	if r.config.Mocks != nil {
 		// prevent deriving the definition from previous test
-		r.config.Mocks.ResetDefinitions()
 		r.config.Mocks.ResetRunningContext()
+		r.config.Mocks.ResetDefinitions()
 	}
 
 	// load mocks

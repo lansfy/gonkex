@@ -12,7 +12,7 @@ var _ http.ResponseWriter = (*wrapResponseWriter)(nil)
 func createResponseWriterProxy(rw http.ResponseWriter) *wrapResponseWriter {
 	return &wrapResponseWriter{
 		statusCode: http.StatusOK,
-		headers:    make(http.Header),
+		headers:    http.Header{},
 		body:       &bytes.Buffer{},
 		writer:     rw,
 	}

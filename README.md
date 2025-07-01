@@ -1548,7 +1548,6 @@ Example:
           statusCode: 404
         POST:
           strategy: nop
-          statusCode: 204
     ...
 ```
 
@@ -1572,7 +1571,7 @@ Example:
       sequence:
         # Responds with a different text on each consequent request:
         # "1" for first call, "2" for second call and so on.
-        # For 5th and later calls response will be "404 Not Found" and fail the test case.
+        # For 5th and later calls response will be "200 OK" with empty body and fail the test case.
         - strategy: constant
           body: '1'
         - strategy: constant

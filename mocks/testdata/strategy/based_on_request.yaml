@@ -1,0 +1,64 @@
+- name: basedOnRequest strategy MUST select third response
+  method: GET
+  path: /request/step3
+  response:
+    203: ""
+  mocks:  &mocks
+    someservice:
+      strategy: basedOnRequest
+      uris:
+        - strategy: constant
+          requestConstraints:
+            - kind: pathMatches
+              path: /request/step1
+          body: ""
+          statusCode: 201
+        - strategy: constant
+          requestConstraints:
+            - kind: pathMatches
+              path: /request/step2
+          body: ""
+          statusCode: 202
+        - strategy: constant
+          requestConstraints:
+            - kind: pathMatches
+              path: /request/step3
+          body: ""
+          statusCode: 203
+
+- name: basedOnRequest strategy MUST select second response
+  method: GET
+  path: /request/step2
+  response:
+    202: ""
+  mocks: *mocks
+
+- name: basedOnRequest strategy MUST select first response
+  method: DELETE
+  path: /request/step1
+  response:
+    201: ""
+  mocks: *mocks
+
+- name: WHEN request does not fit on constraint basedOnRequest strategy MUST show error for all options
+  method: HEAD
+  path: /test/path
+  response:
+    200: ""
+  mocks: *mocks
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'pathMatches': url 'path' does not match expected:
+            expected: /request/step1
+              actual: /test/path
+       2) mock 'someservice': request constraint 'pathMatches': url 'path' does not match expected:
+            expected: /request/step2
+              actual: /test/path
+       3) mock 'someservice': request constraint 'pathMatches': url 'path' does not match expected:
+            expected: /request/step3
+              actual: /test/path
+       4) mock 'someservice': unhandled request to mock:
+       HEAD /test/path HTTP/1.1
+       Host: 127.0.0.1:80
+       Content-Type: application/json
+       User-Agent: Go-http-client/1.1

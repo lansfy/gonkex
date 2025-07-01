@@ -1,0 +1,93 @@
+- name: WHEN key 'methods' absent in uriVary strategy MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: uriVary
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'uriVary': 'uris' key required
+
+- name: WHEN key 'uris' has wrong type in uriVary strategy MUST fail with error
+  method: get
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: uriVary
+      uris: []
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'uriVary': map under 'uris' key required
+
+- name: WHEN uri in 'uris' has wrong type in uriVary strategy MUST fail with error
+  method: get
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: uriVary
+      uris:
+        42:
+          strategy: constant
+          body: ""
+          statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'uriVary': uri '42' has non-string name
+
+- name: WHEN parsing of uriVary internals fail parser MUST fail with error
+  method: get
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: uriVary
+      uris:
+        /test/path:
+          strategy: constant
+          statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'uriVary': strategy 'constant': 'body' key required
+
+- name: WHEN parsing of uriVary basePath fail parser MUST fail with error
+  method: get
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: uriVary
+      basePath: 42
+      uris:
+        /test/path:
+          strategy: constant
+          body: ""
+          statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'uriVary': key 'basePath' has non-string value
+
+- name: WHEN 'uriVary' strategy has unknown key load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: uriVary
+      invalid: invalid
+      uris:
+        /test/path:
+          strategy: constant
+          body: ""
+          statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'uriVary': unexpected key 'invalid' (allowed only [requestConstraints strategy calls order basePath uris])

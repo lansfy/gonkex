@@ -1,0 +1,8 @@
+- name: nop strategy MUST return 204 No content
+  method: GET
+  path: /test/path
+  response:
+    204: ""
+  mocks:
+    someservice:
+      strategy: nop

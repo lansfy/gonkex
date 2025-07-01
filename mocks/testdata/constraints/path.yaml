@@ -1,0 +1,23 @@
+- name: path constraint
+  method: POST
+  path: /test/path
+  request: >
+    {
+      "param": "value",
+      "otherparam": "value"
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: pathMatches
+          path: /test/otherpath
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'pathMatches': url 'path' does not match expected:
+            expected: /test/otherpath
+              actual: /test/path

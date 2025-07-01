@@ -1,0 +1,118 @@
+- name: uriVary strategy MUST select first path
+  method: GET
+  path: /v2/shelf/books
+  response:
+    200: ""
+  mocks: &mocks
+    someservice:
+      strategy: uriVary
+      uris:
+        /v2/shelf/books:
+          strategy: constant
+          body: ""
+          statusCode: 200
+        /v2/shelf/books/1:
+          strategy: constant
+          body: ""
+          statusCode: 201
+        /v2/shelf:
+          strategy: constant
+          body: ""
+          statusCode: 202
+
+- name: uriVary strategy MUST select second path
+  method: GET
+  path: /v2/shelf/books/1
+  response:
+    201: ""
+  mocks: *mocks
+
+- name: uriVary strategy MUST select third path
+  method: GET
+  path: /v2/shelf
+  response:
+    202: ""
+  mocks: *mocks
+
+- name: uriVary strategy MUST fail on unknown path
+  method: GET
+  path: /v2
+  response:
+    200: ""
+  mocks: *mocks
+  meta:
+    expected: |
+       1) mock 'someservice': unhandled request to mock:
+       GET /v2 HTTP/1.1
+       Host: 127.0.0.1:80
+       Accept-Encoding: gzip
+       Content-Type: application/json
+       User-Agent: Go-http-client/1.1
+
+- name: uriVary strategy MUST fail on known path with slash
+  method: GET
+  path: /v2/shelf/
+  response:
+    200: ""
+  mocks: *mocks
+  meta:
+    expected: |
+       1) mock 'someservice': unhandled request to mock:
+       GET /v2/shelf/ HTTP/1.1
+       Host: 127.0.0.1:80
+       Accept-Encoding: gzip
+       Content-Type: application/json
+       User-Agent: Go-http-client/1.1
+
+- name: uriVary strategy MUST be case-sensitive
+  method: GET
+  path: /v2/SHELF
+  response:
+    200: ""
+  mocks: *mocks
+  meta:
+    expected: |
+       1) mock 'someservice': unhandled request to mock:
+       GET /v2/SHELF HTTP/1.1
+       Host: 127.0.0.1:80
+       Accept-Encoding: gzip
+       Content-Type: application/json
+       User-Agent: Go-http-client/1.1
+
+- name: uriVary strategy MUST support basePath
+  method: GET
+  path: /v2/shelf/books
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: uriVary
+      basePath: /v2
+      uris:
+        /shelf/books:
+          strategy: constant
+          body: ""
+          statusCode: 200
+        /shelf/books/1:
+          strategy: constant
+          body: ""
+          statusCode: 201
+
+- name: uriVary strategy MUST support basePath with slash at the end
+  method: GET
+  path: /v2/shelf/books
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: uriVary
+      basePath: /v2/
+      uris:
+        /shelf/books:
+          strategy: constant
+          body: ""
+          statusCode: 200
+        /shelf/books/1:
+          strategy: constant
+          body: ""
+          statusCode: 201

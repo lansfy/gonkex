@@ -1,0 +1,25 @@
+- name: WHEN mock section not specified service MUST use fail strategy
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  meta:
+    expected: |
+       1) mock 'someservice': unhandled request to mock:
+       GET /test/path HTTP/1.1
+       Host: 127.0.0.1:80
+       Accept-Encoding: gzip
+       Content-Type: application/json
+       User-Agent: Go-http-client/1.1
+
+- name: WHEN unknown strategy specified parser MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    400: "value"
+  mocks:
+    someservice:
+      strategy: invalid
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'invalid': unknown strategy

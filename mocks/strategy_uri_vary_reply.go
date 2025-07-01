@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -13,24 +14,28 @@ func (l *loaderImpl) loadUriVaryReplyStrategy(path string, def map[interface{}]i
 	if err != nil {
 		return nil, err
 	}
-	var uris map[string]*Definition
-	if u, ok := def["uris"]; ok {
-		urisMap, ok := u.(map[interface{}]interface{})
+
+	u, ok := def["uris"]
+	if !ok {
+		return nil, errors.New("'uris' key required")
+	}
+
+	urisMap, ok := u.(map[interface{}]interface{})
+	if !ok {
+		return nil, colorize.NewEntityError("map under %s key required", "uris")
+	}
+
+	uris := map[string]*Definition{}
+	for uri, v := range urisMap {
+		uriStr, ok := uri.(string)
 		if !ok {
-			return nil, colorize.NewEntityError("map under %s key required", "uris")
+			return nil, fmt.Errorf("uri '%v' has non-string name", uri)
 		}
-		uris = make(map[string]*Definition, len(urisMap))
-		for uri, v := range urisMap {
-			uriStr, ok := uri.(string)
-			if !ok {
-				return nil, fmt.Errorf("under path %s uri %v has non-string name", path, uri)
-			}
-			def, err := l.loadDefinition(path+"."+uriStr, v)
-			if err != nil {
-				return nil, err
-			}
-			uris[uriStr] = def
+		def, err := l.loadDefinition(path+"."+uriStr, v)
+		if err != nil {
+			return nil, err
 		}
+		uris[uriStr] = def
 	}
 	return NewUriVaryReplyStrategy(basePath, uris), nil
 }

@@ -1,0 +1,17 @@
+- name: constant strategy MUST return specified values
+  method: GET
+  path: /test/path
+  response:
+    400: "value"
+  responseHeaders:
+    400:
+      name1: value1
+      name2: value2
+  mocks:
+    someservice:
+      strategy: file
+      headers:
+        name1: value1
+        name2: value2
+      filename: "testdata/body.txt"
+      statusCode: 400

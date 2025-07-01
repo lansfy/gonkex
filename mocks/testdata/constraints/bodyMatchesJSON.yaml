@@ -1,0 +1,102 @@
+- name: bodyMatchesJSON constraint
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "param": "value",
+      "otherparam": "value"
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesJSON
+          body: >
+            {
+              "param": "value"
+            }
+      strategy: constant
+      body: ""
+      statusCode: 200
+
+- name: bodyMatchesJSON constraint with string body
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "param": "value",
+      "otherparam": "value"
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesJSON
+          body: '{"param": "value"}'
+      strategy: constant
+      body: ""
+      statusCode: 200
+
+- name: bodyMatchesJSON constraint with strict comparasion (disallowExtraFields=true)
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "param": "value",
+      "otherparam": "value"
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesJSON
+          body: '{"param":"value","otherparam":"value"}'
+          comparisonParams:
+            disallowExtraFields: true
+      strategy: constant
+      body: ""
+      statusCode: 200
+
+- name: bodyMatchesJSON constraint with json structure check only (ignoreValues=true)
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "param": "value1",
+      "otherparam": "value2"
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesJSON
+          body: '{"param":"ignored","otherparam":"ignored"}'
+          comparisonParams:
+            ignoreValues: true
+      strategy: constant
+      body: ""
+      statusCode: 200
+
+- name: bodyMatchesJSON constraint with array order ignore (ignoreArraysOrdering=true)
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "param": ["a", "b", "c"]
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesJSON
+          body: '{"param":["c","b","a"]}'
+          comparisonParams:
+            ignoreArraysOrdering: true
+      strategy: constant
+      body: ""
+      statusCode: 200

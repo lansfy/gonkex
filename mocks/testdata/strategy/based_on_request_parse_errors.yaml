@@ -1,0 +1,72 @@
+- name: WHEN key 'uris' absent in basedOnRequest strategy MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: basedOnRequest
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'basedOnRequest': 'uris' key required
+
+- name: WHEN key 'uris' has wrong type in basedOnRequest strategy MUST fail with error
+  method: get
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: basedOnRequest
+      uris: {}
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'basedOnRequest': list under 'uris' key required
+
+- name: WHEN item in 'uris' has wrong type in basedOnRequest strategy MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    203: ""
+  mocks:
+    someservice:
+      strategy: basedOnRequest
+      uris:
+        - 1
+        - 2
+        - 3
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'basedOnRequest': 'uris' list item must be a map
+
+- name: WHEN parsing of basedOnRequest internals fail parser MUST fail with error
+  method: get
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: basedOnRequest
+      uris:
+        - strategy: constant
+          statusCode: 201
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'basedOnRequest': strategy 'constant': 'body' key required
+
+- name: WHEN 'basedOnRequest' strategy has unknown key load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: basedOnRequest
+      invalid: invalid
+      uris:
+        - strategy: constant
+          body: ""
+          statusCode: 201
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'basedOnRequest': unexpected key 'invalid' (allowed only [requestConstraints strategy calls order basePath uris])

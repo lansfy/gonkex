@@ -1,0 +1,56 @@
+- name: WHEN key 'sequence' absent in sequence strategy MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: sequence
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'sequence': 'sequence' key required
+
+- name: WHEN key 'sequence' has wrong type in sequence strategy MUST fail with error
+  method: get
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: sequence
+      sequence: {}
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'sequence': list under 'sequence' key required
+
+- name: WHEN parsing of sequence internals fail parser MUST fail with error
+  method: get
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: sequence
+      sequence:
+        - strategy: constant
+          statusCode: 201
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'sequence': strategy 'constant': 'body' key required
+
+- name: WHEN 'sequence' strategy has unknown key load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: sequence
+      invalid: invalid
+      sequence:
+        - strategy: constant
+          body: ""
+          statusCode: 201
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'sequence': unexpected key 'invalid' (allowed only [requestConstraints strategy calls order sequence])

@@ -29,7 +29,7 @@ func newQueryRegexpConstraint(query string) (*queryRegexpConstraint, error) {
 
 		_, ok := expectedQuery[parts[0]]
 		if !ok {
-			expectedQuery[parts[0]] = make([]string, 0)
+			expectedQuery[parts[0]] = []string{}
 		}
 		expectedQuery[parts[0]] = append(expectedQuery[parts[0]], parts[1])
 	}

@@ -1,0 +1,49 @@
+- name: methodVary strategy MUST select GET option on GET request
+  method: get
+  path: /test/path
+  response:
+    200: ""
+  mocks: &mocks
+    someservice:
+      strategy: methodVary
+      methods:
+        GET:
+          strategy: constant
+          body: ""
+          statusCode: 200
+        post:
+          strategy: constant
+          body: ""
+          statusCode: 201
+        DELETE:
+          strategy: constant
+          body: ""
+          statusCode: 202
+
+- name: methodVary strategy MUST select POST option on POST request
+  method: POST
+  path: /test/path
+  response:
+    201: ""
+  mocks: *mocks
+
+- name: methodVary strategy MUST select DELETE option on DELETE request
+  method: DELETE
+  path: /test/path
+  response:
+    202: ""
+  mocks: *mocks
+
+- name: methodVary strategy MUST fail on unknown method
+  method: HEAD
+  path: /test/path
+  response:
+    200: ""
+  mocks: *mocks
+  meta:
+    expected: |
+       1) mock 'someservice': unhandled request to mock:
+       HEAD /test/path HTTP/1.1
+       Host: 127.0.0.1:80
+       Content-Type: application/json
+       User-Agent: Go-http-client/1.1

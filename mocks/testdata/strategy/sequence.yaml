@@ -1,0 +1,33 @@
+- name: sequence strategy MUST select first response on first request
+  method: GET
+  path: /test/path
+  response:
+    202: ""
+  mocks:
+    someservice:
+      strategy: sequence
+      sequence:
+        - strategy: constant
+          body: ""
+          statusCode: 202
+
+- name: sequence strategy MUST fail if it does not have response for request
+  method: GET
+  path: /test/path
+  response:
+    202: ""
+  mocks:
+    someservice:
+      strategy: sequence
+      sequence: []
+  meta:
+    expected: |
+       1) mock 'someservice': unhandled request to mock:
+       GET /test/path HTTP/1.1
+       Host: 127.0.0.1:80
+       Accept-Encoding: gzip
+       Content-Type: application/json
+       User-Agent: Go-http-client/1.1
+       2) server responded with unexpected 'status':
+            expected: 202
+              actual: 200

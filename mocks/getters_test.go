@@ -336,7 +336,7 @@ func Test_loadHeaders(t *testing.T) {
 				"headers": "invalid",
 			},
 			want:    nil,
-			wantErr: "'headers' must be a map",
+			wantErr: "map under 'headers' key required",
 		},
 		{
 			description: "header key is not a string",

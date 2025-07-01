@@ -1,0 +1,12 @@
+- name: WHEN 'nop' strategy has unknown key load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: nop
+      invalid: invalid
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'nop': unexpected key 'invalid' (allowed only [requestConstraints strategy calls order])

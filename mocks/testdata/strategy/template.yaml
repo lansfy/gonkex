@@ -1,0 +1,30 @@
+- name: strategy template example from documentation
+  method: POST
+  path: /test/case
+  query: ?some_value=from_query
+  request: >
+    {
+      "data": "from_body"
+    }
+  response:
+    200: >
+      {
+        "value-from-query": "from_query",
+        "data-from-body": "from_body"
+      }
+  responseHeaders:
+    200:
+      Header1: Value1
+      Header2: Value2
+  mocks:
+    someservice:
+      strategy: template
+      headers:
+        Header1: Value1
+        Header2: Value2
+      body: |
+        {
+          "value-from-query": "{{ .request.Query "some_value" }}",
+          "data-from-body": "{{ .request.Json.data }}"
+        }
+      statusCode: 200
