@@ -137,9 +137,6 @@ func (m *Mocks) RoundTrip(req *http.Request) (*http.Response, error) {
 // It updates each service with its corresponding definition from the map.
 // Returns an error if any service is not found or if any definition fails to load.
 func (m *Mocks) LoadDefinitions(loader Loader, definitions map[string]interface{}) error {
-	if m == nil && len(definitions) != 0 {
-		return fmt.Errorf("object Mocks has nil value, but mock required for test")
-	}
 	for serviceName, definition := range definitions {
 		service := m.Service(serviceName)
 		if service == nil {

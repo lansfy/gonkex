@@ -1,0 +1,79 @@
+- name: WHEN constraints is not a list load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints: "invalid"
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': 'requestConstraints' requires array
+
+- name: WHEN constraint declaration is not a map load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - "invalid"
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: must be map
+
+- name: WHEN 'kind' field absent load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - name: value
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: 'kind' key required
+
+- name: WHEN constraint declaration has non-string key load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: nop
+          200: value
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'nop': key '200' has non-string type
+
+- name: WHEN constraint has unknown name load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: invalid
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'invalid': unknown constraint

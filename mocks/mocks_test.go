@@ -65,8 +65,9 @@ func (c *errorChecker) Handle(t models.TestInterface, f runner.TestExecutor) (bo
 	return false, nil
 }
 
-func Test_Constraints(t *testing.T) {
-	m := mocks.NewNop("someservice")
+func Test_Declarative(t *testing.T) {
+	service := mocks.NewServiceMock("someservice", nil)
+	m := mocks.New(service)
 	err := m.Start()
 	require.NoError(t, err)
 	defer m.Shutdown()
@@ -80,27 +81,7 @@ func Test_Constraints(t *testing.T) {
 		TestHandler: checker.Handle,
 	}
 
-	r := runner.New(yaml_file.NewLoader("testdata/constraints"), opts)
-	err = r.Run()
-	require.NoError(t, err)
-}
-
-func Test_Strategy(t *testing.T) {
-	m := mocks.NewNop("someservice")
-	err := m.Start()
-	require.NoError(t, err)
-	defer m.Shutdown()
-
-	checker := &errorChecker{t}
-
-	opts := &runner.RunnerOpts{
-		Host:        "http://" + m.Service("someservice").ServerAddr(),
-		Mocks:       m,
-		MocksLoader: mocks.NewYamlLoader(&mocks.YamlLoaderOpts{}),
-		TestHandler: checker.Handle,
-	}
-
-	r := runner.New(yaml_file.NewLoader("testdata/strategy"), opts)
+	r := runner.New(yaml_file.NewLoader("testdata"), opts)
 	err = r.Run()
 	require.NoError(t, err)
 }

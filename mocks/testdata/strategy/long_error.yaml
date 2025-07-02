@@ -1,0 +1,24 @@
+# TODO:
+# load definition for 'someservice': at path '$.sequence.0.methods.GET.uris./test/path.uris.0': strategy 'constant': 'body' key required
+- name: sequence strategy MUST select first response on first request
+  method: GET
+  path: /test/path
+  response:
+    202: ""
+  mocks:
+    someservice:
+      strategy: sequence
+      sequence:
+        - strategy: methodVary
+          methods:
+            GET:
+              strategy: uriVary
+              uris:
+                /test/path:
+                  strategy: basedOnRequest
+                  uris:
+                    - strategy: constant
+                      statusCode: 201
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'sequence': strategy 'methodVary': strategy 'uriVary': strategy 'basedOnRequest': strategy 'constant': 'body' key required

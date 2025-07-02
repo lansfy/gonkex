@@ -55,7 +55,7 @@ func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definitio
 	var requestConstraints []verifier
 	if constraints, ok := def["requestConstraints"]; ok {
 		constraints, ok := constraints.([]interface{})
-		if !ok || len(constraints) == 0 {
+		if !ok {
 			return nil, wrap(colorize.NewEntityError("%s requires array", "requestConstraints"))
 		}
 		requestConstraints = []verifier{}

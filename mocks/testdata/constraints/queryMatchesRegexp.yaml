@@ -1,0 +1,123 @@
+- name: WHEN request query matches expectedQuery constraint check MUST be successful
+  method: GET
+  path: /test/case
+  query: "{{ $query }}"
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatchesRegexp
+          expectedQuery: ?people=2&food=tea&food=cake
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  cases:
+    - variables:
+        # expected
+        query: people=2&food=tea&food=cake
+    - variables:
+        # different order (1)
+        query: food=tea&food=cake&people=2
+    - variables:
+        # different order (2)
+        query: food=cake&food=tea&people=2
+    - variables:
+        # different order (3)
+        query: people=2&food=cake&food=tea
+    - variables:
+        # unexpected keys are ignored
+        query: food=cake&food=tea&people=2&one-more=person
+
+- name: WHEN request query matches expectedQuery with regexp constraint check MUST be successful
+  method: GET
+  path: /test/case
+  query: "{{ $query }}"
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatchesRegexp
+          expectedQuery: ?food=cake&food=$matchRegexp(\w+)&people=$matchRegexp(\d+)
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  cases:
+    - variables:
+        # expected
+        query: people=2&food=tea&food=cake
+    - variables:
+        # different order (1)
+        query: food=tea&food=cake&people=2
+    - variables:
+        # different order (2)
+        query: food=cake&food=tea&people=2
+    - variables:
+        # different order (3)
+        query: people=2&food=cake&food=tea
+    - variables:
+        # unexpected keys are ignored
+        query: food=cake&food=tea&people=2&one-more=person
+
+- name: WHEN one of expected key absent in query queryMatchesRegexp MUST fail with error
+  method: GET
+  path: /test/case
+  query: food=cake&food=tea
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatchesRegexp
+          expectedQuery: ?people=2&food=tea&food=cake
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'queryMatchesRegexp': 'people' parameter is missing in request query
+
+# TODO: unify error
+- name: WHEN one of expected values absent in query queryMatchesRegexp MUST fail with error
+  method: GET
+  path: /test/case
+  query: food=cake&food=beer&people=3
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatchesRegexp
+          expectedQuery: ?people=3&food=beer
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'queryMatchesRegexp': 'food' parameters comparison failed. 
+        expected and actual query params have different lengths'
+
+# TODO: unify error
+#- name: WHEN one of expected key has other value in query queryMatchesRegexp MUST fail with error
+#  method: GET
+#  path: /test/case
+#  query: food=cake&food=beer&people=3
+#  response:
+#    200: "result"
+#  mocks:
+#    someservice:
+#      requestConstraints:
+#        - kind: queryMatchesRegexp
+#          expectedQuery: ?people=2&food=tea&food=cake
+#      strategy: constant
+#      body: "result"
+#      statusCode: 200
+#  meta:
+#    expected: |
+#       1) mock 'someservice': request constraint 'queryMatchesRegexp': 'food' parameters are not equal.
+#        Got: [beer cake]
+#        Want: [cake tea]
+#       2) mock 'someservice': request constraint 'queryMatchesRegexp': 'people' parameters are not equal.
+#        Got: [3]
+#        Want: [2]

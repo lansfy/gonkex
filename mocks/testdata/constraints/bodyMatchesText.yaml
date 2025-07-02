@@ -1,0 +1,72 @@
+- name: WHEN request body matches specified value bodyMatchesText MUST be successful
+  method: POST
+  path: /test/case
+  request: "hello world"
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesText
+          body: "hello world"
+      strategy: constant
+      body: result
+      statusCode: 200
+
+# TODO: improve error
+- name: WHEN request body does not match specified value bodyMatchesText MUST fail
+  method: POST
+  path: /test/case
+  request: "hello world"
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesText
+          body: "hello me"
+      strategy: constant
+      body: result
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'bodyMatchesText': body value
+       hello world
+       does not match expected
+       hello me
+
+- name: WHEN request body matches specified regexp bodyMatchesText MUST be successful
+  method: POST
+  path: /test/case
+  request: "hello world"
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesText
+          regexp: "^(hello.*)$"
+      strategy: constant
+      body: result
+      statusCode: 200
+
+# TODO: improve error
+- name: WHEN request body does not match specified value bodyMatchesText MUST fail
+  method: POST
+  path: /test/case
+  request: "hello world"
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesText
+          regexp: "^(test.*)$"
+      strategy: constant
+      body: result
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'bodyMatchesText': body value
+       hello world
+       does not match regexp ^(test.*)$

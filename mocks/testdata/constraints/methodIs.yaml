@@ -1,0 +1,41 @@
+- name: WHEN request use same method as methodIs constraint check MUST be successful
+  method: "{{ $method }}"
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: methodIs
+          method: "{{ $method }}"
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  cases:
+    - variables:
+        method: GET
+    - variables:
+        method: POST
+    - variables:
+        method: PUT
+    - variables:
+        method: DELETE
+
+- name: WHEN request use different with methodIs method constraint check MUST fail
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: methodIs
+          method: POST
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'methodIs': 'method' does not match:
+            expected: POST
+              actual: GET

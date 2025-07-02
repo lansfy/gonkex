@@ -1,0 +1,50 @@
+- name: WHEN field 'expectedQuery' absent in queryMatchesRegexp parser MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatchesRegexp
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'queryMatchesRegexp': 'expectedQuery' key required
+
+- name: WHEN field 'expectedQuery' has invalid type in queryMatchesRegexp parser MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatchesRegexp
+          expectedQuery: 5
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'queryMatchesRegexp': key 'expectedQuery' has non-string value
+
+- name: WHEN 'queryMatchesRegexp' constraint has unknown key load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatchesRegexp
+          expectedQuery: ?foo=bar
+          invalid: invalid
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'queryMatchesRegexp': unexpected key 'invalid' (allowed only [kind expectedQuery])

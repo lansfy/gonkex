@@ -1,0 +1,120 @@
+- name: WHEN field 'path' absent in bodyJSONFieldMatchesJSON parser MUST fail with error
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "field1": {
+        "field2": "{\"somename\":\"somevalue\"}"
+      }
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyJSONFieldMatchesJSON
+          value: >
+            {
+              "somename": "somevalue"
+            }
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyJSONFieldMatchesJSON': 'path' key required
+
+- name: WHEN field 'value' absent in bodyJSONFieldMatchesJSON parser MUST fail with error
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "field1": {
+        "field2": "{\"somename\":\"somevalue\"}"
+      }
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyJSONFieldMatchesJSON
+          path: field1.field2
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyJSONFieldMatchesJSON': 'value' key required
+
+- name: WHEN field 'comparisonParams' has errors in bodyJSONFieldMatchesJSON parser MUST fail with error
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "field1": {
+        "field2": "{\"somename\":\"somevalue\"}"
+      }
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyJSONFieldMatchesJSON
+          comparisonParams:
+            invalid: invalid
+          path: field1.field2
+          value: >
+            {
+              "somename": "somevalue"
+            }
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyJSONFieldMatchesJSON': section 'comparisonParams': key 'invalid' has non-bool value
+
+- name: WHEN field 'value' consists invalid json in bodyJSONFieldMatchesJSON parser MUST fail with error
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "field1": {
+        "field2": "{\"somename\":\"somevalue\"}"
+      }
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyJSONFieldMatchesJSON
+          path: field1.field2
+          value: "invalid"
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyJSONFieldMatchesJSON': invalid character 'i' looking for beginning of value
+
+- name: WHEN bodyJSONFieldMatchesJSON constraint has unknown key load definition MUST fail with error
+  method: POST
+  path: /test/case
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyJSONFieldMatchesJSON
+          path: field1.field2
+          value: "{}"
+          invalid: invalid
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyJSONFieldMatchesJSON': unexpected key 'invalid' (allowed only [kind path value comparisonParams])

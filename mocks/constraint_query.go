@@ -36,12 +36,13 @@ func (c *queryConstraint) GetName() string {
 	return "queryMatches"
 }
 
-func (c *queryConstraint) Verify(r *http.Request) (errors []error) {
+func (c *queryConstraint) Verify(r *http.Request) []error {
+	errors := []error{}
 	gotQuery := r.URL.Query()
 	for key, want := range c.expectedQuery {
 		got, ok := gotQuery[key]
 		if !ok {
-			errors = append(errors, fmt.Errorf("'%s' parameter is missing in expQuery", key))
+			errors = append(errors, fmt.Errorf("'%s' parameter is missing in request query", key))
 			continue
 		}
 

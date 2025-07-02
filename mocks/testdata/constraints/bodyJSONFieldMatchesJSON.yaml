@@ -1,0 +1,126 @@
+- name: WHEN string at specified path contains json with specified value bodyJSONFieldMatchesJSON MUST be successful
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "field1": {
+        "field2": "{\"somename\":\"somevalue\"}"
+      }
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyJSONFieldMatchesJSON
+          path: field1.field2
+          value: >
+            {
+              "somename": "somevalue"
+            }
+      strategy: constant
+      body: ""
+      statusCode: 200
+
+- name: WHEN string at specified path contains json with other value bodyJSONFieldMatchesJSON MUST fail
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "field1": {
+        "field2": "{\"somename\":\"somevalue\"}"
+      }
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyJSONFieldMatchesJSON
+          path: field1.field2
+          value: >
+            {
+              "othername": "somevalue"
+            }
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'bodyJSONFieldMatchesJSON': path '$': key is missing:
+            expected: othername
+              actual: <missing>
+
+- name: WHEN path not exists in request bodyJSONFieldMatchesJSON MUST fail
+  method: POST
+  path: /test/case
+  request: >
+    {
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyJSONFieldMatchesJSON
+          path: field1.field2
+          value: >
+            {
+              "somename": "somevalue"
+            }
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'bodyJSONFieldMatchesJSON': json field 'field1.field2' does not exist
+
+- name: WHEN path consists empty string in request bodyJSONFieldMatchesJSON MUST fail
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "field1": {"field2": ""}
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyJSONFieldMatchesJSON
+          path: field1.field2
+          value: >
+            {
+              "somename": "somevalue"
+            }
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'bodyJSONFieldMatchesJSON': json field 'field1.field2' is empty
+
+- name: WHEN path consists invalid json in request bodyJSONFieldMatchesJSON MUST fail
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "field1": {"field2": "invalid"}
+    }
+  response:
+    200: ""
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyJSONFieldMatchesJSON
+          path: field1.field2
+          value: >
+            {
+              "somename": "somevalue"
+            }
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'bodyJSONFieldMatchesJSON': invalid character 'i' looking for beginning of value

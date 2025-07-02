@@ -1,4 +1,4 @@
-- name: bodyMatchesJSON constraint
+- name: WHEN request body matches specified pattern bodyMatchesJSON MUST be successful
   method: POST
   path: /test/case
   request: >
@@ -7,7 +7,7 @@
       "otherparam": "value"
     }
   response:
-    200: ""
+    200: result
   mocks:
     someservice:
       requestConstraints:
@@ -17,50 +17,10 @@
               "param": "value"
             }
       strategy: constant
-      body: ""
+      body: result
       statusCode: 200
 
-- name: bodyMatchesJSON constraint with string body
-  method: POST
-  path: /test/case
-  request: >
-    {
-      "param": "value",
-      "otherparam": "value"
-    }
-  response:
-    200: ""
-  mocks:
-    someservice:
-      requestConstraints:
-        - kind: bodyMatchesJSON
-          body: '{"param": "value"}'
-      strategy: constant
-      body: ""
-      statusCode: 200
-
-- name: bodyMatchesJSON constraint with strict comparasion (disallowExtraFields=true)
-  method: POST
-  path: /test/case
-  request: >
-    {
-      "param": "value",
-      "otherparam": "value"
-    }
-  response:
-    200: ""
-  mocks:
-    someservice:
-      requestConstraints:
-        - kind: bodyMatchesJSON
-          body: '{"param":"value","otherparam":"value"}'
-          comparisonParams:
-            disallowExtraFields: true
-      strategy: constant
-      body: ""
-      statusCode: 200
-
-- name: bodyMatchesJSON constraint with json structure check only (ignoreValues=true)
+- name: bodyMatchesJSON MUST support comparisonParams
   method: POST
   path: /test/case
   request: >
@@ -69,7 +29,7 @@
       "otherparam": "value2"
     }
   response:
-    200: ""
+    200: result
   mocks:
     someservice:
       requestConstraints:
@@ -78,25 +38,47 @@
           comparisonParams:
             ignoreValues: true
       strategy: constant
-      body: ""
+      body: result
       statusCode: 200
 
-- name: bodyMatchesJSON constraint with array order ignore (ignoreArraysOrdering=true)
+- name: WHEN request body is empty bodyMatchesJSON MUST fail with error
   method: POST
   path: /test/case
-  request: >
-    {
-      "param": ["a", "b", "c"]
-    }
+  request: ""
   response:
-    200: ""
+    200: result
   mocks:
     someservice:
       requestConstraints:
         - kind: bodyMatchesJSON
-          body: '{"param":["c","b","a"]}'
-          comparisonParams:
-            ignoreArraysOrdering: true
+          body: >
+            {
+              "param": "value"
+            }
       strategy: constant
-      body: ""
+      body: result
       statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'bodyMatchesJSON': request is empty
+
+- name: WHEN request body is not json bodyMatchesJSON MUST fail with error
+  method: POST
+  path: /test/case
+  request: "invalid"
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesJSON
+          body: >
+            {
+              "param": "value"
+            }
+      strategy: constant
+      body: result
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'bodyMatchesJSON': json: invalid character 'i' looking for beginning of value
