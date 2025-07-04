@@ -12,14 +12,19 @@
        Content-Type: application/json
        User-Agent: Go-http-client/1.1
 
-- name: WHEN unknown strategy specified parser MUST fail with error
+- name: WHEN service make not required number of calls to mock test MUST fail with error
   method: GET
-  path: /test/path
+  path: /test/case
   response:
-    400: "value"
+    200: "result"
   mocks:
     someservice:
-      strategy: invalid
+      calls: 2
+      strategy: constant
+      body: "result"
+      statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': strategy 'invalid': unknown strategy
+       1) mock 'someservice': path '$': number of 'calls' does not match:
+            expected: 2
+              actual: 1

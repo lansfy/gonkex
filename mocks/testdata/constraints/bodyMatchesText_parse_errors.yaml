@@ -1,0 +1,83 @@
+- name: WHEN field 'body' value has wrong type in bodyMatchesText parser MUST fail with error
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "param": "value",
+      "otherparam": "value"
+    }
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesText
+          body: 5
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyMatchesText': key 'body' has non-string value
+
+- name: WHEN field 'regexp' value has wrong type in bodyMatchesText parser MUST fail with error
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "param": "value",
+      "otherparam": "value"
+    }
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesText
+          regexp: 5
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyMatchesText': key 'regexp' has non-string value
+
+- name: WHEN field 'regexp' has wrong regular expression in bodyMatchesText parser MUST fail with error
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "param": "value",
+      "otherparam": "value"
+    }
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesText
+          regexp: "["
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyMatchesText': error parsing regexp: missing closing ]: `[`
+
+- name: WHEN 'bodyMatchesText' constraint has unknown key load definition MUST fail with error
+  method: POST
+  path: /test/case
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesText
+          body: ""
+          invalid: invalid
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyMatchesText': unexpected key 'invalid' (allowed only [kind body regexp])

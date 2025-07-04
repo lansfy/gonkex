@@ -111,6 +111,14 @@ func New(loader testloader.LoaderInterface, opts *RunnerOpts) *Runner {
 		r.config.TestHandler = r.defaultTestHandler
 	}
 
+	if r.config.Variables == nil {
+		r.config.Variables = variables.New()
+	}
+
+	if r.config.Mocks == nil {
+		r.config.Mocks = mocks.New()
+	}
+
 	r.AddCheckers(response_body.NewChecker())
 	r.AddCheckers(response_header.NewChecker())
 	if r.config.DB != nil {

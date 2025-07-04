@@ -1,0 +1,69 @@
+- name: WHEN field 'expectedQuery' absent in queryMatches parser MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatches
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'queryMatches': 'expectedQuery' key required
+
+- name: WHEN field 'expectedQuery' has invalid type in queryMatches parser MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatches
+          expectedQuery: 5
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'queryMatches': key 'expectedQuery' has non-string value
+
+# TODO: improve error
+- name: WHEN 'expectedQuery' field has invalid format load definition MUST fail with error
+  method: GET
+  path: /test/case
+  query: food=cake&food=tea
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatches
+          expectedQuery: ?foo=invalid%zz
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'queryMatches': invalid URL escape "%zz"
+
+- name: WHEN 'queryMatches' constraint has unknown key load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatches
+          expectedQuery: ?foo=bar
+          invalid: invalid
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'queryMatches': unexpected key 'invalid' (allowed only [kind expectedQuery])

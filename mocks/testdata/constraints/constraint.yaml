@@ -1,0 +1,11 @@
+- name: requestConstraints MUST support empty list
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints: []
+      strategy: constant
+      body: "result"
+      statusCode: 200

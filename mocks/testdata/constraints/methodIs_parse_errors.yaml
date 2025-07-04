@@ -1,0 +1,50 @@
+- name: WHEN field 'method' absent in methodIs parser MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: methodIs
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'methodIs': 'method' key required
+
+- name: WHEN field 'method' consists invalid method in methodIs parser MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: methodIs
+          method: 5
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'methodIs': key 'method' has non-string value
+
+- name: WHEN 'methodIs' constraint has unknown key load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: methodIs
+          method: GET
+          invalid: invalid
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'methodIs': unexpected key 'invalid' (allowed only [kind method])

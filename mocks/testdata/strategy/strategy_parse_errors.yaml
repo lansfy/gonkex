@@ -1,0 +1,82 @@
+- name: WHEN strategy declaration is not a map load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice: []
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': definition must be key-values
+
+- name: WHEN 'strategy' field absent load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': 'strategy' key required
+
+- name: WHEN strategy has invalid 'calls' value load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      calls: invalid
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'constant': value for key 'calls' cannot be converted to integer
+
+- name: WHEN strategy has invalid 'order' value load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      order: invalid
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'constant': value for key 'order' cannot be converted to integer
+
+- name: WHEN strategy declaration has non-string key load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      strategy: constant
+      body: "result"
+      statusCode: 200
+      200: value
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'constant': key '200' has non-string type
+
+- name: WHEN constraint has unknown name load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      strategy: invalid
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'invalid': unknown strategy

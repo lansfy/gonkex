@@ -1,0 +1,87 @@
+- name: WHEN field 'body' absent in bodyMatchesJSON parser MUST fail with error
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "param": "value",
+      "otherparam": "value"
+    }
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesJSON
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyMatchesJSON': 'body' key required
+
+- name: WHEN field 'comparisonParams' has errors in bodyMatchesJSON parser MUST fail with error
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "param": "value",
+      "otherparam": "value"
+    }
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesJSON
+          comparisonParams:
+            invalid: invalid
+          body: >
+            {
+              "param": "value"
+            }
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyMatchesJSON': section 'comparisonParams': key 'invalid' has non-bool value
+
+- name: WHEN field 'body' consists invalid json in bodyMatchesJSON parser MUST fail with error
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "param": "value",
+      "otherparam": "value"
+    }
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesJSON
+          body: "invalid"
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyMatchesJSON': json: invalid character 'i' looking for beginning of value
+
+- name: WHEN bodyMatchesJSON constraint has unknown key load definition MUST fail with error
+  method: POST
+  path: /test/case
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesJSON
+          body: "{}"
+          invalid: invalid
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyMatchesJSON': unexpected key 'invalid' (allowed only [kind body comparisonParams])

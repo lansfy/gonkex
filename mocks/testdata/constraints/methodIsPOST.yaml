@@ -1,0 +1,30 @@
+- name: WHEN request use same method as methodIsPOST constraint check MUST be successful
+  method: POST
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: methodIsPOST
+      strategy: constant
+      body: "result"
+      statusCode: 200
+
+- name: WHEN request use different with methodIsPOST method constraint check MUST fail
+  method: DELETE
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: methodIsPOST
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'methodIsPOST': 'method' does not match:
+            expected: POST
+              actual: DELETE

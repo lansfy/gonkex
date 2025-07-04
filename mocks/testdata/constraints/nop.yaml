@@ -3,12 +3,11 @@
   path: /test/case
   request: ""
   response:
-    200: ""
-
+    200: "result"
   mocks:
-    testservice:
+    someservice:
       requestConstraints:
         - kind: nop
       strategy: constant
-      body: ""
+      body: "result"
       statusCode: 200

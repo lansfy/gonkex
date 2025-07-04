@@ -1,7 +1,6 @@
 package mocks
 
 import (
-	"net/http"
 	"net/url"
 	"testing"
 
@@ -38,58 +37,4 @@ func Test_newQueryConstraint(t *testing.T) {
 			require.Equal(t, tt.want, *got, "newQueryConstraint() = %v, want %v", *got, tt.want)
 		})
 	}
-}
-
-func Test_queryConstraint_Verify(t *testing.T) {
-	constraint, err := newQueryConstraint("people=2&food=tea&food=cake")
-	require.NoError(t, err, "newQueryConstraint() returned an unexpected error")
-
-	tests := []struct {
-		name       string
-		query      string
-		wantErrors int
-	}{
-		{
-			name:  "expected",
-			query: "people=2&food=tea&food=cake",
-		},
-		{
-			name:  "different order (1)",
-			query: "food=tea&food=cake&people=2",
-		},
-		{
-			name:  "different order (2)",
-			query: "food=cake&food=tea&people=2",
-		},
-		{
-			name:  "different order (3)",
-			query: "people=2&food=cake&food=tea",
-		},
-		{
-			name:  "unexpected keys are ignored",
-			query: "food=cake&food=tea&people=2&one-more=person",
-		},
-		{
-			name:       "unexpected value",
-			query:      "food=cake&food=beer&people=3",
-			wantErrors: 2,
-		},
-		{
-			name:       "key is missing",
-			query:      "food=cake&food=tea",
-			wantErrors: 1,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			req := newTestRequest(tt.query)
-			gotErrors := constraint.Verify(req)
-			require.Len(t, gotErrors, tt.wantErrors, "unexpected amount of errors. Errors: '%v'", gotErrors)
-		})
-	}
-}
-
-func newTestRequest(query string) *http.Request {
-	r, _ := http.NewRequest("GET", "http://localhost/?"+query, http.NoBody)
-	return r
 }

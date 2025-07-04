@@ -1,0 +1,51 @@
+- name: WHEN field 'path' has invalid type in pathMatches parser MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: pathMatches
+          path: 5
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'pathMatches': key 'path' has non-string value
+
+- name: WHEN field 'regexp' has invalid type in pathMatches parser MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: pathMatches
+          regexp: 5
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'pathMatches': key 'regexp' has non-string value
+
+- name: WHEN 'pathMatches' constraint has unknown key load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: pathMatches
+          path: test-value
+          invalid: invalid
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'pathMatches': unexpected key 'invalid' (allowed only [kind path regexp])

@@ -1,0 +1,30 @@
+- name: WHEN request use same method as methodIsDELETE constraint check MUST be successful
+  method: DELETE
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: methodIsDELETE
+      strategy: constant
+      body: "result"
+      statusCode: 200
+
+- name: WHEN request use different with methodIsDELETE method constraint check MUST fail
+  method: POST
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: methodIsDELETE
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'methodIsDELETE': 'method' does not match:
+            expected: DELETE
+              actual: POST

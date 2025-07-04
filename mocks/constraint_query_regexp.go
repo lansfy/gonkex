@@ -50,7 +50,7 @@ func (c *queryRegexpConstraint) Verify(r *http.Request) (errors []error) {
 	for key, want := range c.expectedQuery {
 		got, ok := gotQuery[key]
 		if !ok {
-			errors = append(errors, fmt.Errorf("'%s' parameter is missing in expQuery", key))
+			errors = append(errors, fmt.Errorf("'%s' parameter is missing in request query", key))
 			continue
 		}
 

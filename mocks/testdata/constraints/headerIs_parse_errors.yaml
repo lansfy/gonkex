@@ -1,0 +1,99 @@
+- name: WHEN field 'header' absent in headerIs parser MUST fail with error
+  method: GET
+  path: /test/case
+  headers:
+    X-Test: test-value
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          value: test-value
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'headerIs': 'header' key required
+
+- name: WHEN field 'value' has invalid type in headerIs parser MUST fail with error
+  method: GET
+  path: /test/case
+  headers:
+    X-Test: test-value
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: 5
+          value: test-value
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'headerIs': key 'header' has non-string value
+
+- name: WHEN field 'value' has invalid type in headerIs parser MUST fail with error
+  method: GET
+  path: /test/case
+  headers:
+    X-Test: test-value
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: "X-Test"
+          value: 5
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'headerIs': key 'value' has non-string value
+
+- name: WHEN field 'regexp' has invalid type in headerIs parser MUST fail with error
+  method: GET
+  path: /test/case
+  headers:
+    X-Test: test-value
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: "X-Test"
+          regexp: 5
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'headerIs': key 'regexp' has non-string value
+
+- name: WHEN 'headerIs' constraint has unknown key load definition MUST fail with error
+  method: GET
+  path: /test/case
+  headers:
+    X-Test: test-value
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: "X-Test"
+          value: test-value
+          invalid: invalid
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'headerIs': unexpected key 'invalid' (allowed only [kind header value regexp])

@@ -1,0 +1,17 @@
+- name: WHEN 'nop' constraint has unknown key load definition MUST fail with error
+  method: POST
+  path: /test/case
+  request: ""
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: nop
+          invalid: invalid
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'nop': unexpected key 'invalid' (allowed only [kind])

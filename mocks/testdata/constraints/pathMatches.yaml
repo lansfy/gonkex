@@ -1,0 +1,136 @@
+- name: WHEN request has required path with required value pathMatches MUST be successful
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: pathMatches
+          path: /test/case
+      strategy: constant
+      body: "result"
+      statusCode: 200
+
+- name: WHEN request has required path with value matched provided regexp pathMatches MUST be successful
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: pathMatches
+          regexp: "^/test/.*$"
+      strategy: constant
+      body: "result"
+      statusCode: 200
+
+- name: WHEN request has required path with value matched provided regexp as value pathMatches MUST be successful
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: pathMatches
+          path: "$matchRegexp(^/test/.*$)"
+      strategy: constant
+      body: "result"
+      statusCode: 200
+
+- name: WHEN request has path not equal to value constraint pathMatches MUST fail
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: pathMatches
+          path: /other
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'pathMatches': url 'path' does not match expected:
+            expected: /other
+              actual: /test/case
+
+- name: WHEN request has path with value not matched 'regexp' pathMatches MUST fail
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: pathMatches
+          regexp: "^/other.*$"
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'pathMatches': url 'path': value does not match regexp:
+            expected: $matchRegexp(^/other.*$)
+              actual: /test/case
+
+- name: WHEN request has path with value not matched regexp for value pathMatches MUST fail
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: pathMatches
+          path: "$matchRegexp(^/other.*$)"
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'pathMatches': url 'path': value does not match regexp:
+            expected: $matchRegexp(^/other.*$)
+              actual: /test/case
+
+- name: WHEN field 'regexp' has invalid regexp in pathMatches parser MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: pathMatches
+          regexp: "["
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'pathMatches': url 'path': cannot compile regexp:
+            expected: <nil>
+              actual: missing closing ]: `[`
+
+- name: WHEN field 'value' has invalid regexp in pathMatches parser MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: pathMatches
+          path: $matchRegexp([)
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'pathMatches': url 'path': cannot compile regexp:
+            expected: <nil>
+              actual: missing closing ]: `[`

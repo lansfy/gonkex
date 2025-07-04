@@ -1,0 +1,16 @@
+- name: WHEN methodIsPOST constraint has unknown key load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: methodIsPOST
+          invalid: invalid
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'methodIsPOST': unexpected key 'invalid' (allowed only [kind])

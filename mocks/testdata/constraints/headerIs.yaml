@@ -1,0 +1,178 @@
+- name: WHEN request has required header with required value headerIs MUST be successful
+  method: GET
+  path: /test/case
+  headers:
+    X-Test: test-value
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: X-Test
+          value: test-value
+      strategy: constant
+      body: "result"
+      statusCode: 200
+
+- name: WHEN request has required header with value matched provided regexp headerIs MUST be successful
+  method: GET
+  path: /test/case
+  headers:
+    X-Test: test-value
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: X-Test
+          regexp: "^test.*$"
+      strategy: constant
+      body: "result"
+      statusCode: 200
+
+- name: WHEN request has required header with value matched provided regexp as value headerIs MUST be successful
+  method: GET
+  path: /test/case
+  headers:
+    X-Test: test-value
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: X-Test
+          value: "$matchRegexp(^test.*$)"
+      strategy: constant
+      body: "result"
+      statusCode: 200
+
+- name: WHEN request does not have required header constraint check MUST fail
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: X-Test
+          value: test-value
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'headerIs': request does not have header 'X-Test'
+
+- name: WHEN request has required header but with different value constraint check MUST fail
+  method: GET
+  path: /test/case
+  headers:
+    X-Test: other-value
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: X-Test
+          value: test-value
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'headerIs': 'X-Test' header value does not match:
+            expected: test-value
+              actual: other-value
+
+- name: WHEN request has required header but with value not matched 'regexp' headerIs MUST fail
+  method: GET
+  path: /test/case
+  headers:
+    X-Test: test-value
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: X-Test
+          regexp: "^other.*$"
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'headerIs': 'X-Test' header: value does not match regexp:
+            expected: $matchRegexp(^other.*$)
+              actual: test-value
+
+- name: WHEN request has required header but with value not matched regexp for value headerIs MUST fail
+  method: GET
+  path: /test/case
+  headers:
+    X-Test: test-value
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: X-Test
+          value: "$matchRegexp(^other.*$)"
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'headerIs': 'X-Test' header: value does not match regexp:
+            expected: $matchRegexp(^other.*$)
+              actual: test-value
+
+- name: WHEN field 'regexp' has invalid regexp in headerIs parser MUST fail with error
+  method: GET
+  path: /test/case
+  headers:
+    X-Test: test-value
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: "X-Test"
+          regexp: "["
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'headerIs': 'X-Test' header: cannot compile regexp:
+            expected: <nil>
+              actual: missing closing ]: `[`
+
+- name: WHEN field 'value' has invalid regexp in headerIs parser MUST fail with error
+  method: GET
+  path: /test/case
+  headers:
+    X-Test: test-value
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: "X-Test"
+          value: $matchRegexp([)
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'headerIs': 'X-Test' header: cannot compile regexp:
+            expected: <nil>
+              actual: missing closing ]: `[`
