@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"testing/fstest"
 
 	"github.com/lansfy/gonkex/storage/addons/sqldb/testfixtures"
 
@@ -14,8 +15,9 @@ import (
 )
 
 const (
-	actionExtend = "$extend"
-	actionEval   = "$eval"
+	actionExtend    = "$extend"
+	actionEval      = "$eval"
+	virtualFileName = "fake.yml"
 )
 
 type tableRow map[string]interface{}
@@ -46,11 +48,17 @@ func LoadFixtures(dialect SQLType, db *sql.DB, location string, names []string) 
 		return err
 	}
 
+	vfs := fstest.MapFS{
+		virtualFileName: &fstest.MapFile{
+			Data: data,
+		},
+	}
+
 	fixtures, err := testfixtures.New(
 		testfixtures.Database(db),
 		testfixtures.Dialect(string(dialect)),
-		testfixtures.FS(NewOneFileFS(data)),
-		testfixtures.FilesMultiTables("fake.yml"),
+		testfixtures.FS(vfs),
+		testfixtures.FilesMultiTables(virtualFileName),
 		testfixtures.DangerousSkipTestDatabaseCheck(),
 		testfixtures.SkipTableChecksumComputation(),
 		testfixtures.ResetSequencesTo(1),
