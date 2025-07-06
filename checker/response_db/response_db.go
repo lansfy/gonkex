@@ -114,7 +114,7 @@ func compareDbResponseLength(expected, actual []string, query interface{}) error
 
 	tail := []colorize.Part{
 		colorize.None("\n\n   query: "),
-		colorize.Cyan(query),
+		colorize.Cyan(fmt.Sprintf("%v", query)),
 		colorize.None("\n   diff (--- expected vs +++ actual):\n"),
 	}
 	tail = append(tail, colorize.MakeColorDiff(chunks)...)

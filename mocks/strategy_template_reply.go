@@ -87,15 +87,20 @@ func (s *templateReply) executeResponseTemplate(r *http.Request) (string, error)
 }
 
 func (s *templateReply) HandleRequest(w http.ResponseWriter, r *http.Request) []error {
-	for k, v := range s.headers {
-		w.Header().Add(k, v)
-	}
-
-	responseBody, err := s.executeResponseTemplate(r)
+	requestBody, err := getRequestBodyCopy(r)
 	if err != nil {
 		return []error{err}
 	}
 
+	responseBody, err := s.executeResponseTemplate(r)
+	if err != nil {
+		setRequestBody(r, requestBody)
+		return append([]error{err}, unhandledRequestError(r)...)
+	}
+
+	for k, v := range s.headers {
+		w.Header().Add(k, v)
+	}
 	w.WriteHeader(s.statusCode)
 	_, _ = w.Write([]byte(responseBody))
 	return nil

@@ -2,13 +2,13 @@
   method: GET
   path: /test/path
   response:
-    202: ""
+    202: "result"
   mocks:
     someservice:
       strategy: sequence
       sequence:
         - strategy: constant
-          body: ""
+          body: "result"
           statusCode: 202
 
 - name: sequence strategy MUST fail if it does not have response for request

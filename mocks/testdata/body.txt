@@ -1,1 +1,1 @@
-value
+result_from_file

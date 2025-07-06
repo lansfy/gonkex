@@ -2,36 +2,36 @@
   method: GET
   path: /v2/shelf/books
   response:
-    200: ""
+    200: "result0"
   mocks: &mocks
     someservice:
       strategy: uriVary
       uris:
         /v2/shelf/books:
           strategy: constant
-          body: ""
+          body: "result0"
           statusCode: 200
         /v2/shelf/books/1:
           strategy: constant
-          body: ""
+          body: "result1"
           statusCode: 201
         /v2/shelf:
           strategy: constant
-          body: ""
+          body: "result2"
           statusCode: 202
 
 - name: uriVary strategy MUST select second path
   method: GET
   path: /v2/shelf/books/1
   response:
-    201: ""
+    201: "result1"
   mocks: *mocks
 
 - name: uriVary strategy MUST select third path
   method: GET
   path: /v2/shelf
   response:
-    202: ""
+    202: "result2"
   mocks: *mocks
 
 - name: uriVary strategy MUST fail on unknown path
@@ -83,7 +83,7 @@
   method: GET
   path: /v2/shelf/books
   response:
-    200: ""
+    200: "result0"
   mocks:
     someservice:
       strategy: uriVary
@@ -91,18 +91,18 @@
       uris:
         /shelf/books:
           strategy: constant
-          body: ""
+          body: "result0"
           statusCode: 200
         /shelf/books/1:
           strategy: constant
-          body: ""
+          body: "result1"
           statusCode: 201
 
 - name: uriVary strategy MUST support basePath with slash at the end
   method: GET
   path: /v2/shelf/books
   response:
-    200: ""
+    200: "result0"
   mocks:
     someservice:
       strategy: uriVary
@@ -110,9 +110,9 @@
       uris:
         /shelf/books:
           strategy: constant
-          body: ""
+          body: "result0"
           statusCode: 200
         /shelf/books/1:
           strategy: constant
-          body: ""
+          body: "result1"
           statusCode: 201

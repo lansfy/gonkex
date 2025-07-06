@@ -8,7 +8,7 @@
       }
     }
   response:
-    200: ""
+    200: "result"
   mocks:
     someservice:
       requestConstraints:
@@ -19,7 +19,7 @@
               "somename": "somevalue"
             }
       strategy: constant
-      body: ""
+      body: "result"
       statusCode: 200
 
 - name: WHEN string at specified path contains json with other value bodyJSONFieldMatchesJSON MUST fail
@@ -32,7 +32,7 @@
       }
     }
   response:
-    200: ""
+    200: "result"
   mocks:
     someservice:
       requestConstraints:
@@ -43,7 +43,7 @@
               "othername": "somevalue"
             }
       strategy: constant
-      body: ""
+      body: "result"
       statusCode: 200
   meta:
     expected: |
@@ -58,7 +58,7 @@
     {
     }
   response:
-    200: ""
+    200: "result"
   mocks:
     someservice:
       requestConstraints:
@@ -69,7 +69,7 @@
               "somename": "somevalue"
             }
       strategy: constant
-      body: ""
+      body: "result"
       statusCode: 200
   meta:
     expected: |
@@ -83,7 +83,7 @@
       "field1": {"field2": ""}
     }
   response:
-    200: ""
+    200: "result"
   mocks:
     someservice:
       requestConstraints:
@@ -94,7 +94,7 @@
               "somename": "somevalue"
             }
       strategy: constant
-      body: ""
+      body: "result"
       statusCode: 200
   meta:
     expected: |
@@ -108,7 +108,7 @@
       "field1": {"field2": "invalid"}
     }
   response:
-    200: ""
+    200: "result"
   mocks:
     someservice:
       requestConstraints:
@@ -119,7 +119,7 @@
               "somename": "somevalue"
             }
       strategy: constant
-      body: ""
+      body: "result"
       statusCode: 200
   meta:
     expected: |

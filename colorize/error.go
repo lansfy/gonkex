@@ -7,20 +7,20 @@ import (
 	"github.com/fatih/color"
 )
 
-func Red(v interface{}) Part {
-	return &partImpl{color.HiRedString, fmt.Sprintf("%v", v), false}
+func Red(v string) Part {
+	return &partImpl{color.HiRedString, v, false}
 }
 
-func Cyan(v interface{}) Part {
-	return &partImpl{color.HiCyanString, fmt.Sprintf("%v", v), true}
+func Cyan(v string) Part {
+	return &partImpl{color.HiCyanString, v, true}
 }
 
-func Green(v interface{}) Part {
-	return &partImpl{color.HiGreenString, fmt.Sprintf("%v", v), false}
+func Green(v string) Part {
+	return &partImpl{color.HiGreenString, v, false}
 }
 
-func None(v interface{}) Part {
-	return &partImpl{asIsString, fmt.Sprintf("%v", v), false}
+func None(v string) Part {
+	return &partImpl{asIsString, v, false}
 }
 
 func SubError(err error) Part {
@@ -98,5 +98,5 @@ func NewEntityError(pattern, entity string) *Error {
 
 func NewNotEqualError(pattern, entity string, expected, actual interface{}) *Error {
 	pattern += "\n     expected: %s\n       actual: %s"
-	return NewError(pattern, Cyan(entity), Green(expected), Red(actual))
+	return NewError(pattern, Cyan(entity), Green(fmt.Sprintf("%v", expected)), Red(fmt.Sprintf("%v", actual)))
 }
