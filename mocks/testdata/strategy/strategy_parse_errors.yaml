@@ -4,6 +4,20 @@
   response:
     200: "result"
   mocks:
+    unknowservice:
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       unknown mock name 'unknowservice'
+
+- name: WHEN strategy declaration is not a map load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
     someservice: []
   meta:
     expected: |

@@ -2,36 +2,36 @@
   method: get
   path: /test/path
   response:
-    200: ""
+    200: "result0"
   mocks: &mocks
     someservice:
       strategy: methodVary
       methods:
         GET:
           strategy: constant
-          body: ""
+          body: "result0"
           statusCode: 200
         post:
           strategy: constant
-          body: ""
+          body: "result1"
           statusCode: 201
         DELETE:
           strategy: constant
-          body: ""
+          body: "result2"
           statusCode: 202
 
 - name: methodVary strategy MUST select POST option on POST request
   method: POST
   path: /test/path
   response:
-    201: ""
+    201: "result1"
   mocks: *mocks
 
 - name: methodVary strategy MUST select DELETE option on DELETE request
   method: DELETE
   path: /test/path
   response:
-    202: ""
+    202: "result2"
   mocks: *mocks
 
 - name: methodVary strategy MUST fail on unknown method

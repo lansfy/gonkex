@@ -128,7 +128,7 @@ func (m *Mocks) RoundTrip(req *http.Request) (*http.Response, error) {
 	host := req.URL.Hostname()
 	service := m.Service(host)
 	if service == nil {
-		return nil, fmt.Errorf("unknown mock name: %s", host)
+		return nil, fmt.Errorf("unknown mock name '%s'", host)
 	}
 	return service.RoundTrip(req)
 }
@@ -140,7 +140,7 @@ func (m *Mocks) LoadDefinitions(loader Loader, definitions map[string]interface{
 	for serviceName, definition := range definitions {
 		service := m.Service(serviceName)
 		if service == nil {
-			return fmt.Errorf("unknown mock name: %s", serviceName)
+			return fmt.Errorf("unknown mock name '%s'", serviceName)
 		}
 
 		def, err := loader.LoadDefinition(definition)

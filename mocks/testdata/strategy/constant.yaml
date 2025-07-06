@@ -2,7 +2,7 @@
   method: GET
   path: /test/path
   response:
-    400: "value"
+    400: "result"
   responseHeaders:
     400:
       Header1: Value1
@@ -13,5 +13,5 @@
       headers:
         Header1: Value1
         Header2: Value2
-      body: "value"
+      body: "result"
       statusCode: 400

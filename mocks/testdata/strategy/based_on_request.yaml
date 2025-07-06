@@ -2,7 +2,7 @@
   method: GET
   path: /request/step3
   response:
-    203: ""
+    203: "result3"
   mocks:  &mocks
     someservice:
       strategy: basedOnRequest
@@ -11,33 +11,33 @@
           requestConstraints:
             - kind: pathMatches
               path: /request/step1
-          body: ""
+          body: "result1"
           statusCode: 201
         - strategy: constant
           requestConstraints:
             - kind: pathMatches
               path: /request/step2
-          body: ""
+          body: "result2"
           statusCode: 202
         - strategy: constant
           requestConstraints:
             - kind: pathMatches
               path: /request/step3
-          body: ""
+          body: "result3"
           statusCode: 203
 
 - name: basedOnRequest strategy MUST select second response
   method: GET
   path: /request/step2
   response:
-    202: ""
+    202: "result2"
   mocks: *mocks
 
 - name: basedOnRequest strategy MUST select first response
   method: DELETE
   path: /request/step1
   response:
-    201: ""
+    201: "result1"
   mocks: *mocks
 
 - name: WHEN request does not fit on constraint basedOnRequest strategy MUST show error for all options

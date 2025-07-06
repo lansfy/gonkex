@@ -2,6 +2,8 @@ package mocks_test
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"regexp"
 	"strings"
 	"testing"
@@ -19,7 +21,9 @@ import (
 var portRegexp = regexp.MustCompile(`127\.0\.0\.1:\d+`)
 
 type errorChecker struct {
-	t *testing.T
+	t         *testing.T
+	errorInfo string
+	lastTest  models.TestInterface
 }
 
 func normalizeString(s string) string {
@@ -41,6 +45,9 @@ func simplifyError(err error) string {
 }
 
 func (c *errorChecker) Handle(t models.TestInterface, f runner.TestExecutor) (bool, error) {
+	c.lastTest = t
+	c.errorInfo = fmt.Sprintf("test %q (%s) failed", t.GetName(), t.GetFileName())
+
 	content := ""
 	result, err := f(t)
 	if err != nil {
@@ -53,16 +60,34 @@ func (c *errorChecker) Handle(t models.TestInterface, f runner.TestExecutor) (bo
 		}
 	}
 
-	content = normalizeString(content)
-
-	expectedStr := ""
-	expected := t.GetMeta("expected")
-	if expected != nil {
-		expectedStr = normalizeString(expected.(string))
-	}
-
-	assert.Equal(c.t, expectedStr, content, "test %q (%s) failed", t.GetName(), t.GetFileName())
+	assert.Equal(c.t, c.getExpected(), normalizeString(content), c.errorInfo)
 	return false, nil
+}
+
+func (c *errorChecker) CheckRequest(mockName string, req *http.Request, resp *http.Response) []error {
+	assert.Equal(c.t, mockName, "someservice", c.errorInfo)
+	if strings.Contains(c.lastTest.GetFileName(), "drop_request") {
+		// we don't check body for drop_request strategy
+		return nil
+	}
+	assert.NotNil(c.t, resp, c.errorInfo)
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	require.NoError(c.t, err, c.errorInfo)
+
+	if !strings.Contains(c.getExpected(), "unhandled request to mock") &&
+		!strings.Contains(c.lastTest.GetFileName(), "nop") {
+		assert.Contains(c.t, string(bodyBytes), "result", c.errorInfo)
+	}
+	return nil
+}
+
+func (c *errorChecker) getExpected() string {
+	expected := c.lastTest.GetMeta("expected")
+	if expected == nil {
+		return ""
+	}
+	return normalizeString(expected.(string))
 }
 
 func Test_Declarative(t *testing.T) {
@@ -72,7 +97,10 @@ func Test_Declarative(t *testing.T) {
 	require.NoError(t, err)
 	defer m.Shutdown()
 
-	checker := &errorChecker{t}
+	checker := &errorChecker{
+		t: t,
+	}
+	m.SetCheckers([]mocks.CheckerInterface{checker, checker})
 
 	opts := &runner.RunnerOpts{
 		Host:        "http://" + m.Service("someservice").ServerAddr(),

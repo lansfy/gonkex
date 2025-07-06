@@ -2,7 +2,7 @@
   method: GET
   path: /test/path
   response:
-    400: "value"
+    400: result_from_file
   responseHeaders:
     400:
       name1: value1
