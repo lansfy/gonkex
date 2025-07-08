@@ -21,25 +21,22 @@ type Mocks struct {
 
 // New creates a new Mocks instance from a list of ServiceMock objects.
 func New(mocks ...*ServiceMock) *Mocks {
-	mocksMap := map[string]*ServiceMock{}
+	m := &Mocks{map[string]*ServiceMock{}}
 	for _, v := range mocks {
-		mocksMap[v.ServiceName] = v
+		m.SetMock(v)
 	}
-	return &Mocks{
-		mocks: mocksMap,
-	}
+	return m
 }
 
 // NewNop creates a new Mocks instance with provided service names.
 // Each service is initialized with a empty definition, which will fail reply.
 func NewNop(serviceNames ...string) *Mocks {
-	mocksMap := map[string]*ServiceMock{}
+	mocks := []*ServiceMock{}
 	for _, name := range serviceNames {
-		mocksMap[name] = NewServiceMock(name, nil)
+		mocks = append(mocks, NewServiceMock(name, nil))
 	}
-	return &Mocks{
-		mocks: mocksMap,
-	}
+
+	return New(mocks...)
 }
 
 // ResetDefinitions restores the original default definition for all mock services.
@@ -73,6 +70,9 @@ func (m *Mocks) Shutdown() {
 func (m *Mocks) ShutdownContext(ctx context.Context) error {
 	errs := []string{}
 	for _, v := range m.mocks {
+		if !v.IsStarted() {
+			continue
+		}
 		if err := v.ShutdownServer(ctx); err != nil {
 			errs = append(errs, fmt.Sprintf("%s: %s", v.mock.path, err.Error()))
 		}
