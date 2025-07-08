@@ -3,10 +3,12 @@ package mocks_test
 import (
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/models"
@@ -91,8 +93,7 @@ func (c *errorChecker) getExpected() string {
 }
 
 func Test_Declarative(t *testing.T) {
-	service := mocks.NewServiceMock("someservice", nil)
-	m := mocks.New(service)
+	m := mocks.NewNop("someservice")
 	err := m.Start()
 	require.NoError(t, err)
 	defer m.Shutdown()
@@ -112,4 +113,28 @@ func Test_Declarative(t *testing.T) {
 	r := runner.New(yaml_file.NewLoader("testdata"), opts)
 	err = r.Run()
 	require.NoError(t, err)
+}
+
+func Test_MocksWithPort(t *testing.T) {
+	m := mocks.NewNop("someservice")
+	err := m.Start()
+	require.NoError(t, err)
+	defer m.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	require.NotNil(t, m.Service("someservice"))
+	addr := m.Service("someservice").ServerAddr()
+
+	_, port, err := net.SplitHostPort(addr)
+	require.NoError(t, err)
+
+	m = mocks.NewNop("someservice:" + port)
+	err = m.Start()
+	require.ErrorContains(t, err, fmt.Sprintf("listen tcp 127.0.0.1:%s: bind:", port))
+
+	require.NotNil(t, m.Service("someservice"))
+	require.Panics(t, func() {
+		m.Service("someservice").ServerAddr()
+	})
 }
