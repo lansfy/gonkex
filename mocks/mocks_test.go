@@ -5,11 +5,12 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
+	"github.com/lansfy/gonkex/endpoint"
 	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/runner"
@@ -92,6 +93,47 @@ func (c *errorChecker) getExpected() string {
 	return normalizeString(expected.(string))
 }
 
+type item struct {
+	RequestURL string `json:"request_url"`
+	Response   string `json:"response_body"`
+}
+
+func multiRequest(h endpoint.Helper) error {
+	h.SetStatusCode(200)
+	wrap := func(err error) error {
+		if err != nil {
+			err = fmt.Errorf("error: %w", err)
+			_ = h.SetResponseAsBytes([]byte(err.Error()))
+		}
+		return nil
+	}
+	data := []item{}
+	err := h.GetRequestAsJson(&data)
+	if err != nil {
+		return wrap(err)
+	}
+
+	client := &http.Client{
+		Transport: h.GetMocksRoundTripper(),
+	}
+
+	for i := range data {
+		resp, err := client.Get("http://someservice" + data[i].RequestURL)
+		if err != nil {
+			return wrap(err)
+		}
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return wrap(err)
+		}
+		resp.Body.Close()
+		if string(body) != data[i].Response {
+			return wrap(fmt.Errorf("request #%d: not expected response %q", i, string(body)))
+		}
+	}
+	return nil
+}
+
 func Test_Declarative(t *testing.T) {
 	m := mocks.NewNop("someservice")
 	err := m.Start()
@@ -108,6 +150,9 @@ func Test_Declarative(t *testing.T) {
 		Mocks:       m,
 		MocksLoader: mocks.NewYamlLoader(&mocks.YamlLoaderOpts{}),
 		TestHandler: checker.Handle,
+		HelperEndpoints: endpoint.EndpointMap{
+			"multi_request": multiRequest,
+		},
 	}
 
 	r := runner.New(yaml_file.NewLoader("testdata"), opts)
@@ -120,8 +165,6 @@ func Test_MocksWithPort(t *testing.T) {
 	err := m.Start()
 	require.NoError(t, err)
 	defer m.Shutdown()
-
-	time.Sleep(100 * time.Millisecond)
 
 	require.NotNil(t, m.Service("someservice"))
 	addr := m.Service("someservice").ServerAddr()
@@ -137,4 +180,17 @@ func Test_MocksWithPort(t *testing.T) {
 	require.Panics(t, func() {
 		m.Service("someservice").ServerAddr()
 	})
+}
+
+func TestRegisterEnvironmentVariables(t *testing.T) {
+	m := mocks.NewNop("service1", "service2")
+	err := m.Start()
+	require.NoError(t, err)
+	defer m.Shutdown()
+
+	err = m.RegisterEnvironmentVariables("TEST_")
+	require.NoError(t, err)
+
+	require.Equal(t, m.Service("service1").ServerAddr(), os.Getenv("TEST_SERVICE1"))
+	require.Equal(t, m.Service("service2").ServerAddr(), os.Getenv("TEST_SERVICE2"))
 }

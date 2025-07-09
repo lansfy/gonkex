@@ -11,7 +11,61 @@
           body: "result"
           statusCode: 202
 
+- name: sequence strategy MUST select first response on first request, second on second request and so on
+  method: GET
+  path: /gonkex/multi_request
+  request: >
+    [
+      {"request_url": "/call/1", "response_body": "result1"},
+      {"request_url": "/call/2", "response_body": "result2"},
+      {"request_url": "/call/3", "response_body": "result3"}
+    ]
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: sequence
+      sequence:
+        - strategy: constant
+          body: "result1"
+          statusCode: 200
+        - strategy: constant
+          body: "result2"
+          statusCode: 200
+        - strategy: constant
+          body: "result3"
+          statusCode: 200
+
 - name: sequence strategy MUST fail if it does not have response for request
+  method: GET
+  path: /gonkex/multi_request
+  request: >
+    [
+      {"request_url": "/call/1", "response_body": "result1"},
+      {"request_url": "/call/2", "response_body": "result2"},
+      {"request_url": "/call/3", "response_body": ""}
+    ]
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: sequence
+      sequence:
+        - strategy: constant
+          body: "result1"
+          statusCode: 200
+        - strategy: constant
+          body: "result2"
+          statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': unhandled request to mock:
+       GET /call/3 HTTP/1.1
+       Host: someservice
+       Accept-Encoding: gzip
+       User-Agent: Go-http-client/1.1
+
+- name: sequence strategy MUST fail return empty 200 response and generate error
   method: GET
   path: /test/path
   response:

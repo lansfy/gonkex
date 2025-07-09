@@ -67,6 +67,10 @@ func (h *helperImpl) GetRequestAsBytes() ([]byte, error) {
 	return h.requestBytes, nil
 }
 
+func (h *helperImpl) GetMocksRoundTripper() http.RoundTripper {
+	return h.services
+}
+
 func (h *helperImpl) GetMockAddr(name string) string {
 	if h.services == nil {
 		panic(fmt.Sprintf("mock with name %q not exists", name))

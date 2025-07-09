@@ -13,7 +13,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'pathMatches': key 'path' has non-string value
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'pathMatches': key 'path' has non-string value
 
 - name: WHEN field 'regexp' has invalid type in pathMatches parser MUST fail with error
   method: GET
@@ -30,7 +30,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'pathMatches': key 'regexp' has non-string value
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'pathMatches': key 'regexp' has non-string value
 
 - name: WHEN 'pathMatches' constraint has unknown key load definition MUST fail with error
   method: GET
@@ -48,4 +48,4 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'pathMatches': unexpected key 'invalid' (allowed only [kind path regexp])
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'pathMatches': unexpected key 'invalid' (allowed only [kind path regexp])

@@ -66,23 +66,35 @@ func (m *ServiceMock) StartServerWithAddr(addr string) error {
 	if err != nil {
 		return err
 	}
-	m.listener = ln
-	m.server = &http.Server{
-		Addr:    addr,
-		Handler: m,
-	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
 	go func() {
-		_ = m.server.Serve(ln)
+		server := &http.Server{
+			Addr:    addr,
+			Handler: m,
+		}
+
+		m.listener = ln
+		m.server = server
+		wg.Done()
+
+		_ = server.Serve(ln)
 	}()
+	wg.Wait()
 	return nil
 }
 
 // ShutdownServer gracefully stops the HTTP server using the provided context.
 func (m *ServiceMock) ShutdownServer(ctx context.Context) error {
-	err := m.server.Shutdown(ctx)
+	server := m.server
 	m.listener = nil
 	m.server = nil
-	return err
+	if server == nil {
+		return nil
+	}
+	return server.Shutdown(ctx)
 }
 
 // IsStarted returns true if mock service started.

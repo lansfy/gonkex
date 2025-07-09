@@ -42,13 +42,13 @@ func (l *loaderImpl) LoadDefinition(rawDef interface{}) (*Definition, error) {
 }
 
 func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definition, error) {
-	wrap := func(err error) error {
+	wrapPath := func(path string, err error) error {
 		return colorize.NewEntityError("path %s", path).SetSubError(err)
 	}
 
 	def, ok := rawDef.(map[interface{}]interface{})
 	if !ok {
-		return nil, wrap(errors.New("definition must be key-values"))
+		return nil, wrapPath(path, errors.New("definition must be key-values"))
 	}
 
 	// load request constraints
@@ -56,13 +56,13 @@ func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definitio
 	if constraints, ok := def["requestConstraints"]; ok {
 		constraints, ok := constraints.([]interface{})
 		if !ok {
-			return nil, wrap(colorize.NewEntityError("%s requires array", "requestConstraints"))
+			return nil, wrapPath(path+".requestConstraints", colorize.NewEntityError("%s must be array", "requestConstraints"))
 		}
 		requestConstraints = []verifier{}
 		for i, c := range constraints {
 			constraint, err := loadConstraint(c)
 			if err != nil {
-				return nil, wrap(fmt.Errorf("unable to load constraint %d: %w", i+1, err))
+				return nil, wrapPath(fmt.Sprintf("%s.requestConstraints[%d]", path, i), err)
 			}
 			requestConstraints = append(requestConstraints, constraint)
 		}
@@ -78,10 +78,10 @@ func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definitio
 	// load reply strategy
 	strategyName, err := getRequiredStringKey(def, "strategy", false)
 	if err != nil {
-		return nil, wrap(err)
+		return nil, wrapPath(path, err)
 	}
 
-	wrap = func(err error) error {
+	wrap := func(err error) error {
 		return colorize.NewEntityError("strategy %s", strategyName).SetSubError(err)
 	}
 
@@ -141,18 +141,23 @@ func (l *loaderImpl) loadStrategy(path, strategyName string, definition map[inte
 }
 
 func loadConstraint(definition interface{}) (verifier, error) {
+	wrap := func(err error) error {
+		return colorize.NewError("load constraint").SetSubError(err)
+	}
+
 	def, ok := definition.(map[interface{}]interface{})
 	if !ok {
-		return nil, errors.New("must be map")
+		return nil, wrap(errors.New("must be map"))
 	}
 	kind, err := getRequiredStringKey(def, "kind", false)
 	if err != nil {
-		return nil, err
+		return nil, wrap(err)
 	}
+
 	ak := []string{"kind"}
 
-	wrap := func(err error) error {
-		return colorize.NewEntityError("constraint %s", kind).SetSubError(err)
+	wrap = func(err error) error {
+		return colorize.NewEntityError("load constraint %s", kind).SetSubError(err)
 	}
 
 	c, err := loadConstraintOfKind(kind, def, &ak)

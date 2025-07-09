@@ -1,0 +1,39 @@
+- name: WHEN service make not required number of calls to mock test MUST fail with error
+  method: GET
+  path: /gonkex/multi_request
+  request: >
+    [
+      {"request_url": "/call/1", "response_body": "result"},
+      {"request_url": "/call/2", "response_body": "result"}
+    ]
+  response:
+    200: ""
+  mocks:
+    someservice:
+      calls: 3
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': path '$': number of 'calls' does not match:
+            expected: 3
+              actual: 2
+
+- name: WHEN service make specified number of calls to mock test MUST be successful
+  method: GET
+  path: /gonkex/multi_request
+  request: >
+    [
+      {"request_url": "/call/1", "response_body": "result"},
+      {"request_url": "/call/2", "response_body": "result"},
+      {"request_url": "/call/3", "response_body": "result"}
+    ]
+  response:
+    200: ""
+  mocks:
+    someservice:
+      calls: 3
+      strategy: constant
+      body: "result"
+      statusCode: 200

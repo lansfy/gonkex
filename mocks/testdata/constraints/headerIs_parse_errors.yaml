@@ -15,7 +15,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'headerIs': 'header' key required
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'headerIs': 'header' key required
 
 - name: WHEN field 'value' has invalid type in headerIs parser MUST fail with error
   method: GET
@@ -35,7 +35,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'headerIs': key 'header' has non-string value
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'headerIs': key 'header' has non-string value
 
 - name: WHEN field 'value' has invalid type in headerIs parser MUST fail with error
   method: GET
@@ -55,7 +55,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'headerIs': key 'value' has non-string value
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'headerIs': key 'value' has non-string value
 
 - name: WHEN field 'regexp' has invalid type in headerIs parser MUST fail with error
   method: GET
@@ -75,7 +75,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'headerIs': key 'regexp' has non-string value
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'headerIs': key 'regexp' has non-string value
 
 - name: WHEN 'headerIs' constraint has unknown key load definition MUST fail with error
   method: GET
@@ -96,4 +96,4 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'headerIs': unexpected key 'invalid' (allowed only [kind header value regexp])
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'headerIs': unexpected key 'invalid' (allowed only [kind header value regexp])

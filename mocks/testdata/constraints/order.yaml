@@ -1,0 +1,77 @@
+- name: WHEN mock receive requests in specified order check MUST be successful
+  method: GET
+  path: /gonkex/multi_request
+  request: >
+    [
+      {"request_url": "/call/1", "response_body": "result1"},
+      {"request_url": "/call/2", "response_body": "result2"},
+      {"request_url": "/call/3", "response_body": "result3"}
+    ]
+  response:
+    200: ""
+  mocks: &mocks
+    someservice:
+      strategy: uriVary
+      uris:
+        /call/1:
+          order: 1
+          strategy: constant
+          body: "result1"
+          statusCode: 200
+        /call/2:
+          order: 2
+          strategy: constant
+          body: "result2"
+          statusCode: 200
+        /call/3:
+          order: 3
+          strategy: constant
+          body: "result3"
+          statusCode: 200
+
+- name: WHEN mock receive requests in wrong order check MUST fail
+  method: GET
+  path: /gonkex/multi_request
+  request: >
+    [
+      {"request_url": "/call/1", "response_body": "result1"},
+      {"request_url": "/call/3", "response_body": "result3"},
+      {"request_url": "/call/2", "response_body": "result2"}
+    ]
+  response:
+    200: ""
+  mocks: *mocks
+  meta:
+    expected: |
+       1) mock 'someservice': the 'order' of the current request (2) is less than that of the previous request (3)
+
+- name: order value can be equal
+  method: GET
+  path: /gonkex/multi_request
+  request: >
+    [
+      {"request_url": "/call/1", "response_body": "result1"},
+      {"request_url": "/call/2", "response_body": "result2"},
+      {"request_url": "/call/3", "response_body": "result3"}
+    ]
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: uriVary
+      uris:
+        /call/1:
+          order: 1
+          strategy: constant
+          body: "result1"
+          statusCode: 200
+        /call/2:
+          order: 1
+          strategy: constant
+          body: "result2"
+          statusCode: 200
+        /call/3:
+          order: 2
+          strategy: constant
+          body: "result3"
+          statusCode: 200

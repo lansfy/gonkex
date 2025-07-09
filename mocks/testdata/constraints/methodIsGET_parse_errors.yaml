@@ -13,4 +13,4 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'methodIsGET': unexpected key 'invalid' (allowed only [kind])
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'methodIsGET': unexpected key 'invalid' (allowed only [kind])

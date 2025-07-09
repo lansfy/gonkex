@@ -1,9 +1,9 @@
 package mocks
 
 import (
-	"fmt"
 	"net/http"
-	"regexp"
+
+	"github.com/lansfy/gonkex/compare"
 )
 
 func loadBodyMatchesTextConstraint(def map[interface{}]interface{}) (verifier, error) {
@@ -15,27 +15,22 @@ func loadBodyMatchesTextConstraint(def map[interface{}]interface{}) (verifier, e
 	if err != nil {
 		return nil, err
 	}
-	return newBodyMatchesTextConstraint(bodyStr, regexpStr)
+
+	if regexpStr != "" {
+		bodyStr = compare.MatchRegexpWrap(regexpStr)
+	}
+
+	return newBodyMatchesTextConstraint(bodyStr), nil
 }
 
-func newBodyMatchesTextConstraint(body, re string) (verifier, error) {
-	var reCompiled *regexp.Regexp
-	if re != "" {
-		var err error
-		reCompiled, err = regexp.Compile(re)
-		if err != nil {
-			return nil, err
-		}
-	}
+func newBodyMatchesTextConstraint(body string) verifier {
 	return &bodyMatchesTextConstraint{
-		body:   body,
-		regexp: reCompiled,
-	}, nil
+		body: body,
+	}
 }
 
 type bodyMatchesTextConstraint struct {
-	body   string
-	regexp *regexp.Regexp
+	body string
 }
 
 func (c *bodyMatchesTextConstraint) GetName() string {
@@ -48,13 +43,5 @@ func (c *bodyMatchesTextConstraint) Verify(r *http.Request) []error {
 		return []error{err}
 	}
 
-	textBody := string(body)
-
-	if c.body != "" && c.body != textBody {
-		return []error{fmt.Errorf("body value\n%s\ndoes not match expected\n%s", textBody, c.body)}
-	}
-	if c.regexp != nil && !c.regexp.MatchString(textBody) {
-		return []error{fmt.Errorf("body value\n%s\ndoes not match regexp %s", textBody, c.regexp)}
-	}
-	return nil
+	return compareValues("request %s", "body", c.body, string(body))
 }
