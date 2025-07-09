@@ -55,7 +55,7 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'pathMatches': url 'path' does not match expected:
+       1) mock 'someservice': request constraint 'pathMatches': url 'path': values do not match:
             expected: /other
               actual: /test/case
 

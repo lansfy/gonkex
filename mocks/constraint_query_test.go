@@ -31,6 +31,7 @@ func Test_newQueryConstraint(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt.want.name = "queryMatches"
 			got, err := newQueryConstraint(tt.query)
 			require.NoError(t, err, "newQueryConstraint() returned an unexpected error")
 			require.NotNil(t, got, "newQueryConstraint() returned nil")

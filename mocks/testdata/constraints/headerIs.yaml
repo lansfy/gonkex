@@ -85,7 +85,7 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'headerIs': 'X-Test' header value does not match:
+       1) mock 'someservice': request constraint 'headerIs': header 'X-Test': values do not match:
             expected: test-value
               actual: other-value
 
@@ -107,7 +107,7 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'headerIs': 'X-Test' header: value does not match regexp:
+       1) mock 'someservice': request constraint 'headerIs': header 'X-Test': value does not match regexp:
             expected: $matchRegexp(^other.*$)
               actual: test-value
 
@@ -129,7 +129,7 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'headerIs': 'X-Test' header: value does not match regexp:
+       1) mock 'someservice': request constraint 'headerIs': header 'X-Test': value does not match regexp:
             expected: $matchRegexp(^other.*$)
               actual: test-value
 
@@ -151,7 +151,7 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'headerIs': 'X-Test' header: cannot compile regexp:
+       1) mock 'someservice': request constraint 'headerIs': header 'X-Test': cannot compile regexp:
             expected: <nil>
               actual: missing closing ]: `[`
 
@@ -173,6 +173,6 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'headerIs': 'X-Test' header: cannot compile regexp:
+       1) mock 'someservice': request constraint 'headerIs': header 'X-Test': cannot compile regexp:
             expected: <nil>
               actual: missing closing ]: `[`

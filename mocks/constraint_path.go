@@ -3,7 +3,6 @@ package mocks
 import (
 	"net/http"
 
-	"github.com/lansfy/gonkex/colorize"
 	"github.com/lansfy/gonkex/compare"
 )
 
@@ -17,25 +16,20 @@ func loadPathConstraint(def map[interface{}]interface{}) (verifier, error) {
 		return nil, err
 	}
 
-	matcher := compare.StringAsMatcher(compare.MatchRegexpWrap(regexpStr))
-	if m := compare.StringAsMatcher(pathStr); m != nil {
-		pathStr = ""
-		matcher = m
+	if regexpStr != "" {
+		pathStr = compare.MatchRegexpWrap(regexpStr)
 	}
-
-	return newPathConstraint(pathStr, matcher), nil
+	return newPathConstraint(pathStr), nil
 }
 
-func newPathConstraint(path string, matcher compare.Matcher) verifier {
+func newPathConstraint(path string) verifier {
 	return &pathConstraint{
-		path:    path,
-		matcher: matcher,
+		path: path,
 	}
 }
 
 type pathConstraint struct {
-	path    string
-	matcher compare.Matcher
+	path string
 }
 
 func (c *pathConstraint) GetName() string {
@@ -43,16 +37,5 @@ func (c *pathConstraint) GetName() string {
 }
 
 func (c *pathConstraint) Verify(r *http.Request) []error {
-	path := r.URL.Path
-	if c.path != "" && c.path != path {
-		return []error{colorize.NewNotEqualError("url %s does not match expected:", "path", c.path, path)}
-	}
-
-	if c.matcher != nil {
-		err := c.matcher.MatchValues("url %s:", "path", path)
-		if err != nil {
-			return []error{err}
-		}
-	}
-	return nil
+	return compareValues("url %s", "path", c.path, r.URL.Path)
 }

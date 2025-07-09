@@ -100,3 +100,17 @@ func NewNotEqualError(pattern, entity string, expected, actual interface{}) *Err
 	pattern += "\n     expected: %s\n       actual: %s"
 	return NewError(pattern, Cyan(entity), Green(fmt.Sprintf("%v", expected)), Red(fmt.Sprintf("%v", actual)))
 }
+
+// TODO: remove this hack
+func RemovePathComponent(err error) error {
+	pErr, ok := err.(*Error)
+	if !ok {
+		return err
+	}
+	if pErr.parts[0].Text() == "path " && len(pErr.parts) >= 3 {
+		parts := pErr.parts[2:]
+		parts[0] = None(parts[0].Text()[2:])
+		pErr.parts = parts
+	}
+	return pErr
+}
