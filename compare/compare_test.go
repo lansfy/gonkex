@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/lansfy/gonkex/colorize"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -462,4 +464,15 @@ func TestCompareMapsWithFewErrors(t *testing.T) {
 	array2 := map[string]string{"a": "1", "b": "3", "d": "4"}
 	errors := Compare(array1, array2, Params{})
 	assert.Len(t, errors, 2)
+}
+
+func TestRemovePathComponent(t *testing.T) {
+	expected := fmt.Sprintf(
+		"%s:\n     expected: %v\n       actual: %v",
+		"values do not match", 1, 2,
+	)
+	errors := Compare("1", "2", Params{})
+	require.Len(t, errors, 1)
+	err := colorize.RemovePathComponent(errors[0])
+	require.Equal(t, expected, err.Error())
 }

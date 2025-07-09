@@ -23,27 +23,23 @@ func loadHeaderConstraint(def map[interface{}]interface{}) (verifier, error) {
 		return nil, err
 	}
 
-	matcher := compare.StringAsMatcher(compare.MatchRegexpWrap(regexpStr))
-	if m := compare.StringAsMatcher(valueStr); m != nil {
-		valueStr = ""
-		matcher = m
+	if regexpStr != "" {
+		valueStr = compare.MatchRegexpWrap(regexpStr)
 	}
 
-	return newHeaderConstraint(header, valueStr, matcher), nil
+	return newHeaderConstraint(header, valueStr), nil
 }
 
-func newHeaderConstraint(header, value string, matcher compare.Matcher) verifier {
+func newHeaderConstraint(header, value string) verifier {
 	return &headerConstraint{
-		header:  header,
-		value:   value,
-		matcher: matcher,
+		header: header,
+		value:  value,
 	}
 }
 
 type headerConstraint struct {
-	header  string
-	value   string
-	matcher compare.Matcher
+	header string
+	value  string
 }
 
 func (c *headerConstraint) GetName() string {
@@ -55,14 +51,17 @@ func (c *headerConstraint) Verify(r *http.Request) []error {
 	if value == "" {
 		return []error{colorize.NewEntityError("request does not have header %s", c.header)}
 	}
-	if c.value != "" && c.value != value {
-		return []error{colorize.NewNotEqualError("%s header value does not match:", c.header, c.value, value)}
+
+	return compareValues("header %s", c.header, c.value, value)
+}
+
+func compareValues(pattern, entity string, expected, actual interface{}) []error {
+	errs := compare.Compare(expected, actual, compare.Params{
+		IgnoreArraysOrdering: true,
+	})
+	for idx := range errs {
+		errs[idx] = colorize.NewEntityError(pattern, entity).SetSubError(
+			colorize.RemovePathComponent(errs[idx]))
 	}
-	if c.matcher != nil {
-		err := c.matcher.MatchValues("%s header:", c.header, value)
-		if err != nil {
-			return []error{err}
-		}
-	}
-	return nil
+	return errs
 }

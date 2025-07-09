@@ -10,32 +10,33 @@ func Test_newQueryRegexpConstraint(t *testing.T) {
 	tests := []struct {
 		name  string
 		query string
-		want  queryRegexpConstraint
+		want  queryConstraint
 	}{
 		{
 			name:  "simple expQuery",
 			query: "a=1&b=2&a=3",
-			want:  queryRegexpConstraint{expectedQuery: map[string][]string{"a": {"1", "3"}, "b": {"2"}}},
+			want:  queryConstraint{expectedQuery: map[string][]string{"a": {"1", "3"}, "b": {"2"}}},
 		},
 		{
 			name:  "expQuery written with '?'",
 			query: "?a=1&b=2&a=3",
-			want:  queryRegexpConstraint{expectedQuery: map[string][]string{"a": {"1", "3"}, "b": {"2"}}},
+			want:  queryConstraint{expectedQuery: map[string][]string{"a": {"1", "3"}, "b": {"2"}}},
 		},
 		{
 			name:  "expQuery contains multiple '?'",
 			query: "?a=1&b=?&a=3",
-			want:  queryRegexpConstraint{expectedQuery: map[string][]string{"a": {"1", "3"}, "b": {"?"}}},
+			want:  queryConstraint{expectedQuery: map[string][]string{"a": {"1", "3"}, "b": {"?"}}},
 		},
 		{
 			name:  "expQuery contains 'matchRegexp'",
 			query: "a=1&b=$matchRegexp(\\d+)&a=3",
-			want:  queryRegexpConstraint{expectedQuery: map[string][]string{"a": {"1", "3"}, "b": {"$matchRegexp(\\d+)"}}},
+			want:  queryConstraint{expectedQuery: map[string][]string{"a": {"1", "3"}, "b": {"$matchRegexp(\\d+)"}}},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt.want.name = "queryMatchesRegexp"
 			got, err := newQueryRegexpConstraint(tt.query)
 
 			require.NoError(t, err)

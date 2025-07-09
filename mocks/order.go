@@ -15,16 +15,19 @@ type orderChecker struct {
 }
 
 func newOrderChecker() *orderChecker {
-	c := &orderChecker{}
-	c.Reset()
-	return c
+	return &orderChecker{
+		value: OrderNoValue,
+	}
 }
 
 func (c *orderChecker) Update(value int) error {
 	if value == OrderNoValue {
 		return nil
 	}
+
 	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	var err error
 	if c.value > value {
 		err = colorize.NewError("the %s of the current request (%s) is less than that of the previous request (%s)",
@@ -34,7 +37,6 @@ func (c *orderChecker) Update(value int) error {
 		)
 	}
 	c.value = value
-	c.mutex.Unlock()
 	return err
 }
 

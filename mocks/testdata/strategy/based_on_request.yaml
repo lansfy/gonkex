@@ -48,13 +48,13 @@
   mocks: *mocks
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'pathMatches': url 'path' does not match expected:
+       1) mock 'someservice': request constraint 'pathMatches': url 'path': values do not match:
             expected: /request/step1
               actual: /test/path
-       2) mock 'someservice': request constraint 'pathMatches': url 'path' does not match expected:
+       2) mock 'someservice': request constraint 'pathMatches': url 'path': values do not match:
             expected: /request/step2
               actual: /test/path
-       3) mock 'someservice': request constraint 'pathMatches': url 'path' does not match expected:
+       3) mock 'someservice': request constraint 'pathMatches': url 'path': values do not match:
             expected: /request/step3
               actual: /test/path
        4) mock 'someservice': unhandled request to mock:

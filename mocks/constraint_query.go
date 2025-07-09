@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/lansfy/gonkex/colorize"
 )
 
 func loadQueryConstraint(def map[interface{}]interface{}) (verifier, error) {
@@ -25,35 +26,48 @@ func newQueryConstraint(query string) (*queryConstraint, error) {
 		return nil, err
 	}
 
-	return &queryConstraint{expectedQuery: pq}, nil
+	return &queryConstraint{
+		name:          "queryMatches",
+		expectedQuery: pq,
+	}, nil
 }
 
 type queryConstraint struct {
-	expectedQuery url.Values
+	name          string
+	expectedQuery map[string][]string
 }
 
 func (c *queryConstraint) GetName() string {
-	return "queryMatches"
+	return c.name
 }
 
 func (c *queryConstraint) Verify(r *http.Request) []error {
+	expectedKeys := []string{}
+	for key := range c.expectedQuery {
+		expectedKeys = append(expectedKeys, key)
+	}
+	sort.Strings(expectedKeys)
+
 	errors := []error{}
 	gotQuery := r.URL.Query()
-	for key, want := range c.expectedQuery {
+	for _, key := range expectedKeys {
 		got, ok := gotQuery[key]
 		if !ok {
 			errors = append(errors, fmt.Errorf("'%s' parameter is missing in request query", key))
 			continue
 		}
+		expected := c.expectedQuery[key]
 
-		sort.Strings(got)
-		sort.Strings(want)
-		if !reflect.DeepEqual(got, want) {
-			errors = append(errors, fmt.Errorf(
-				"'%s' parameters are not equal.\n Got: %s \n Want: %s", key, got, want,
-			))
+		if len(expected) != len(got) {
+			sort.Strings(expected)
+			sort.Strings(got)
+			errors = append(errors, colorize.NewNotEqualError(
+				"number of values for parameter %s is not equal to expected:",
+				key, got, expected))
+			continue
 		}
-	}
 
+		errors = append(errors, compareValues("parameter %s", key, expected, got)...)
+	}
 	return errors
 }

@@ -78,7 +78,6 @@
     expected: |
        1) mock 'someservice': request constraint 'queryMatchesRegexp': 'people' parameter is missing in request query
 
-# TODO: unify error
 - name: WHEN one of expected values absent in query queryMatchesRegexp MUST fail with error
   method: GET
   path: /test/case
@@ -95,29 +94,29 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'queryMatchesRegexp': 'food' parameters comparison failed. 
-        expected and actual query params have different lengths'
+       1) mock 'someservice': request constraint 'queryMatchesRegexp': number of values for parameter 'food' is not equal to expected:
+            expected: [beer cake]
+              actual: [beer]
 
-# TODO: unify error
-#- name: WHEN one of expected key has other value in query queryMatchesRegexp MUST fail with error
-#  method: GET
-#  path: /test/case
-#  query: food=cake&food=beer&people=3
-#  response:
-#    200: "result"
-#  mocks:
-#    someservice:
-#      requestConstraints:
-#        - kind: queryMatchesRegexp
-#          expectedQuery: ?people=2&food=tea&food=cake
-#      strategy: constant
-#      body: "result"
-#      statusCode: 200
-#  meta:
-#    expected: |
-#       1) mock 'someservice': request constraint 'queryMatchesRegexp': 'food' parameters are not equal.
-#        Got: [beer cake]
-#        Want: [cake tea]
-#       2) mock 'someservice': request constraint 'queryMatchesRegexp': 'people' parameters are not equal.
-#        Got: [3]
-#        Want: [2]
+- name: WHEN one of expected key has other value in query queryMatchesRegexp MUST fail with error
+  method: GET
+  path: /test/case
+  query: food=cake&food=beer&people=3
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatchesRegexp
+          expectedQuery: ?people=2&food=$matchRegexp(^c.*$)&food=tea
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'queryMatchesRegexp': parameter 'food': values do not match:
+            expected: tea
+              actual: beer
+       2) mock 'someservice': request constraint 'queryMatchesRegexp': parameter 'people': values do not match:
+            expected: 2
+              actual: 3
