@@ -141,7 +141,6 @@ func checkApplied(t *testing.T, test models.TestInterface, combined bool) {
 	if combined {
 		resp, ok = test.GetResponse(501)
 		assert.True(t, ok)
-		t.Log(resp)
 		assert.Equal(t, "some_value - redefined_value", resp)
 	}
 }

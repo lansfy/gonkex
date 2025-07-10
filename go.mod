@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/fatih/color v1.7.0
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.3.1
 	github.com/joho/godotenv v1.3.0
 	github.com/kylelemons/godebug v1.1.0

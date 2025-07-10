@@ -43,6 +43,11 @@ type Form interface {
 	GetFields() map[string]string // Map of field name to field value for form fields
 }
 
+type Script interface {
+	CmdLine() string        // Command line to execute
+	Timeout() time.Duration // Timeout for execution (3 seconds by default)
+}
+
 // TestInterface defines the interface for Gonkex test cases
 // Contains all methods necessary to execute a test
 type TestInterface interface {
@@ -76,11 +81,8 @@ type TestInterface interface {
 	Pause() time.Duration             // Pause duration before test execution
 	AfterRequestPause() time.Duration // Pause duration after request execution
 
-	BeforeScriptPath() string           // Path to script to execute before the request
-	BeforeScriptTimeout() time.Duration // Timeout for the before script
-
-	AfterRequestScriptPath() string           // Path to script to execute after the request
-	AfterRequestScriptTimeout() time.Duration // Timeout for the after request script
+	BeforeScript() Script       // Script to execute before the request
+	AfterRequestScript() Script // Script to execute after the request
 
 	GetVariables() map[string]string                      // Test-specific variables
 	GetCombinedVariables() map[string]string              // Combined variables from all sources

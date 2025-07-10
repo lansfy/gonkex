@@ -1,36 +1,52 @@
-//go:build !windows
-// +build !windows
-
 package cmd_runner
 
 import (
-	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
-	"syscall"
 	"time"
+
+	"github.com/google/shlex"
+	"github.com/lansfy/gonkex/models"
 )
 
-func CmdRun(scriptPath string, timeout time.Duration) error {
+func CmdRun(scriptPath string, timeout time.Duration) (string, error) {
 	// by default timeout should be 3s
 	if timeout <= 0 {
 		timeout = 3 * time.Second
 	}
-	cmd := exec.Command(strings.TrimRight(scriptPath, "\n"))
-	cmd.Env = os.Environ()
 
-	// Set up a process group which will be killed later
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return err
+	scriptPath = strings.TrimRight(scriptPath, "\n")
+	scriptPath = strings.TrimSpace(scriptPath)
+	if runtime.GOOS == "windows" {
+		scriptPath = strings.ReplaceAll(scriptPath, "\\", "\\\\")
+	}
+	if scriptPath == "" {
+		return "", fmt.Errorf("empty command provided")
 	}
 
+	args, err := shlex.Split(scriptPath)
+	if err != nil {
+		return "", err
+	}
+
+	args[0] = filepath.FromSlash(args[0])
+
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Env = os.Environ()
+
+	beforeStart(cmd)
+
+	stdout := &bytes.Buffer{}
+	cmd.Stdout = stdout
+	cmd.Stderr = stdout
+
 	if err := cmd.Start(); err != nil {
-		return err
+		return stdout.String(), err
 	}
 
 	done := make(chan error, 1)
@@ -40,30 +56,18 @@ func CmdRun(scriptPath string, timeout time.Duration) error {
 
 	select {
 	case <-time.After(timeout):
-
-		// Get process group which we want to kill
-		pgid, err := syscall.Getpgid(cmd.Process.Pid)
-		if err != nil {
-			return err
+		if err := killProcess(cmd); err != nil {
+			return stdout.String(), err
 		}
-		// Send kill to process group
-		if err := syscall.Kill(-pgid, 15); err != nil {
-			return err
-		}
-		_, _ = fmt.Printf("Process killed as timeout (%s) reached\n", timeout)
+		return stdout.String(), fmt.Errorf("process killed as timeout (%s) reached", timeout)
 	case err := <-done:
 		if err != nil {
-			return fmt.Errorf("process finished with error = %v", err)
+			return stdout.String(), fmt.Errorf("process finished with error: %w", err)
 		}
-		_, _ = fmt.Print("Process finished successfully")
 	}
+	return stdout.String(), nil
+}
 
-	// Print log
-	scanner := bufio.NewScanner(stdout)
-	for scanner.Scan() {
-		m := scanner.Text()
-		_, _ = fmt.Println(m)
-	}
-
-	return nil
+func ExecuteScript(script models.Script) (string, error) {
+	return CmdRun(script.CmdLine(), script.Timeout())
 }
