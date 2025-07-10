@@ -11,7 +11,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': 'requestConstraints' requires array
+       load definition for 'someservice': path '$.requestConstraints': 'requestConstraints' must be array
 
 - name: WHEN constraint declaration is not a map load definition MUST fail with error
   method: GET
@@ -27,7 +27,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: must be map
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint: must be map
 
 - name: WHEN 'kind' field absent load definition MUST fail with error
   method: GET
@@ -43,7 +43,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: 'kind' key required
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint: 'kind' key required
 
 - name: WHEN constraint declaration has non-string key load definition MUST fail with error
   method: GET
@@ -60,7 +60,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'nop': key '200' has non-string type
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'nop': key '200' has non-string type
 
 - name: WHEN constraint has unknown name load definition MUST fail with error
   method: GET
@@ -76,4 +76,4 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'invalid': unknown constraint
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'invalid': unknown constraint

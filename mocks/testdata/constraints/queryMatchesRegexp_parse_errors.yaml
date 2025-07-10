@@ -12,7 +12,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'queryMatchesRegexp': 'expectedQuery' key required
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatchesRegexp': 'expectedQuery' key required
 
 - name: WHEN field 'expectedQuery' has invalid type in queryMatchesRegexp parser MUST fail with error
   method: GET
@@ -29,7 +29,24 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'queryMatchesRegexp': key 'expectedQuery' has non-string value
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatchesRegexp': key 'expectedQuery' has non-string value
+
+- name: WHEN field 'expectedQuery' consists several '=' in queryMatchesRegexp parser MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatchesRegexp
+          expectedQuery: food=cake&people==3
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatchesRegexp': failed to parse query 'people==3'
 
 - name: WHEN 'queryMatchesRegexp' constraint has unknown key load definition MUST fail with error
   method: GET
@@ -47,4 +64,4 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'queryMatchesRegexp': unexpected key 'invalid' (allowed only [kind expectedQuery])
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatchesRegexp': unexpected key 'invalid' (allowed only [kind expectedQuery])

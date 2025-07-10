@@ -12,7 +12,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'queryMatches': 'expectedQuery' key required
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatches': 'expectedQuery' key required
 
 - name: WHEN field 'expectedQuery' has invalid type in queryMatches parser MUST fail with error
   method: GET
@@ -29,7 +29,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'queryMatches': key 'expectedQuery' has non-string value
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatches': key 'expectedQuery' has non-string value
 
 # TODO: improve error
 - name: WHEN 'expectedQuery' field has invalid format load definition MUST fail with error
@@ -48,7 +48,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'queryMatches': invalid URL escape "%zz"
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatches': invalid URL escape "%zz"
 
 - name: WHEN 'queryMatches' constraint has unknown key load definition MUST fail with error
   method: GET
@@ -66,4 +66,4 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'queryMatches': unexpected key 'invalid' (allowed only [kind expectedQuery])
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatches': unexpected key 'invalid' (allowed only [kind expectedQuery])

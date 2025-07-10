@@ -22,7 +22,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyJSONFieldMatchesJSON': 'path' key required
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'bodyJSONFieldMatchesJSON': 'path' key required
 
 - name: WHEN field 'value' absent in bodyJSONFieldMatchesJSON parser MUST fail with error
   method: POST
@@ -45,7 +45,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyJSONFieldMatchesJSON': 'value' key required
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'bodyJSONFieldMatchesJSON': 'value' key required
 
 - name: WHEN field 'comparisonParams' has errors in bodyJSONFieldMatchesJSON parser MUST fail with error
   method: POST
@@ -74,7 +74,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyJSONFieldMatchesJSON': section 'comparisonParams': key 'invalid' has non-bool value
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'bodyJSONFieldMatchesJSON': section 'comparisonParams': key 'invalid' has non-bool value
 
 - name: WHEN field 'value' consists invalid json in bodyJSONFieldMatchesJSON parser MUST fail with error
   method: POST
@@ -98,7 +98,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyJSONFieldMatchesJSON': invalid character 'i' looking for beginning of value
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'bodyJSONFieldMatchesJSON': invalid character 'i' looking for beginning of value
 
 - name: WHEN bodyJSONFieldMatchesJSON constraint has unknown key load definition MUST fail with error
   method: POST
@@ -117,4 +117,4 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyJSONFieldMatchesJSON': unexpected key 'invalid' (allowed only [kind path value comparisonParams])
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'bodyJSONFieldMatchesJSON': unexpected key 'invalid' (allowed only [kind path value comparisonParams])

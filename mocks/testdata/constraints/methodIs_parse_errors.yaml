@@ -12,7 +12,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'methodIs': 'method' key required
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'methodIs': 'method' key required
 
 - name: WHEN field 'method' consists invalid method in methodIs parser MUST fail with error
   method: GET
@@ -29,7 +29,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'methodIs': key 'method' has non-string value
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'methodIs': key 'method' has non-string value
 
 - name: WHEN 'methodIs' constraint has unknown key load definition MUST fail with error
   method: GET
@@ -47,4 +47,4 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'methodIs': unexpected key 'invalid' (allowed only [kind method])
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'methodIs': unexpected key 'invalid' (allowed only [kind method])

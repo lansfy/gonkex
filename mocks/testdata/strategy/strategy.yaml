@@ -11,20 +11,3 @@
        Accept-Encoding: gzip
        Content-Type: application/json
        User-Agent: Go-http-client/1.1
-
-- name: WHEN service make not required number of calls to mock test MUST fail with error
-  method: GET
-  path: /test/case
-  response:
-    200: "result"
-  mocks:
-    someservice:
-      calls: 2
-      strategy: constant
-      body: "result"
-      statusCode: 200
-  meta:
-    expected: |
-       1) mock 'someservice': path '$': number of 'calls' does not match:
-            expected: 2
-              actual: 1

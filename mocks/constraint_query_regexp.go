@@ -21,7 +21,7 @@ func newQueryRegexpConstraint(query string) (*queryConstraint, error) {
 	for _, rawParam := range strings.Split(query, "&") {
 		parts := strings.Split(rawParam, "=")
 		if len(parts) != 2 {
-			return nil, fmt.Errorf("error parsing query: got %d parts, expected 2", len(parts))
+			return nil, fmt.Errorf("failed to parse query '%s'", rawParam)
 		}
 
 		_, ok := expectedQuery[parts[0]]

@@ -17,7 +17,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyMatchesJSON': 'body' key required
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'bodyMatchesJSON': 'body' key required
 
 - name: WHEN field 'comparisonParams' has errors in bodyMatchesJSON parser MUST fail with error
   method: POST
@@ -44,7 +44,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyMatchesJSON': section 'comparisonParams': key 'invalid' has non-bool value
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'bodyMatchesJSON': section 'comparisonParams': key 'invalid' has non-bool value
 
 - name: WHEN field 'body' consists invalid json in bodyMatchesJSON parser MUST fail with error
   method: POST
@@ -66,7 +66,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyMatchesJSON': json: invalid character 'i' looking for beginning of value
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'bodyMatchesJSON': json: invalid character 'i' looking for beginning of value
 
 - name: WHEN bodyMatchesJSON constraint has unknown key load definition MUST fail with error
   method: POST
@@ -84,4 +84,4 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$': unable to load constraint 1: constraint 'bodyMatchesJSON': unexpected key 'invalid' (allowed only [kind body comparisonParams])
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'bodyMatchesJSON': unexpected key 'invalid' (allowed only [kind body comparisonParams])

@@ -13,7 +13,6 @@
       body: result
       statusCode: 200
 
-# TODO: improve error
 - name: WHEN request body does not match specified value bodyMatchesText MUST fail
   method: POST
   path: /test/case
@@ -30,10 +29,9 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'bodyMatchesText': body value
-       hello world
-       does not match expected
-       hello me
+       1) mock 'someservice': request constraint 'bodyMatchesText': request 'body': values do not match:
+            expected: hello me
+              actual: hello world
 
 - name: WHEN request body matches specified regexp bodyMatchesText MUST be successful
   method: POST
@@ -50,7 +48,6 @@
       body: result
       statusCode: 200
 
-# TODO: improve error
 - name: WHEN request body does not match specified value bodyMatchesText MUST fail
   method: POST
   path: /test/case
@@ -67,6 +64,30 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'bodyMatchesText': body value
-       hello world
-       does not match regexp ^(test.*)$
+       1) mock 'someservice': request constraint 'bodyMatchesText': request 'body': value does not match regexp:
+            expected: $matchRegexp(^(test.*)$)
+              actual: hello world
+
+- name: WHEN field 'regexp' has wrong regular expression in bodyMatchesText parser MUST fail with error
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "param": "value",
+      "otherparam": "value"
+    }
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesText
+          regexp: "["
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'bodyMatchesText': request 'body': cannot compile regexp:
+            expected: <nil>
+              actual: missing closing ]: `[`
