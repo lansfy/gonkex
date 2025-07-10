@@ -70,16 +70,29 @@ func (f *formValues) GetFields() map[string]string {
 	return f.values.Fields
 }
 
+type script struct {
+	cmd    string
+	params scriptParams
+}
+
+func (s *script) CmdLine() string {
+	return s.cmd
+}
+
+func (s *script) Timeout() time.Duration {
+	return s.params.Timeout.Duration
+}
+
 type Test struct {
 	TestDefinition
 
 	Filename string
 
-	Request            string
-	Responses          map[int]string
-	ResponseHeaders    map[int]map[string]string
-	BeforeScript       string
-	AfterRequestScript string
+	Request                string
+	Responses              map[int]string
+	ResponseHeaders        map[int]map[string]string
+	BeforeScriptPath       string
+	AfterRequestScriptPath string
 
 	CombinedVariables map[string]string
 
@@ -154,24 +167,22 @@ func (t *Test) Pause() time.Duration {
 	return t.PauseValue.Duration
 }
 
+func (t *Test) BeforeScript() models.Script {
+	return &script{
+		cmd:    t.BeforeScriptPath,
+		params: t.BeforeScriptParams,
+	}
+}
+
+func (t *Test) AfterRequestScript() models.Script {
+	return &script{
+		cmd:    t.AfterRequestScriptPath,
+		params: t.AfterRequestScriptParams,
+	}
+}
+
 func (t *Test) AfterRequestPause() time.Duration {
 	return t.AfterRequestPauseValue.Duration
-}
-
-func (t *Test) BeforeScriptPath() string {
-	return t.BeforeScript
-}
-
-func (t *Test) BeforeScriptTimeout() time.Duration {
-	return t.BeforeScriptParams.Timeout.Duration
-}
-
-func (t *Test) AfterRequestScriptPath() string {
-	return t.AfterRequestScript
-}
-
-func (t *Test) AfterRequestScriptTimeout() time.Duration {
-	return t.AfterRequestScriptParams.Timeout.Duration
 }
 
 func (t *Test) Cookies() map[string]string {

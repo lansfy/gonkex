@@ -102,8 +102,8 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 		test.Request = testDefinition.RequestTmpl
 		test.Responses = testDefinition.ResponseTmpls
 		test.ResponseHeaders = testDefinition.ResponseHeaders
-		test.BeforeScript = testDefinition.BeforeScriptParams.PathTmpl
-		test.AfterRequestScript = testDefinition.AfterRequestScriptParams.PathTmpl
+		test.BeforeScriptPath = testDefinition.BeforeScriptParams.PathTmpl
+		test.AfterRequestScriptPath = testDefinition.AfterRequestScriptParams.PathTmpl
 		test.CombinedVariables = testDefinition.Variables
 
 		dbChecks := []models.DatabaseCheck{}
@@ -206,12 +206,12 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 			}
 		}
 
-		test.BeforeScript, err = substituteArgs(testDefinition.BeforeScriptParams.PathTmpl, testCase.BeforeScriptArgs)
+		test.BeforeScriptPath, err = substituteArgs(testDefinition.BeforeScriptParams.PathTmpl, testCase.BeforeScriptArgs)
 		if err != nil {
 			return nil, err
 		}
 
-		test.AfterRequestScript, err = substituteArgs(testDefinition.AfterRequestScriptParams.PathTmpl, testCase.AfterRequestScriptArgs)
+		test.AfterRequestScriptPath, err = substituteArgs(testDefinition.AfterRequestScriptParams.PathTmpl, testCase.AfterRequestScriptArgs)
 		if err != nil {
 			return nil, err
 		}

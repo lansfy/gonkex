@@ -297,8 +297,8 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	}
 
 	// launch script in cmd interface
-	if v.BeforeScriptPath() != "" {
-		err = cmd_runner.CmdRun(v.BeforeScriptPath(), v.BeforeScriptTimeout())
+	if v.BeforeScript().CmdLine() != "" {
+		_, err = cmd_runner.ExecuteScript(v.BeforeScript())
 		if err != nil {
 			return nil, err
 		}
@@ -357,8 +357,8 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	}
 
 	// launch script in cmd interface
-	if v.AfterRequestScriptPath() != "" {
-		err = cmd_runner.CmdRun(v.AfterRequestScriptPath(), v.AfterRequestScriptTimeout())
+	if v.AfterRequestScript().CmdLine() != "" {
+		_, err = cmd_runner.ExecuteScript(v.AfterRequestScript())
 		if err != nil {
 			return nil, err
 		}
