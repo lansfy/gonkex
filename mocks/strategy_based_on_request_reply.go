@@ -2,8 +2,8 @@ package mocks
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
-	"strconv"
 	"sync"
 )
 
@@ -24,7 +24,7 @@ func (l *loaderImpl) loadBasedOnRequestReplyStrategy(path string, def map[interf
 		if !ok {
 			return nil, errors.New("'uris' list item must be a map")
 		}
-		def, err := l.loadDefinition(path+"."+strconv.Itoa(i), v)
+		def, err := l.loadDefinition(fmt.Sprintf("%s.uris[%d]", path, i), v)
 		if err != nil {
 			return nil, err
 		}

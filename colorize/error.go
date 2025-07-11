@@ -102,6 +102,14 @@ func NewNotEqualError(pattern, entity string, expected, actual interface{}) *Err
 }
 
 // TODO: remove this hack
+func HasPathComponent(err error) bool {
+	pErr, ok := err.(*Error)
+	if !ok {
+		return false
+	}
+	return pErr.parts[0].Text() == "path " && len(pErr.parts) >= 3
+}
+
 func RemovePathComponent(err error) error {
 	pErr, ok := err.(*Error)
 	if !ok {

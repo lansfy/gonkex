@@ -31,7 +31,7 @@ func (l *loaderImpl) loadUriVaryReplyStrategy(path string, def map[interface{}]i
 		if !ok {
 			return nil, fmt.Errorf("uri '%v' has non-string name", uri)
 		}
-		def, err := l.loadDefinition(path+"."+uriStr, v)
+		def, err := l.loadDefinition(path+".uris."+uriStr, v)
 		if err != nil {
 			return nil, err
 		}

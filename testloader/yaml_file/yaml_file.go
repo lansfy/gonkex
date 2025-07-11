@@ -1,7 +1,9 @@
 package yaml_file
 
 import (
+	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -23,8 +25,13 @@ func NewLoader(testsLocation string) *YamlFileLoader {
 }
 
 func (l *YamlFileLoader) Load() ([]models.TestInterface, error) {
+	_, err := os.Stat(l.testsLocation)
+	if err != nil && os.IsNotExist(err) {
+		return nil, fmt.Errorf("file or directory with tests '%s' does not exist", l.testsLocation)
+	}
+
 	var tests []models.TestInterface
-	err := filepath.WalkDir(l.testsLocation, func(relpath string, d fs.DirEntry, err error) error {
+	err = filepath.WalkDir(l.testsLocation, func(relpath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}

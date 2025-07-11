@@ -24,7 +24,7 @@ func (l *loaderImpl) loadMethodVaryStrategy(path string, def map[interface{}]int
 		if !ok {
 			return nil, fmt.Errorf("method '%v' has non-string name", method)
 		}
-		def, err := l.loadDefinition(path+"."+methodStr, v)
+		def, err := l.loadDefinition(path+".methods."+methodStr, v)
 		if err != nil {
 			return nil, err
 		}

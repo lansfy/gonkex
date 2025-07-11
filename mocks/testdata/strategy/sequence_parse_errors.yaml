@@ -36,7 +36,7 @@
           statusCode: 201
   meta:
     expected: |
-       load definition for 'someservice': strategy 'sequence': strategy 'constant': 'body' key required
+       load definition for 'someservice': path '$.sequence[0]': strategy 'constant': 'body' key required
 
 - name: WHEN 'sequence' strategy has unknown key load definition MUST fail with error
   method: GET

@@ -82,7 +82,14 @@ func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definitio
 	}
 
 	wrap := func(err error) error {
-		return colorize.NewEntityError("strategy %s", strategyName).SetSubError(err)
+		if colorize.HasPathComponent(err) {
+			return err
+		}
+		err = colorize.NewEntityError("strategy %s", strategyName).SetSubError(err)
+		if path == "$" {
+			return err
+		}
+		return colorize.NewEntityError("path %s", path).SetSubError(err)
 	}
 
 	replyStrategy, err := l.loadStrategy(path, strategyName, def, &ak)
@@ -108,7 +115,6 @@ func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definitio
 
 func (l *loaderImpl) loadStrategy(path, strategyName string, definition map[interface{}]interface{},
 	ak *[]string) (ReplyStrategy, error) {
-	path = path + "." + strategyName
 	switch strategyName {
 	case "nop":
 		return NewNopReply(), nil

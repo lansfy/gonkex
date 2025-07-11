@@ -54,7 +54,7 @@
           statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': strategy 'uriVary': strategy 'constant': 'body' key required
+       load definition for 'someservice': path '$.uris./test/path': strategy 'constant': 'body' key required
 
 - name: WHEN parsing of uriVary basePath fail parser MUST fail with error
   method: get
