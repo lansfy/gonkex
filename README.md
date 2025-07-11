@@ -148,9 +148,9 @@ func TestFuncCases(t *testing.T) {
 Externally written storage may be used for loading test data, if Gonkex used as a library.
 To start using the custom storage, you need to import the custom module, that contains implementation of storage.StorageInterface interface.
 For example, the following NoSQL databases are currently supported as custom modules:
-- Aerospike ([github.com/lansfy/gonkex/storage/addons/aerospike](https://github.com/lansfy/gonkex/tree/master/storage/addons/aerospike))
-- MongoDB ([github.com/lansfy/gonkex/storage/addons/mongo](https://github.com/lansfy/gonkex/tree/master/storage/addons/mongo))
-- Redis ([github.com/lansfy/gonkex/storage/addons/redis](https://github.com/lansfy/gonkex/tree/master/storage/addons/redis))
+- Aerospike ([storage/addons/aerospike](https://github.com/lansfy/gonkex/tree/master/storage/addons/aerospike))
+- MongoDB ([storage/addons/mongo](https://github.com/lansfy/gonkex/tree/master/storage/addons/mongo))
+- Redis ([storage/addons/redis](https://github.com/lansfy/gonkex/tree/master/storage/addons/redis))
 
 The tests can be now ran with `go test`, for example: `go test ./...`.
 

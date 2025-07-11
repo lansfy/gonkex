@@ -2,6 +2,8 @@ package response_header
 
 import (
 	"net/textproto"
+	"sort"
+	"strings"
 
 	"github.com/lansfy/gonkex/checker"
 	"github.com/lansfy/gonkex/colorize"
@@ -42,9 +44,6 @@ func checkOneHeader(key, value string, responseHeaders map[string][]string) erro
 			return nil
 		}
 	}
-	if len(actualValues) == 1 {
-		return colorize.NewNotEqualError("response header %s value does not match:", key, value, actualValues[0])
-	}
-	return colorize.NewError(
-		"response header %s value does not match expected %s", colorize.Cyan(key), colorize.Green(value))
+	sort.Strings(actualValues)
+	return colorize.NewNotEqualError("response header %s value does not match:", key, value, strings.Join(actualValues, " / "))
 }

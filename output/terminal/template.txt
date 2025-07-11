@@ -36,9 +36,9 @@ Response:
 {{ if .ResponseBody }}{{ yellow .ResponseBody }}{{ else }}{{ yellow "<no body>" }}{{ end }}
 {{- range $i, $dbr := .DatabaseResult }}
 {{- if $dbr.Query }}
-       Db Request #{{ inc $i }}:
+       DB Request #{{ $i }}:
 {{ cyan $dbr.Query }}
-       Db Response #{{ inc $i }}:
+       DB Response #{{ $i }}:
 {{- range $value := $dbr.Response }}
 {{ yellow $value }}{{ end }}
 {{- end }}

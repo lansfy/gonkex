@@ -1,0 +1,124 @@
+- name: WHEN required body consists matcher check MUST compare response body as string
+  method: GET
+  path: /test/case
+  response:
+    200: "$matchRegexp(test)"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/yaml"
+      body: |
+        test: value
+      statusCode: 200
+
+- name: WHEN required body is empty check MUST compare response body as string
+  method: GET
+  path: /test/case
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/yaml"
+      body: ""
+      statusCode: 200
+
+- name: WHEN required body is yaml check MUST compare response body as yaml
+  method: GET
+  path: /test/case
+  response:
+    200: |
+      "othername": "value2"
+      "name": "value"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/yaml"
+      body: |
+        name: value
+        extra: "extravalue"
+        othername: value2
+      statusCode: 200
+
+- name: checker MUST use comparisonParams
+  method: GET
+  path: /test/case
+  response:
+    200: |
+      "othername": "value2"
+      "name": "value"
+  comparisonParams:
+    disallowExtraFields: true
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/yaml"
+      body: |
+        name: value
+        extra: "extravalue"
+        othername: value2
+      statusCode: 200
+  meta:
+    expected: |
+       1) service 'response body' comparison: path '$': map lengths do not match:
+            expected: 2
+              actual: 3
+
+- name: WHEN service body is not yaml check MUST fail
+  method: GET
+  path: /test/case
+  response:
+    200: >
+        {
+          "name": "value"
+        }
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/yaml"
+      body: "{"
+      statusCode: 200
+  meta:
+    expected: |
+       1) parse service 'response body' as YAML: yaml: line 1: did not find expected node content
+
+- name: WHEN expected body is not yaml check MUST fail
+  method: GET
+  path: /test/case
+  response:
+    200: "{"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/yaml"
+      body: >
+        {}
+      statusCode: 200
+  meta:
+    expected: |
+       load definition in 'response' (status code '200') as YAML: yaml: line 1: did not find expected node content
+
+- name: WHEN required body consists matcher check and body does not match check MUST fail
+  method: GET
+  path: /test/case
+  response:
+    200: "$matchRegexp(wrong)"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/yaml"
+      body: >
+        {"test": "value"}
+      statusCode: 200
+  meta:
+    expected: |
+       1) service 'response body' comparison: path '$': value does not match regexp:
+            expected: $matchRegexp(wrong)
+              actual: {"test": "value"}

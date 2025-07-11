@@ -139,6 +139,10 @@ func (r *Runner) AddCheckers(c ...checker.CheckerInterface) {
 
 // Run executes the test suite, processing each test and handling failures according to policy.
 func (r *Runner) Run() error {
+	if filterFlag != "" {
+		r.loader.SetFilter(filterFlag)
+	}
+
 	tests, err := r.loader.Load()
 	if err != nil {
 		return err

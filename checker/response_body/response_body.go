@@ -2,6 +2,7 @@ package response_body
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -46,7 +47,9 @@ func createWrongStatusError(statusCode int, known map[int]string) error {
 	for code := range known {
 		knownCodes = append(knownCodes, strconv.Itoa(code))
 	}
-	return colorize.NewNotEqualError("server responded with unexpected %s:", "status", strings.Join(knownCodes, " / "), statusCode)
+	sort.Strings(knownCodes)
+	return colorize.NewNotEqualError("server responded with unexpected %s:",
+		"status code", strings.Join(knownCodes, " / "), statusCode)
 }
 
 func addMainError(source []error) []error {
@@ -62,13 +65,15 @@ func compareBody(t models.TestInterface, expectedBody string, result *models.Res
 	// decode expected body
 	expected, err := decode(expectedBody)
 	if err != nil {
-		return nil, fmt.Errorf("invalid %s in response in the test declaration (for status %d): %w", typeName, result.ResponseStatusCode, err)
+		return nil, fmt.Errorf("load definition in 'response' (status code '%d') as %s: %w", result.ResponseStatusCode, typeName, err)
 	}
 
 	// decode actual body
 	actual, err := decode(result.ResponseBody)
 	if err != nil {
-		return []error{fmt.Errorf("could not parse service response as %s", typeName)}, nil
+		return []error{
+			colorize.NewEntityError("parse service %s as "+typeName, "response body").SetSubError(err),
+		}, nil
 	}
 
 	return addMainError(compare.Compare(expected, actual, getCompareParams(t))), nil

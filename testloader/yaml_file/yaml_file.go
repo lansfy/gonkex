@@ -55,8 +55,8 @@ func (l *YamlFileLoader) Load() ([]models.TestInterface, error) {
 	return tests, err
 }
 
-func (l *YamlFileLoader) SetFileFilter(f string) {
-	l.fileFilter = f
+func (l *YamlFileLoader) SetFilter(filter string) {
+	l.fileFilter = filter
 }
 
 func (l *YamlFileLoader) fitsFilter(fileName string) bool {

@@ -6,7 +6,6 @@ linters:
     - bodyclose
     - dogsled
     - errcheck
-    - gochecknoinits
     - gocritic
     - govet
     - ineffassign
