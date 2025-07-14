@@ -17,6 +17,7 @@ type MetaProvider interface {
 }
 
 type helperImpl struct {
+	headers       map[string][]string
 	path          string
 	requestBytes  []byte
 	responseBytes []byte
@@ -26,8 +27,10 @@ type helperImpl struct {
 	provider      MetaProvider
 }
 
-func newHelper(path string, requestBytes []byte, services *mocks.Mocks, provider MetaProvider) *helperImpl {
+func newHelper(headers map[string][]string, path string, requestBytes []byte,
+	services *mocks.Mocks, provider MetaProvider) *helperImpl {
 	return &helperImpl{
+		headers:      headers,
 		path:         path,
 		requestBytes: requestBytes,
 		responseCode: http.StatusNoContent,
@@ -39,6 +42,10 @@ func newHelper(path string, requestBytes []byte, services *mocks.Mocks, provider
 
 func internalError(name string, err error) error {
 	return fmt.Errorf("internal: %s: %w", name, err)
+}
+
+func (h *helperImpl) GetHeaders() map[string][]string {
+	return h.headers
 }
 
 func (h *helperImpl) GetPath() string {

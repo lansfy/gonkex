@@ -7,6 +7,8 @@ import (
 var Prefix = "/gonkex/"
 
 type Helper interface {
+	// GetHeaders returns all request headers.
+	GetHeaders() map[string][]string
 	// GetPath returns request path without Prefix
 	GetPath() string
 
