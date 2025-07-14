@@ -19,7 +19,7 @@ func runEndpoint(e Endpoint, path string, req *http.Request, services *mocks.Moc
 
 	_ = req.Body.Close()
 
-	helper := newHelper(path, requestBytes, services, meta)
+	helper := newHelper(req.Header, path, requestBytes, services, meta)
 	err = e(helper)
 	if err != nil {
 		var data struct {
