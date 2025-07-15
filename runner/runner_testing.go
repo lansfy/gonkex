@@ -82,7 +82,9 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 		yamlLoader.SetFilter(os.Getenv("GONKEX_FILE_FILTER"))
 	}
 
-	handler := &testingHandler{t}
+	handler := &testingHandler{
+		t: t,
+	}
 	runner := New(
 		yamlLoader,
 		&RunnerOpts{
@@ -108,6 +110,9 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if !handler.executed {
+		t.Skip("no tests to run: none found or all were filtered out")
+	}
 }
 
 func addOutputs(runner *Runner, opts *RunWithTestingOpts) {
@@ -123,10 +128,12 @@ func addOutputs(runner *Runner, opts *RunWithTestingOpts) {
 }
 
 type testingHandler struct {
-	t *testing.T
+	t        *testing.T
+	executed bool
 }
 
 func (h *testingHandler) HandleTest(test models.TestInterface, executor TestExecutor) (bool, error) {
+	h.executed = true
 	var critical bool
 	var returnErr error
 	h.t.Run(test.GetName(), func(t *testing.T) {
