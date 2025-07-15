@@ -61,7 +61,7 @@ type RunnerOpts struct {
 
 	// Variables holds test execution variables that can be referenced
 	// and modified during test runs for dynamic test behavior.
-	Variables *variables.Variables
+	Variables variables.Variables
 
 	// CustomClient is an HTTP client implementation for making test requests.
 	// If nil, a default HTTP client will be used.

@@ -28,6 +28,9 @@ type RunWithTestingOpts struct {
 	FixturesDir string
 	// EnvFilePath is the path to the environment configuration file used during tests.
 	EnvFilePath string
+	// Variables holds test execution variables that can be referenced
+	// and modified during test runs for dynamic test behavior.
+	Variables variables.Variables
 
 	// Mocks contains the mock implementations for dependencies to be used during testing.
 	Mocks *mocks.Mocks
@@ -95,7 +98,7 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 			}),
 			FixturesDir:     opts.FixturesDir,
 			DB:              opts.DB,
-			Variables:       variables.New(),
+			Variables:       opts.Variables,
 			HTTPProxyURL:    proxyURL,
 			HelperEndpoints: opts.HelperEndpoints,
 			TestHandler:     handler.HandleTest,

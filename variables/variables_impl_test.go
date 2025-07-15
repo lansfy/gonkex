@@ -7,8 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func newVariablesImpl() *VariablesImpl {
+	return New().(*VariablesImpl)
+}
+
 func Test_SetAndGetVariables(t *testing.T) {
-	vs := New()
+	vs := newVariablesImpl()
 	vs.Set("foo", "bar")
 	vs.Set("baz", "qux")
 
@@ -40,7 +44,7 @@ func Test_SetAndGetVariables(t *testing.T) {
 }
 
 func Test_Substitute(t *testing.T) {
-	vs := New()
+	vs := newVariablesImpl()
 	vs.Set("name", "John")
 	vs.Set("city", "New York")
 
@@ -79,7 +83,7 @@ func Test_Substitute(t *testing.T) {
 }
 
 func Test_Len(t *testing.T) {
-	vs := New()
+	vs := newVariablesImpl()
 	require.Equal(t, 0, vs.Len())
 
 	vs.Set("key1", "value1")
@@ -93,7 +97,7 @@ func Test_Len(t *testing.T) {
 }
 
 func Test_Merge(t *testing.T) {
-	vs1 := New()
+	vs1 := newVariablesImpl()
 	vs1.Set("key1", "value1")
 	vs1.Set("key3", "value3")
 
