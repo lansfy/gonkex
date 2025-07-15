@@ -30,7 +30,7 @@ func TestParse_TestWithEniromentVariables(t *testing.T) {
 	tests, err := parseTestDefinitionFile("testdata/variables-enviroment.yaml")
 	require.NoError(t, err)
 
-	testOriginal := &tests[0]
+	testOriginal := tests[0]
 
 	vars := variables.New()
 	testApplied := testOriginal.Clone()
@@ -47,7 +47,7 @@ func TestParse_TestsWithVariables(t *testing.T) {
 	tests, err := parseTestDefinitionFile("testdata/variables.yaml")
 	require.NoError(t, err)
 
-	testOriginal := &tests[0]
+	testOriginal := tests[0]
 
 	vars := variables.New()
 	vars.Merge(testOriginal.GetVariables())
@@ -66,7 +66,7 @@ func TestParse_TestsWithCombinedVariables(t *testing.T) {
 	tests, err := parseTestDefinitionFile("testdata/combined-variables.yaml")
 	require.NoError(t, err)
 
-	testOriginal := &tests[0]
+	testOriginal := tests[0]
 
 	vars := variables.New()
 	vars.Merge(testOriginal.GetCombinedVariables())
