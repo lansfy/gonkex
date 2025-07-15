@@ -40,7 +40,7 @@ func (l *YamlInMemoryLoader) Load() ([]models.TestInterface, error) {
 		}
 
 		for i := range moreTests {
-			tests = append(tests, &moreTests[i])
+			tests = append(tests, moreTests[i])
 		}
 	}
 

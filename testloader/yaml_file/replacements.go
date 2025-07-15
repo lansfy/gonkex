@@ -37,7 +37,7 @@ func performInterface(value interface{}, perform func(string) string) {
 }
 
 func performStringMap(src map[string]string, perform func(string) string) map[string]string {
-	dst := make(map[string]string, len(src))
+	dst := map[string]string{}
 	for k, v := range src {
 		dst[k] = perform(v)
 	}
@@ -56,7 +56,7 @@ func performHeaders(headers map[string]string, perform func(string) string) map[
 }
 
 func performResponses(responses map[int]string, perform func(string) string) map[int]string {
-	res := make(map[int]string)
+	res := map[int]string{}
 
 	for k, v := range responses {
 		res[k] = perform(v)
