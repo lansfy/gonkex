@@ -21,6 +21,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func init() {
+	RegisterFlags()
+}
+
 type failEndpoint struct {
 	expectedError string
 	pattern       string

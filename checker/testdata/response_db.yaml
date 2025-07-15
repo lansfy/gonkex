@@ -1,0 +1,149 @@
+- name: WHEN db request returns required values check MUST be successful
+  method: POST
+  path: /gonkex/set_db_response
+  request: >
+    [
+      {"item": "value"}
+    ]
+  response:
+    200: ""
+  dbChecks:
+    - dbQuery: "SELECT 1"
+      dbResponse:
+        - '{"item": "value"}'
+
+- name: db checker MUST support matchers
+  method: POST
+  path: /gonkex/set_db_response
+  request: >
+    [
+      {"item": "value"}
+    ]
+  response:
+    200: ""
+  dbChecks:
+    - dbQuery: "SELECT 1"
+      dbResponse:
+        - '{"item": "$matchRegexp(^v.*e$)"}'
+
+- name: WHEN db request returns required values with additional fields check MUST be successful
+  method: POST
+  path: /gonkex/set_db_response
+  request: >
+    [
+      {"item": "value", "extraitem": "extravalue"}
+    ]
+  response:
+    200: ""
+  dbChecks:
+    - dbQuery: "SELECT 1"
+      dbResponse:
+        - '{"item": "value"}'
+
+- name: WHEN db request returns wrong value check MUST fail
+  method: POST
+  path: /gonkex/set_db_response
+  request: >
+    [
+      {"item": "value", "extraitem": "extravalue"}
+    ]
+  response:
+    200: ""
+  dbChecks:
+    - dbQuery: "SELECT 1"
+      dbResponse:
+        - '{"item": "othervalue"}'
+  meta:
+    expected: |
+       1) database check for '$.dbChecks[0].dbResponse': path '$[0].item': values do not match:
+            expected: othervalue
+              actual: value
+
+- name: WHEN db request returns items in same order check MUST be successful
+  method: POST
+  path: /gonkex/set_db_response
+  request: >
+    [
+      {"extraitem": "extravalue1", "item": "value1"},
+      {"extraitem": "extravalue2", "item": "value2"}
+    ]
+  response:
+    200: ""
+  dbChecks:
+    - dbQuery: "SELECT 1"
+      dbResponse:
+        - '{"item": "value1", "extraitem": "extravalue1"}'
+        - '{"item": "value2", "extraitem": "extravalue2"}'
+
+- name: WHEN db request returns items in different order check MUST be successful
+  method: POST
+  path: /gonkex/set_db_response
+  request: >
+    [
+      {"extraitem": "extravalue", "item": "value2"},
+      {"extraitem": "extravalue", "item": "value1"}
+    ]
+  response:
+    200: ""
+  dbChecks:
+    - dbQuery: "SELECT 1"
+      dbResponse:
+        - '{"item": "value1", "extraitem": "extravalue"}'
+        - '{"item": "value2", "extraitem": "extravalue"}'
+  meta:
+    expected: |
+       1) database check for '$.dbChecks[0].dbResponse': path '$[0].item': values do not match:
+            expected: value1
+              actual: value2
+       2) database check for '$.dbChecks[0].dbResponse': path '$[1].item': values do not match:
+            expected: value2
+              actual: value1
+
+- name: WHEN db request returns not the same number of items check MUST fail
+  method: POST
+  path: /gonkex/set_db_response
+  request: >
+    [
+      {"item": "value1", "extraitem": "extravalue"},
+      {"item": "value2", "extraitem": "extravalue"}
+    ]
+  response:
+    200: ""
+  dbChecks:
+    - dbQuery: "SELECT 1"
+      dbResponse:
+        - '{"item": "value1", "extraitem": "extravalue"}'
+        - '{"item": "value12", "extraitem": "extravalue"}'
+        - '{"item": "value2", "extraitem": "extravalue"}'
+  meta:
+    expected: |
+       1) path '$.dbChecks[0]': quantity of 'items in database' does not match:
+            expected: 3
+              actual: 2
+
+          diff (--- expected vs +++ actual):
+        [
+         '{"extraitem":"extravalue","item":"value1"}',
+       - '{"extraitem":"extravalue","item":"value12"}',
+         '{"extraitem":"extravalue","item":"value2"}',
+        ]
+
+
+- name: WHEN db fails during request test MUST fail
+  method: POST
+  path: /gonkex/set_db_response
+  request: >
+    [
+      {"item": "value"}
+    ]
+  response:
+    200: ""
+  dbChecks:
+    - dbQuery: "SELECT 1"
+      dbResponse:
+        - '{"item": "value"}'
+    - dbQuery: "SELECT 2"
+      dbResponse: []
+  meta:
+    expected: |
+       1) failed 'database check': path '$.dbChecks[1]': execute request 'SELECT 2': fake error

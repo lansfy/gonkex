@@ -1,0 +1,17 @@
+- name: WHEN request return not expected code check MUST fail
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+    201: "result"
+    202: "result"
+  mocks:
+    someservice:
+      strategy: constant
+      body: "empty"
+      statusCode: 400
+  meta:
+    expected: |
+       1) server responded with unexpected 'status code':
+            expected: 200 / 201 / 202
+              actual: 400

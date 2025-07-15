@@ -3,7 +3,6 @@ package response_db
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/lansfy/gonkex/checker"
 	"github.com/lansfy/gonkex/colorize"
@@ -27,8 +26,9 @@ type responseDbChecker struct {
 
 func (c *responseDbChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
 	var errors []error
-	for _, dbCheck := range t.GetDatabaseChecks() {
-		errs, err := c.check(dbCheck, result)
+	for idx, dbCheck := range t.GetDatabaseChecks() {
+		path := fmt.Sprintf("$.dbChecks[%d]", idx)
+		errs, err := c.check(path, dbCheck, result)
 		if err != nil {
 			return nil, err
 		}
@@ -38,61 +38,88 @@ func (c *responseDbChecker) Check(t models.TestInterface, result *models.Result)
 	return errors, nil
 }
 
-func (c *responseDbChecker) check(t models.DatabaseCheck, result *models.Result) ([]error, error) {
-	// check expected db query exist
+func (c *responseDbChecker) check(path string, t models.DatabaseCheck, result *models.Result) ([]error, error) {
 	if t.DbQueryString() == "" {
-		return nil, fmt.Errorf("dbQuery not found in the test declaration")
+		return nil, createDefinitionError(path, colorize.NewEntityError("%s key required", "dbQuery"))
 	}
 
-	// check expected response exist
 	if t.DbResponseJson() == nil {
-		return nil, fmt.Errorf("dbResponse not found in the test declaration")
+		return nil, createDefinitionError(path, colorize.NewEntityError("%s key required", "dbResponse"))
 	}
 
-	// get DB response
-	actualDbResponse, err := newQuery(t.DbQueryString(), c.db)
+	// parse expected DB response
+	expectedItems, err := unmarshalArray(path, t.DbResponseJson())
 	if err != nil {
 		return nil, err
 	}
 
-	result.DatabaseResult = append(
-		result.DatabaseResult,
-		models.DatabaseResult{Query: t.DbQueryString(), Response: actualDbResponse},
-	)
-
-	// compare responses length
-	err = compareDbResponseLength(t.DbResponseJson(), actualDbResponse, t.DbQueryString())
+	// get real DB response
+	actualItems, err := makeQuery(path, c.db, t.DbQueryString())
 	if err != nil {
+		result.DatabaseResult = append(result.DatabaseResult,
+			models.DatabaseResult{Query: t.DbQueryString(), Response: []string{}},
+		)
 		return []error{err}, nil
 	}
-	// compare responses as json lists
-	expectedItems, err := toJSONArray(t.DbResponseJson(), "dbResponse in the test declaration")
-	if err != nil {
-		return nil, err
-	}
-	actualItems, err := toJSONArray(actualDbResponse, "database response")
-	if err != nil {
-		return nil, err
+
+	result.DatabaseResult = append(result.DatabaseResult,
+		models.DatabaseResult{Query: t.DbQueryString(), Response: toStringArray(actualItems)},
+	)
+
+	if len(expectedItems) != len(actualItems) {
+		return []error{createDifferentLengthError(path, expectedItems, actualItems)}, nil
 	}
 
 	cmpOptions := t.GetComparisonParams()
 
-	return compare.Compare(expectedItems, actualItems, compare.Params{
+	errs := compare.Compare(expectedItems, actualItems, compare.Params{
 		IgnoreValues:         cmpOptions.IgnoreValuesChecking(),
 		IgnoreArraysOrdering: cmpOptions.IgnoreArraysOrdering(),
 		DisallowExtraFields:  cmpOptions.DisallowExtraFields(),
-	}), nil
+	})
+
+	for idx := range errs {
+		errs[idx] = colorize.NewEntityError("database check for %s", path+".dbResponse").SetSubError(errs[idx])
+	}
+
+	return errs, nil
 }
 
-func toJSONArray(items []string, qual string) ([]interface{}, error) {
+func toStringArray(src []interface{}) []string {
+	result := make([]string, len(src))
+	for idx := range src {
+		data, _ := json.Marshal(src[idx])
+		result[idx] = string(data)
+	}
+	return result
+}
+
+func makeQuery(path string, db storage.StorageInterface, dbQuery string) ([]interface{}, error) {
+	rawMessages, err := db.ExecuteQuery(dbQuery)
+	if err != nil {
+		return nil, colorize.NewEntityError("failed %s", "database check").SetSubError(
+			createPathError(path, fmt.Errorf("execute request '%s': %w", dbQuery, err)),
+		)
+	}
+
+	response := make([]interface{}, len(rawMessages))
+	for idx := range rawMessages {
+		err := json.Unmarshal(rawMessages[idx], &response[idx])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return response, nil
+}
+
+func unmarshalArray(path string, items []string) ([]interface{}, error) {
 	itemJSONs := make([]interface{}, 0, len(items))
-	for i, row := range items {
+	for idx, row := range items {
 		var itemJSON interface{}
 		if err := json.Unmarshal([]byte(row), &itemJSON); err != nil {
-			return nil, fmt.Errorf(
-				"invalid JSON in the %s:\n row #%d:\n %s\n error:\n%w",
-				qual, i, row, err,
-			)
+			return nil, createDefinitionError(fmt.Sprintf("%s.dbResponse[%d]", path, idx),
+				fmt.Errorf("invalid JSON: %w", err))
 		}
 		itemJSONs = append(itemJSONs, itemJSON)
 	}
@@ -100,48 +127,42 @@ func toJSONArray(items []string, qual string) ([]interface{}, error) {
 	return itemJSONs, nil
 }
 
-func compareDbResponseLength(expected, actual []string, query interface{}) error {
-	if len(expected) == len(actual) {
-		return nil
+func sprintWithSingleQuotes(items []interface{}) []string {
+	result := []string{"["}
+	for _, item := range toStringArray(items) {
+		line := " '" + item + "',"
+		result = append(result, line)
 	}
+	result = append(result, "]")
+	return result
+}
 
+func createDifferentLengthError(path string, expected, actual []interface{}) error {
 	diffCfg := *pretty.DefaultConfig
 	diffCfg.Diffable = true
 	chunks := diff.DiffChunks(
-		strings.Split(diffCfg.Sprint(expected), "\n"),
-		strings.Split(diffCfg.Sprint(actual), "\n"),
+		sprintWithSingleQuotes(expected),
+		sprintWithSingleQuotes(actual),
 	)
 
 	tail := []colorize.Part{
-		colorize.None("\n\n   query: "),
-		colorize.Cyan(fmt.Sprintf("%v", query)),
-		colorize.None("\n   diff (--- expected vs +++ actual):\n"),
+		colorize.None("\n\n   diff (--- expected vs +++ actual):\n"),
 	}
 	tail = append(tail, colorize.MakeColorDiff(chunks)...)
 
-	return colorize.NewNotEqualError(
-		"quantity of %s do not match:",
+	return createPathError(path, colorize.NewNotEqualError(
+		"quantity of %s does not match:",
 		"items in database",
 		len(expected),
 		len(actual),
-	).AddParts(tail...)
+	).AddParts(tail...))
 }
 
-func newQuery(dbQuery string, db storage.StorageInterface) ([]string, error) {
-	messages, err := db.ExecuteQuery(dbQuery)
-	if err != nil {
-		return nil, err
-	}
+func createPathError(path string, err error) error {
+	return colorize.NewEntityError("path %s", path).SetSubError(err)
+}
 
-	dbResponse := []string{}
-	for _, item := range messages {
-		data, err := item.MarshalJSON()
-		if err != nil {
-			return nil, err
-		}
-
-		dbResponse = append(dbResponse, string(data))
-	}
-
-	return dbResponse, nil
+func createDefinitionError(path string, err error) error {
+	return colorize.NewEntityError("load definition for %s", "database check").
+		SetSubError(createPathError(path, err))
 }

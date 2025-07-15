@@ -14,9 +14,9 @@ Response:
      Status: 200 OK
        Body:
 {"somefield":123}
-       Db Request #1:
+       DB Request #0:
 SELECT *
-       Db Response #1:
+       DB Response #0:
 {"field1":"value1"}
 {"field2":123}
 
@@ -25,15 +25,15 @@ SELECT *
 
 Errors:
 
-1) server responded with unexpected 'status':
+1) server responded with unexpected 'status code':
      expected: 400
        actual: 200
 
-2) path '$[0].field1': values do not match:
+2) database check for '$.dbChecks[0].dbResponse': path '$[0].field1': values do not match:
      expected: value2
        actual: value1
 
-3) path '$[1].field2': values do not match:
+3) database check for '$.dbChecks[0].dbResponse': path '$[1].field2': values do not match:
      expected: 124
        actual: 123
 

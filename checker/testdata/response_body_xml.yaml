@@ -1,0 +1,134 @@
+- name: WHEN required body consists matcher check MUST compare response body as string
+  method: GET
+  path: /test/case
+  response:
+    200: "$matchRegexp(test)"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/xml"
+      body: |
+        <xml><test></test></xml>
+      statusCode: 200
+
+- name: WHEN required body is empty check MUST compare response body as string
+  method: GET
+  path: /test/case
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/xml"
+      body: ""
+      statusCode: 200
+
+- name: WHEN required body is xml check MUST compare response body as xml
+  method: GET
+  path: /test/case
+  response:
+    200: |
+      <xml>
+        <othername>value2</othername>
+        <name>value</name>
+      </xml>
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/xml"
+      body: |
+        <xml>
+          <name>value</name>
+          <extra>extravalue</extra>
+          <othername>value2</othername>
+        </xml>
+      statusCode: 200
+
+- name: checker MUST use comparisonParams
+  method: GET
+  path: /test/case
+  response:
+    200: |
+      <xml>
+        <othername>value2</othername>
+        <name>value</name>
+      </xml>
+  comparisonParams:
+    disallowExtraFields: true
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/xml"
+      body: |
+        <xml>
+          <name>value</name>
+          <extra>extravalue</extra>
+          <othername>value2</othername>
+        </xml>
+      statusCode: 200
+  meta:
+    expected: |
+       1) service 'response body' comparison: path '$.xml': map lengths do not match:
+            expected: 2
+              actual: 3
+
+- name: WHEN service body is not xml check MUST fail
+  method: GET
+  path: /test/case
+  response:
+    200: |
+      <xml>
+        <name>value</name>
+      </xml>
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/xml"
+      body: "invalid"
+      statusCode: 200
+  meta:
+    expected: |
+       1) parse service 'response body' as XML: EOF
+
+- name: WHEN expected body is not xml check MUST fail
+  method: GET
+  path: /test/case
+  response:
+    200: "invalid"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/xml"
+      body: |
+        <xml>
+          <name>value</name>
+        </xml>
+      statusCode: 200
+  meta:
+    expected: |
+       load definition in 'response' (status code '200') as XML: EOF
+
+- name: WHEN required body consists matcher check and body does not match check MUST fail
+  method: GET
+  path: /test/case
+  response:
+    200: "$matchRegexp(wrong)"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/xml"
+      body: >
+        {"test": "value"}
+      statusCode: 200
+  meta:
+    expected: |
+       1) service 'response body' comparison: path '$': value does not match regexp:
+            expected: $matchRegexp(wrong)
+              actual: {"test": "value"}

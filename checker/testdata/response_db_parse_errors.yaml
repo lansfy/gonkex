@@ -1,0 +1,46 @@
+- name: WHEN dbQuery string empty parser MUST fail
+  method: POST
+  path: /gonkex/set_db_response
+  request: >
+    [
+      {"item": "value"}
+    ]
+  response:
+    200: ""
+  dbChecks:
+    - dbResponse: []
+  meta:
+    expected: |
+       load definition for 'database check': path '$.dbChecks[0]': 'dbQuery' key required
+
+- name: WHEN dbResponse not found in declaration parser MUST fail
+  method: POST
+  path: /gonkex/set_db_response
+  request: >
+    [
+      {"item": "value"}
+    ]
+  response:
+    200: ""
+  dbChecks:
+    - dbQuery: "SELECT 1"
+  meta:
+    expected: |
+       load definition for 'database check': path '$.dbChecks[0]': 'dbResponse' key required
+
+- name: WHEN dbResponse has invalid json string parser MUST fail
+  method: POST
+  path: /gonkex/set_db_response
+  request: >
+    [
+      {"item": "value"}
+    ]
+  response:
+    200: ""
+  dbChecks:
+    - dbQuery: "SELECT 1"
+      dbResponse:
+        - '{"item":'
+  meta:
+    expected: |
+       load definition for 'database check': path '$.dbChecks[0].dbResponse[0]': invalid JSON: unexpected end of JSON input

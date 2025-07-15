@@ -20,6 +20,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func init() {
+	runner.RegisterFlags()
+}
+
 // This regex matches :[port]/ after 127.0.0.1
 var portRegexp = regexp.MustCompile(`127\.0\.0\.1:\d+`)
 

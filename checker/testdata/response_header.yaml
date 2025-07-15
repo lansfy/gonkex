@@ -1,0 +1,186 @@
+- name: WHEN request return header with required values check MUST be successful (1)
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  responseHeaders:
+    200:
+      Content-Type: "application/text"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         CONTENT-TYPE: "application/text"
+      body: "result"
+      statusCode: 200
+
+- name: WHEN request return header with required values check MUST be successful (2)
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  responseHeaders:
+    200:
+      CONTENT-TYPE: "application/text"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/text"
+      body: "result"
+      statusCode: 200
+
+- name: WHEN request return header with required values check MUST be successful (3)
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  responseHeaders:
+    200:
+      Accept: "application/json"
+      ACCEPT: "application/text" # we use different case here, because Yaml doesn't support keys with same name 
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+        Accept: "application/text"
+        ACCEPT: "application/json" # we use different case here, because Yaml doesn't support keys with same name 
+      body: "result"
+      statusCode: 200
+
+- name: WHEN service returns several values, but we check only one check MUST be successful
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  responseHeaders:
+    200:
+      Accept: "application/text"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Accept: "application/json"
+         ACcept: "application/text" # we use different case here, because Yaml doesn't support keys with same name 
+      body: "result"
+      statusCode: 200
+
+- name: WHEN we do not have any header check for returned code check MUST be successful
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  responseHeaders:
+    400:
+      Content-Type: "application/text"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         CONTENT-TYPE: "application/text"
+      body: "result"
+      statusCode: 200
+
+- name: WHEN request does not return expected header check MUST fail
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  responseHeaders:
+    200:
+      Accept-Type: "text/html"
+  mocks:
+    someservice:
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) response does not include expected header 'Accept-Type'
+
+- name: WHEN request return header with wrong value check MUST fail
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  responseHeaders:
+    200:
+      Content-Type: "text/html"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/text"
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) response header 'Content-Type' value does not match:
+            expected: text/html
+              actual: application/text
+
+- name: WHEN service returns only one of required value check MUST fail (1)
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  responseHeaders:
+    200:
+      Accept: "application/json"
+      ACCEPT: "application/text" # we use different case here, because Yaml doesn't support keys with same name 
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Accept: "application/json"
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) response header 'Accept' value does not match:
+            expected: application/text
+              actual: application/json
+
+- name: WHEN service returns only one of required value check MUST fail (2)
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  responseHeaders:
+    200:
+      Accept: "application/json"
+      ACCEPT: "application/text" # we use different case here, because Yaml doesn't support keys with same name 
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Accept: "application/text"
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) response header 'Accept' value does not match:
+            expected: application/json
+              actual: application/text
+
+- name: WHEN service returns only several required values except one check MUST fail
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  responseHeaders:
+    200:
+      Accept: "application/json"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Accept: "application/text"
+         ACCEPT: "application/xml" # we use different case here, because Yaml doesn't support keys with same name 
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) response header 'Accept' value does not match:
+            expected: application/json
+              actual: application/text / application/xml

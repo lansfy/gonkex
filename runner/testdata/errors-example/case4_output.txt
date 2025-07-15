@@ -14,9 +14,9 @@ Response:
      Status: 200 OK
        Body:
 {"somefield":123}
-       Db Request #1:
+       DB Request #0:
 SELECT *
-       Db Response #1:
+       DB Response #0:
 {"field1":"value1"}
 {"field2":123}
 
@@ -25,15 +25,14 @@ SELECT *
 
 Errors:
 
-1) quantity of 'items in database' do not match:
+1) path '$.dbChecks[0]': quantity of 'items in database' does not match:
      expected: 1
        actual: 2
 
-   query: 'SELECT *'
    diff (--- expected vs +++ actual):
  [
-+ "{\"field1\":\"value1\"}",
-  "{\"field2\":123}",
++ '{"field1":"value1"}',
+  '{"field2":123}',
  ]
 
 

@@ -82,6 +82,6 @@
        Accept-Encoding: gzip
        Content-Type: application/json
        User-Agent: Go-http-client/1.1
-       2) server responded with unexpected 'status':
+       2) server responded with unexpected 'status code':
             expected: 202
               actual: 200

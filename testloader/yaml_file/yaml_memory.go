@@ -2,6 +2,7 @@ package yaml_file
 
 import (
 	"sort"
+	"strings"
 
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/testloader"
@@ -10,7 +11,8 @@ import (
 var _ testloader.LoaderInterface = (*YamlInMemoryLoader)(nil)
 
 type YamlInMemoryLoader struct {
-	files map[string]string
+	files      map[string]string
+	fileFilter string
 }
 
 func NewInMemoryLoader(files map[string]string) *YamlInMemoryLoader {
@@ -24,6 +26,9 @@ func (l *YamlInMemoryLoader) Load() ([]models.TestInterface, error) {
 
 	keys := make([]string, 0, len(l.files))
 	for k := range l.files {
+		if l.fileFilter != "" && strings.Contains(k, l.fileFilter) {
+			continue
+		}
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -40,4 +45,8 @@ func (l *YamlInMemoryLoader) Load() ([]models.TestInterface, error) {
 	}
 
 	return tests, nil
+}
+
+func (l *YamlInMemoryLoader) SetFilter(filter string) {
+	l.fileFilter = filter
 }
