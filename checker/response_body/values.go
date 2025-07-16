@@ -57,6 +57,7 @@ func processPath(path string, result *models.Result) (string, error) {
 		}
 		return "", fmt.Errorf("paths not supported for plain text body")
 	case "header":
+		result.ShowHeaders = true // output should show request headers
 		if valArr := result.ResponseHeaders[path]; len(valArr) != 0 {
 			return valArr[0], nil
 		}

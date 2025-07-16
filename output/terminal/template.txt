@@ -23,7 +23,7 @@ Request:
 {{ if .RequestBody }}{{ cyan .RequestBody }}{{ else }}{{ cyan "<no body>" }}{{ end }}
 
 Response:
-{{- if show_headers }}
+{{- if .ShowHeaders }}
     Headers:
 {{- range $header, $values := .ResponseHeaders }}
 {{- range $idx, $val := $values }}
