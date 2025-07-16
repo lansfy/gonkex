@@ -3,6 +3,7 @@ package terminal
 import (
 	"bytes"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"io"
 	"text/template"
@@ -29,6 +30,7 @@ type OutputOpts struct {
 	Policy       ColorPolicy
 	ShowSuccess  bool
 	CustomWriter io.Writer
+	PrettyBody   bool
 }
 
 type Output struct {
@@ -64,7 +66,7 @@ func NewOutput(opts *OutputOpts) *Output {
 
 func (o *Output) Process(_ models.TestInterface, result *models.Result) error {
 	if !result.Passed() || o.opts.ShowSuccess {
-		text, err := renderResult(result, o.opts.Policy)
+		text, err := o.renderResult(result)
 		if err != nil {
 			return err
 		}
@@ -74,9 +76,9 @@ func (o *Output) Process(_ models.TestInterface, result *models.Result) error {
 	return nil
 }
 
-func renderResult(result *models.Result, policy ColorPolicy) (string, error) {
+func (o *Output) renderResult(result *models.Result) (string, error) {
 	var buffer bytes.Buffer
-	t := template.Must(template.New("report").Funcs(getTemplateFuncMap(policy)).Parse(resultTmpl))
+	t := template.Must(template.New("report").Funcs(o.getTemplateFuncMap()).Parse(resultTmpl))
 	if err := t.Execute(&buffer, result); err != nil {
 		return "", err
 	}
@@ -84,9 +86,9 @@ func renderResult(result *models.Result, policy ColorPolicy) (string, error) {
 	return buffer.String(), nil
 }
 
-func getTemplateFuncMap(policy ColorPolicy) template.FuncMap {
+func (o *Output) getTemplateFuncMap() template.FuncMap {
 	var funcMap template.FuncMap
-	if policy == PolicyForceColor {
+	if o.opts.Policy == PolicyForceColor {
 		funcMap = template.FuncMap{
 			"green":      color.GreenString,
 			"cyan":       color.CyanString,
@@ -106,7 +108,22 @@ func getTemplateFuncMap(policy ColorPolicy) template.FuncMap {
 		}
 	}
 	funcMap["inc"] = func(i int) int { return i + 1 }
+	funcMap["prettify"] = func(body string) string {
+		if !o.opts.PrettyBody {
+			return body
+		}
+		return makePretty(body)
+	}
+
 	return funcMap
+}
+
+func makePretty(body string) string {
+	out := &bytes.Buffer{}
+	if json.Indent(out, []byte(body), "", "  ") != nil {
+		return body
+	}
+	return out.String()
 }
 
 func suppressColor(err error) string {

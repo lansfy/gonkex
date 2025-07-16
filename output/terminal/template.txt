@@ -33,7 +33,7 @@ Response:
 {{- end }}
      Status: {{ cyan .ResponseStatus }}
        Body:
-{{ if .ResponseBody }}{{ yellow .ResponseBody }}{{ else }}{{ yellow "<no body>" }}{{ end }}
+{{ if .ResponseBody }}{{ .ResponseBody | prettify | yellow }}{{ else }}{{ yellow "<no body>" }}{{ end }}
 {{- range $i, $dbr := .DatabaseResult }}
 {{- if $dbr.Query }}
        DB Request #{{ $i }}:
