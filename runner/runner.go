@@ -25,15 +25,15 @@ import (
 )
 
 // OnFailPolicy defines the policy to follow when a test fails.
-type OnFailPolicy string
+type OnFailPolicy int
 
 const (
 	// PolicySkipFile skips the current test file if test fails (default policy).
-	PolicySkipFile OnFailPolicy = "file"
+	PolicySkipFile OnFailPolicy = 0
 	// PolicyStop stops all test execution on failure.
-	PolicyStop OnFailPolicy = "stop"
+	PolicyStop OnFailPolicy = 1
 	// PolicyContinue continues running tests despite failures.
-	PolicyContinue OnFailPolicy = "continue"
+	PolicyContinue OnFailPolicy = 2
 )
 
 // HTTPClient defines an interface for making HTTP requests.
@@ -99,9 +99,6 @@ func New(loader testloader.LoaderInterface, opts *RunnerOpts) *Runner {
 	}
 	if opts != nil {
 		r.config = *opts
-	}
-	if r.config.OnFailPolicy == "" {
-		r.config.OnFailPolicy = PolicySkipFile
 	}
 
 	if r.config.CustomClient == nil {

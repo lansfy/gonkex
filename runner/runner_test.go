@@ -275,6 +275,19 @@ func Test_status(t *testing.T) {
 	}
 }
 
+func policyToStr(policy OnFailPolicy) string {
+	switch policy {
+	case PolicySkipFile:
+		return "filePolicy"
+	case PolicyStop:
+		return "stopPolicy"
+	case PolicyContinue:
+		return "continuePolicy"
+	default:
+		return "unknown"
+	}
+}
+
 func Test_on_fail_policy_with_test_error(t *testing.T) {
 	testCases := []struct {
 		policy  OnFailPolicy
@@ -324,7 +337,7 @@ func Test_on_fail_policy_with_test_error(t *testing.T) {
 		},
 	}
 	for _, tt := range testCases {
-		t.Run(string(tt.policy), func(t *testing.T) {
+		t.Run(policyToStr(tt.policy), func(t *testing.T) {
 			obj := newStatusServer()
 			srv := httptest.NewServer(obj)
 			defer srv.Close()
@@ -384,7 +397,7 @@ func Test_on_fail_policy_with_critical_error(t *testing.T) {
 		},
 	}
 	for _, tt := range testCases {
-		t.Run(string(tt.policy), func(t *testing.T) {
+		t.Run(policyToStr(tt.policy), func(t *testing.T) {
 			obj := newStatusServer()
 
 			yamlLoader := yaml_file.NewLoader("testdata/on-fail-policy/" + tt.postfix)
