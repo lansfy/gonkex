@@ -23,6 +23,7 @@ type Result struct {
 	Errors         []error          // Any errors encountered during test execution
 	Test           TestInterface    // Reference to the test case that was executed
 	DatabaseResult []DatabaseResult // Results of database checks after the request
+	ShowHeaders    bool             // The checker can force display of request headers with this flag
 }
 
 // Passed returns true if the test execution passed without errors

@@ -22,6 +22,8 @@ func (c *responseHeaderChecker) Check(t models.TestInterface, result *models.Res
 		return nil, nil
 	}
 
+	result.ShowHeaders = true // output should show request headers
+
 	var errs []error
 	for k, v := range expectedHeaders {
 		err := checkOneHeader(k, v, result.ResponseHeaders)

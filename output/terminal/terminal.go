@@ -75,11 +75,8 @@ func (o *Output) Process(_ models.TestInterface, result *models.Result) error {
 }
 
 func renderResult(result *models.Result, policy ColorPolicy) (string, error) {
-	_, hasHeaders := result.Test.GetResponseHeaders(result.ResponseStatusCode)
-	_, hasVariables := result.Test.GetVariablesToSet(result.ResponseStatusCode)
-
 	var buffer bytes.Buffer
-	t := template.Must(template.New("report").Funcs(getTemplateFuncMap(policy, hasHeaders || hasVariables)).Parse(resultTmpl))
+	t := template.Must(template.New("report").Funcs(getTemplateFuncMap(policy)).Parse(resultTmpl))
 	if err := t.Execute(&buffer, result); err != nil {
 		return "", err
 	}
@@ -87,7 +84,7 @@ func renderResult(result *models.Result, policy ColorPolicy) (string, error) {
 	return buffer.String(), nil
 }
 
-func getTemplateFuncMap(policy ColorPolicy, showHeaders bool) template.FuncMap {
+func getTemplateFuncMap(policy ColorPolicy) template.FuncMap {
 	var funcMap template.FuncMap
 	if policy == PolicyForceColor {
 		funcMap = template.FuncMap{
@@ -109,7 +106,6 @@ func getTemplateFuncMap(policy ColorPolicy, showHeaders bool) template.FuncMap {
 		}
 	}
 	funcMap["inc"] = func(i int) int { return i + 1 }
-	funcMap["show_headers"] = func() bool { return showHeaders }
 	return funcMap
 }
 
