@@ -31,12 +31,13 @@ Capabilities:
    * [$matchRegexp](#matchregexp)
    * [$matchTime](#matchtime)
       + [Basic Format Matching](#basic-format-matching)
-      + ['accuracy' parameter](#accuracy-parameter)
-      + ['value' parameter](#value-parameter)
+      + [`accuracy` parameter](#accuracy-parameter)
+      + [`value` parameter](#value-parameter)
+      + [`timezone` parameter](#timezone-parameter)
    * [$matchArray](#matcharray)
-      + [$matchArray(pattern)](#matcharray-pattern)
-      + [$matchArray(subset+pattern)](#matcharray-subset-pattern)
-      + [$matchArray(pattern+subset)](#matcharray-pattern-subset)
+      + [$matchArray(pattern)](#matcharraypattern)
+      + [$matchArray(subset+pattern)](#matcharraysubsetpattern)
+      + [$matchArray(pattern+subset)](#matcharraypatternsubset)
 - [Delays](#delays)
 - [Variables](#variables)
    * [Assignment](#assignment)
@@ -95,16 +96,7 @@ To integrate functional and native Go tests and run them together, use Gonkex as
 
 Create a test file, for example `func_test.go`.
 
-Import Gonkex as a dependency to your project in this file:
-
-```go
-import (
-	"github.com/lansfy/gonkex/mocks"
-	"github.com/lansfy/gonkex/runner"
-)
-```
-
-Create a test function:
+Import Gonkex as a dependency to your project in this file and create a test function:
 
 ```go
 package test
@@ -117,6 +109,13 @@ import (
 	"github.com/lansfy/gonkex/storage/addons/sqldb"
 	"github.com/lansfy/gonkex/runner"
 )
+
+func init() {
+	// Optional helper function which registers "gonkex-filter" flag that allows users
+	// to filter which test files are executed during a test run.
+	// For example, go test -gonkex-filter="mytest.yaml"
+	runner.RegisterFlags()
+}
 
 func TestFuncCases(t *testing.T) {
 	// init the mocks if needed (details below)
