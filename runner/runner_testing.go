@@ -47,6 +47,8 @@ type RunWithTestingOpts struct {
 	CustomClient HTTPClient
 	// HelperEndpoints is a map of helper endpoints available for facilitating tests.
 	HelperEndpoints endpoint.EndpointMap
+	// EndpointsPrefix consists common prefix for all HelperEndpoints.
+	EndpointsPrefix string
 	// TemplateReplyFuncs contains a set of template functions for processing or customizing replies in tests.
 	TemplateReplyFuncs template.FuncMap
 	// OnFailPolicy defining what happens when a some step of test fails.
@@ -100,6 +102,7 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 			DB:              opts.DB,
 			Variables:       opts.Variables,
 			HTTPProxyURL:    proxyURL,
+			EndpointsPrefix: opts.EndpointsPrefix,
 			HelperEndpoints: opts.HelperEndpoints,
 			TestHandler:     handler.HandleTest,
 			OnFailPolicy:    opts.OnFailPolicy,
