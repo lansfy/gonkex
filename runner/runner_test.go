@@ -57,8 +57,6 @@ func (e *failEndpoint) Check(models.TestInterface, *models.Result) ([]error, err
 }
 
 func Test_retries(t *testing.T) {
-	endpoint.Prefix = "/test."
-
 	testCases := []string{
 		"success.yaml",
 		"failure1.yaml",
@@ -75,6 +73,7 @@ func Test_retries(t *testing.T) {
 			runner := New(
 				yamlLoader,
 				&RunnerOpts{
+					EndpointsPrefix: "/test.",
 					HelperEndpoints: endpoint.EndpointMap{
 						"run/*": e.Run,
 					},

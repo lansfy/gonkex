@@ -32,9 +32,8 @@ func runEndpoint(e Endpoint, path string, req *http.Request, services *mocks.Moc
 	return helper.createHTTPResponse(), nil
 }
 
-func SelectEndpoint(m EndpointMap, path string, req *http.Request,
+func SelectEndpoint(m EndpointMap, prefix, path string, req *http.Request,
 	services *mocks.Mocks, meta MetaProvider) (*http.Response, error) {
-	path = path[len(Prefix):]
 	for name, endpoint := range m {
 		if !match.Match(path, name) {
 			continue
@@ -43,7 +42,7 @@ func SelectEndpoint(m EndpointMap, path string, req *http.Request,
 	}
 	available := []string{}
 	for name := range m {
-		available = append(available, Prefix+name)
+		available = append(available, prefix+name)
 	}
-	return nil, fmt.Errorf("helper endpoint %q not found (available: %s)", Prefix+path, strings.Join(available, ","))
+	return nil, fmt.Errorf("helper endpoint %q not found (available: %s)", prefix+path, strings.Join(available, ","))
 }

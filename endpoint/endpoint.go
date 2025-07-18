@@ -4,7 +4,8 @@ import (
 	"net/http"
 )
 
-var Prefix = "/gonkex/"
+// DefaultPrefix is default prefix for all HelperEndpoints in case if you not override this value in Runner configuration.
+const DefaultPrefix = "/gonkex/"
 
 type Helper interface {
 	// GetHeaders returns all request headers.
