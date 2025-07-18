@@ -137,7 +137,7 @@ func (r *Runner) AddCheckers(c ...checker.CheckerInterface) {
 // Run executes the test suite, processing each test and handling failures according to policy.
 func (r *Runner) Run() error {
 	if filterFlag != "" {
-		r.loader.SetFilter(filterFlag)
+		setStringFilter(r.loader, filterFlag)
 	}
 
 	tests, err := r.loader.Load()
@@ -436,6 +436,12 @@ func (r *Runner) defaultTestHandler(t models.TestInterface, f TestExecutor) (boo
 		return false, result.Errors[0]
 	}
 	return false, nil
+}
+
+func setStringFilter(loader testloader.LoaderInterface, filterStr string) {
+	loader.SetFilter(func(fileName string) bool {
+		return strings.Contains(fileName, filterStr)
+	})
 }
 
 // checkHasFocused checks if any test has a "focus" status, indicating prioritized execution.

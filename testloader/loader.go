@@ -19,6 +19,6 @@ type LoaderInterface interface {
 	// against test file names, test names, or other test metadata.
 	//
 	// Parameters:
-	// - filter: The filter string to apply. An empty string means no filtering.
-	SetFilter(filter string)
+	// - filterFunc: The function which should return true for valid file.
+	SetFilter(filterFunc func(fileName string) bool)
 }

@@ -82,7 +82,7 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 
 	yamlLoader := yaml_file.NewLoader(opts.TestsDir)
 	if os.Getenv("GONKEX_FILE_FILTER") != "" {
-		yamlLoader.SetFilter(os.Getenv("GONKEX_FILE_FILTER"))
+		setStringFilter(yamlLoader, os.Getenv("GONKEX_FILE_FILTER"))
 	}
 
 	handler := &testingHandler{
