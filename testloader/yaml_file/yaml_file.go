@@ -15,7 +15,7 @@ var _ testloader.LoaderInterface = (*YamlInMemoryLoader)(nil)
 
 type YamlFileLoader struct {
 	testsLocation string
-	fileFilter    string
+	filterFunc    func(fileName string) bool
 }
 
 func NewLoader(testsLocation string) *YamlFileLoader {
@@ -55,16 +55,12 @@ func (l *YamlFileLoader) Load() ([]models.TestInterface, error) {
 	return tests, err
 }
 
-func (l *YamlFileLoader) SetFilter(filter string) {
-	l.fileFilter = filter
+func (l *YamlFileLoader) SetFilter(filterFunc func(fileName string) bool) {
+	l.filterFunc = filterFunc
 }
 
 func (l *YamlFileLoader) fitsFilter(fileName string) bool {
-	if l.fileFilter == "" {
-		return true
-	}
-
-	return strings.Contains(fileName, l.fileFilter)
+	return l.filterFunc == nil || l.filterFunc(fileName)
 }
 
 func isYmlFile(name string) bool {
