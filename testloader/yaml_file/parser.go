@@ -20,16 +20,13 @@ const (
 
 var gonkexProtectTemplate = regexp.MustCompile(`{{\s*\$`)
 
-func parseTestDefinitionContent(absPath string, data []byte) ([]*Test, error) {
-	testDefinitions := []TestDefinition{}
-
-	// reading the test source file
-	if err := yaml.UnmarshalStrict(data, &testDefinitions); err != nil {
-		return nil, fmt.Errorf("unmarshal file %s: %w", absPath, err)
+func parseTestDefinitionContent(f FileReadFun, absPath string, data []byte) ([]models.TestInterface, error) {
+	testDefinitions, err := f(absPath, data)
+	if err != nil {
+		return nil, err
 	}
 
 	tests := []*Test{}
-
 	for i := range testDefinitions {
 		testCases, err := makeTestFromDefinition(absPath, &testDefinitions[i])
 		if err != nil {
@@ -44,16 +41,37 @@ func parseTestDefinitionContent(absPath string, data []byte) ([]*Test, error) {
 		tests[len(tests)-1].LastTest = true
 	}
 
-	return tests, nil
+	result := make([]models.TestInterface, len(tests))
+	for i := range tests {
+		result[i] = tests[i]
+	}
+
+	return result, nil
 }
 
-func parseTestDefinitionFile(absPath string) ([]*Test, error) {
+func DefaultFileRead(filePath string, content []byte) ([]TestDefinition, error) {
+	testDefinitions := []TestDefinition{}
+
+	// reading the test source file
+	if err := yaml.UnmarshalStrict(content, &testDefinitions); err != nil {
+		return nil, fmt.Errorf("unmarshal file %s: %w", filePath, err)
+	}
+
+	return testDefinitions, nil
+}
+
+func parseTestDefinitionFile(f FileReadFun, absPath string) ([]models.TestInterface, error) {
 	data, err := os.ReadFile(absPath)
 	if err != nil {
 		return nil, fmt.Errorf("read file %s: %w", absPath, err)
 	}
 
-	return parseTestDefinitionContent(absPath, data)
+	moreTests, err := parseTestDefinitionContent(f, absPath, data)
+	if err != nil {
+		return nil, err
+	}
+
+	return moreTests, nil
 }
 
 func substituteArgs(tmpl string, args map[string]interface{}) (string, error) {
