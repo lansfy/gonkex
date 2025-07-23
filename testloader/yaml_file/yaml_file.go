@@ -11,17 +11,33 @@ import (
 	"github.com/lansfy/gonkex/testloader"
 )
 
-var _ testloader.LoaderInterface = (*YamlInMemoryLoader)(nil)
+type FileReadFun func(filePath string, content []byte) ([]TestDefinition, error)
+
+type LoaderOpts struct {
+	CustomFileRead FileReadFun
+}
 
 type YamlFileLoader struct {
 	testsLocation string
+	opts          LoaderOpts
 	filterFunc    func(fileName string) bool
 }
 
-func NewLoader(testsLocation string) *YamlFileLoader {
-	return &YamlFileLoader{
+func NewLoader(testsLocation string) testloader.LoaderInterface {
+	return NewFileLoader(testsLocation, nil)
+}
+
+func NewFileLoader(testsLocation string, opts *LoaderOpts) testloader.LoaderInterface {
+	l := &YamlFileLoader{
 		testsLocation: testsLocation,
 	}
+	if opts != nil {
+		l.opts = *opts
+	}
+	if l.opts.CustomFileRead == nil {
+		l.opts.CustomFileRead = DefaultFileRead
+	}
+	return l
 }
 
 func (l *YamlFileLoader) Load() ([]models.TestInterface, error) {
@@ -40,15 +56,12 @@ func (l *YamlFileLoader) Load() ([]models.TestInterface, error) {
 			return nil
 		}
 
-		moreTests, err := parseTestDefinitionFile(relpath)
+		moreTests, err := parseTestDefinitionFile(l.opts.CustomFileRead, relpath)
 		if err != nil {
 			return err
 		}
 
-		for i := range moreTests {
-			tests = append(tests, moreTests[i])
-		}
-
+		tests = append(tests, moreTests...)
 		return nil
 	})
 

@@ -12,7 +12,7 @@ import (
 )
 
 func TestParse_TestWithCases(t *testing.T) {
-	tests, err := parseTestDefinitionFile("testdata/cases.yaml")
+	tests, err := parseTestDefinitionFile(DefaultFileRead, "testdata/cases.yaml")
 	require.NoError(t, err)
 	require.Len(t, tests, 2)
 
@@ -27,7 +27,7 @@ func TestParse_TestWithEniromentVariables(t *testing.T) {
 	err := godotenv.Load("testdata/test.env")
 	require.NoError(t, err)
 
-	tests, err := parseTestDefinitionFile("testdata/variables-enviroment.yaml")
+	tests, err := parseTestDefinitionFile(DefaultFileRead, "testdata/variables-enviroment.yaml")
 	require.NoError(t, err)
 
 	testOriginal := tests[0]
@@ -44,7 +44,7 @@ func TestParse_TestWithEniromentVariables(t *testing.T) {
 }
 
 func TestParse_TestsWithVariables(t *testing.T) {
-	tests, err := parseTestDefinitionFile("testdata/variables.yaml")
+	tests, err := parseTestDefinitionFile(DefaultFileRead, "testdata/variables.yaml")
 	require.NoError(t, err)
 
 	testOriginal := tests[0]
@@ -63,7 +63,7 @@ func TestParse_TestsWithVariables(t *testing.T) {
 }
 
 func TestParse_TestsWithCombinedVariables(t *testing.T) {
-	tests, err := parseTestDefinitionFile("testdata/combined-variables.yaml")
+	tests, err := parseTestDefinitionFile(DefaultFileRead, "testdata/combined-variables.yaml")
 	require.NoError(t, err)
 
 	testOriginal := tests[0]

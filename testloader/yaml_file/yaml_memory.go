@@ -7,17 +7,23 @@ import (
 	"github.com/lansfy/gonkex/testloader"
 )
 
-var _ testloader.LoaderInterface = (*YamlInMemoryLoader)(nil)
-
 type YamlInMemoryLoader struct {
 	files      map[string]string
+	opts       LoaderOpts
 	filterFunc func(fileName string) bool
 }
 
-func NewInMemoryLoader(files map[string]string) *YamlInMemoryLoader {
-	return &YamlInMemoryLoader{
+func NewInMemoryLoader(files map[string]string, opts *LoaderOpts) testloader.LoaderInterface {
+	l := &YamlInMemoryLoader{
 		files: files,
 	}
+	if opts != nil {
+		l.opts = *opts
+	}
+	if l.opts.CustomFileRead == nil {
+		l.opts.CustomFileRead = DefaultFileRead
+	}
+	return l
 }
 
 func (l *YamlInMemoryLoader) Load() ([]models.TestInterface, error) {
@@ -33,14 +39,13 @@ func (l *YamlInMemoryLoader) Load() ([]models.TestInterface, error) {
 	sort.Strings(keys)
 
 	for _, relpath := range keys {
-		moreTests, err := parseTestDefinitionContent(relpath, []byte(l.files[relpath]))
+		moreTests, err := parseTestDefinitionContent(l.opts.CustomFileRead,
+			relpath, []byte(l.files[relpath]))
 		if err != nil {
 			return nil, err
 		}
 
-		for i := range moreTests {
-			tests = append(tests, moreTests[i])
-		}
+		tests = append(tests, moreTests...)
 	}
 
 	return tests, nil

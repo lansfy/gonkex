@@ -83,7 +83,7 @@ func (s *script) Timeout() time.Duration {
 	return s.params.Timeout.Duration
 }
 
-type Test struct {
+type testImpl struct {
 	TestDefinition
 
 	Filename string
@@ -103,54 +103,54 @@ type Test struct {
 	IsOneOfCase bool
 }
 
-func (t *Test) ToQuery() string {
+func (t *testImpl) ToQuery() string {
 	return t.QueryParams
 }
 
-func (t *Test) GetMethod() string {
+func (t *testImpl) GetMethod() string {
 	return t.Method
 }
 
-func (t *Test) Path() string {
+func (t *testImpl) Path() string {
 	return t.RequestURL
 }
 
-func (t *Test) GetRequest() string {
+func (t *testImpl) GetRequest() string {
 	return t.Request
 }
 
-func (t *Test) GetResponses() map[int]string {
+func (t *testImpl) GetResponses() map[int]string {
 	return t.Responses
 }
 
-func (t *Test) GetResponse(code int) (string, bool) {
+func (t *testImpl) GetResponse(code int) (string, bool) {
 	val, ok := t.Responses[code]
 	return val, ok
 }
 
-func (t *Test) GetResponseHeaders(code int) (map[string]string, bool) {
+func (t *testImpl) GetResponseHeaders(code int) (map[string]string, bool) {
 	val, ok := t.ResponseHeaders[code]
 
 	return val, ok
 }
 
-func (t *Test) GetName() string {
+func (t *testImpl) GetName() string {
 	return t.Name
 }
 
-func (t *Test) GetDescription() string {
+func (t *testImpl) GetDescription() string {
 	return t.Description
 }
 
-func (t *Test) GetStatus() models.Status {
+func (t *testImpl) GetStatus() models.Status {
 	return t.Status.value
 }
 
-func (t *Test) Fixtures() []string {
+func (t *testImpl) Fixtures() []string {
 	return t.FixtureFiles
 }
 
-func (t *Test) GetMeta(key string) interface{} {
+func (t *testImpl) GetMeta(key string) interface{} {
 	if t.Meta != nil {
 		if val, ok := t.Meta[key]; ok {
 			return val
@@ -159,45 +159,45 @@ func (t *Test) GetMeta(key string) interface{} {
 	return nil
 }
 
-func (t *Test) ServiceMocks() map[string]interface{} {
+func (t *testImpl) ServiceMocks() map[string]interface{} {
 	return t.MocksDefinition
 }
 
-func (t *Test) Pause() time.Duration {
+func (t *testImpl) Pause() time.Duration {
 	return t.PauseValue.Duration
 }
 
-func (t *Test) BeforeScript() models.Script {
+func (t *testImpl) BeforeScript() models.Script {
 	return &script{
 		cmd:    t.BeforeScriptPath,
 		params: t.BeforeScriptParams,
 	}
 }
 
-func (t *Test) AfterRequestScript() models.Script {
+func (t *testImpl) AfterRequestScript() models.Script {
 	return &script{
 		cmd:    t.AfterRequestScriptPath,
 		params: t.AfterRequestScriptParams,
 	}
 }
 
-func (t *Test) AfterRequestPause() time.Duration {
+func (t *testImpl) AfterRequestPause() time.Duration {
 	return t.AfterRequestPauseValue.Duration
 }
 
-func (t *Test) Cookies() map[string]string {
+func (t *testImpl) Cookies() map[string]string {
 	return t.CookiesVal
 }
 
-func (t *Test) Headers() map[string]string {
+func (t *testImpl) Headers() map[string]string {
 	return t.HeadersVal
 }
 
-func (t *Test) GetRetryPolicy() models.RetryPolicy {
+func (t *testImpl) GetRetryPolicy() models.RetryPolicy {
 	return &retry{t.RetryPolicy}
 }
 
-func (t *Test) ContentType() string {
+func (t *testImpl) ContentType() string {
 	for key, val := range t.HeadersVal {
 		if strings.EqualFold(key, "content-type") {
 			return val
@@ -206,30 +206,30 @@ func (t *Test) ContentType() string {
 	return ""
 }
 
-func (t *Test) GetComparisonParams() models.ComparisonParams {
+func (t *testImpl) GetComparisonParams() models.ComparisonParams {
 	return &cmpParams{t.ComparisonParams}
 }
 
-func (t *Test) GetDatabaseChecks() []models.DatabaseCheck {
+func (t *testImpl) GetDatabaseChecks() []models.DatabaseCheck {
 	return t.DbChecks
 }
 
-func (t *Test) GetVariables() map[string]string {
+func (t *testImpl) GetVariables() map[string]string {
 	return t.Variables
 }
 
-func (t *Test) GetCombinedVariables() map[string]string {
+func (t *testImpl) GetCombinedVariables() map[string]string {
 	return t.CombinedVariables
 }
 
-func (t *Test) GetForm() models.Form {
+func (t *testImpl) GetForm() models.Form {
 	if t.Form == nil {
 		return nil
 	}
 	return &formValues{t.Form}
 }
 
-func (t *Test) GetVariablesToSet(code int) (map[string]string, bool) {
+func (t *testImpl) GetVariablesToSet(code int) (map[string]string, bool) {
 	if t.VariablesToSet != nil {
 		val, ok := t.VariablesToSet[code]
 		return val, ok
@@ -237,11 +237,11 @@ func (t *Test) GetVariablesToSet(code int) (map[string]string, bool) {
 	return nil, false
 }
 
-func (t *Test) GetFileName() string {
+func (t *testImpl) GetFileName() string {
 	return t.Filename
 }
 
-func (t *Test) Clone() models.TestInterface {
+func (t *testImpl) Clone() models.TestInterface {
 	res := *t
 	if t.MocksDefinition != nil {
 		res.MocksDefinition = map[string]interface{}{}
@@ -252,11 +252,11 @@ func (t *Test) Clone() models.TestInterface {
 	return &res
 }
 
-func (t *Test) SetStatus(status models.Status) {
+func (t *testImpl) SetStatus(status models.Status) {
 	t.Status.value = status
 }
 
-func (t *Test) ApplyVariables(perform func(string) string) {
+func (t *testImpl) ApplyVariables(perform func(string) string) {
 	t.QueryParams = performQuery(t.QueryParams, perform)
 	t.Method = perform(t.Method)
 	t.RequestURL = perform(t.RequestURL)
@@ -296,14 +296,14 @@ func (t *Test) ApplyVariables(perform func(string) string) {
 	}
 }
 
-func (t *Test) FirstTestInFile() bool {
+func (t *testImpl) FirstTestInFile() bool {
 	return t.FirstTest
 }
 
-func (t *Test) LastTestInFile() bool {
+func (t *testImpl) LastTestInFile() bool {
 	return t.LastTest
 }
 
-func (t *Test) OneOfCase() bool {
+func (t *testImpl) OneOfCase() bool {
 	return t.IsOneOfCase
 }
