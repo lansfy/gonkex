@@ -43,7 +43,7 @@ func (c *cmpParams) DisallowExtraFields() bool {
 }
 
 type retry struct {
-	params retryPolicy
+	params RetryPolicy
 }
 
 func (r *retry) Attempts() int {
@@ -55,7 +55,7 @@ func (r *retry) Delay() time.Duration {
 }
 
 func (r *retry) SuccessCount() int {
-	return r.params.SuccessCount
+	return r.params.SuccessInRow
 }
 
 type formValues struct {
@@ -72,7 +72,7 @@ func (f *formValues) GetFields() map[string]string {
 
 type script struct {
 	cmd    string
-	params scriptParams
+	params ScriptParams
 }
 
 func (s *script) CmdLine() string {
@@ -104,7 +104,7 @@ type testImpl struct {
 }
 
 func (t *testImpl) ToQuery() string {
-	return t.QueryParams
+	return t.Query
 }
 
 func (t *testImpl) GetMethod() string {
@@ -112,7 +112,7 @@ func (t *testImpl) GetMethod() string {
 }
 
 func (t *testImpl) Path() string {
-	return t.RequestURL
+	return t.TestDefinition.Path
 }
 
 func (t *testImpl) GetRequest() string {
@@ -147,7 +147,7 @@ func (t *testImpl) GetStatus() models.Status {
 }
 
 func (t *testImpl) Fixtures() []string {
-	return t.FixtureFiles
+	return t.TestDefinition.Fixtures
 }
 
 func (t *testImpl) GetMeta(key string) interface{} {
@@ -160,37 +160,37 @@ func (t *testImpl) GetMeta(key string) interface{} {
 }
 
 func (t *testImpl) ServiceMocks() map[string]interface{} {
-	return t.MocksDefinition
+	return t.Mocks
 }
 
 func (t *testImpl) Pause() time.Duration {
-	return t.PauseValue.Duration
+	return t.TestDefinition.Pause.Duration
 }
 
 func (t *testImpl) BeforeScript() models.Script {
 	return &script{
 		cmd:    t.BeforeScriptPath,
-		params: t.BeforeScriptParams,
+		params: t.TestDefinition.BeforeScript,
 	}
 }
 
 func (t *testImpl) AfterRequestScript() models.Script {
 	return &script{
 		cmd:    t.AfterRequestScriptPath,
-		params: t.AfterRequestScriptParams,
+		params: t.TestDefinition.AfterRequestScript,
 	}
 }
 
 func (t *testImpl) AfterRequestPause() time.Duration {
-	return t.AfterRequestPauseValue.Duration
+	return t.TestDefinition.AfterRequestPause.Duration
 }
 
 func (t *testImpl) Cookies() map[string]string {
-	return t.CookiesVal
+	return t.TestDefinition.Cookies
 }
 
 func (t *testImpl) Headers() map[string]string {
-	return t.HeadersVal
+	return t.TestDefinition.Headers
 }
 
 func (t *testImpl) GetRetryPolicy() models.RetryPolicy {
@@ -198,7 +198,7 @@ func (t *testImpl) GetRetryPolicy() models.RetryPolicy {
 }
 
 func (t *testImpl) ContentType() string {
-	for key, val := range t.HeadersVal {
+	for key, val := range t.TestDefinition.Headers {
 		if strings.EqualFold(key, "content-type") {
 			return val
 		}
@@ -243,10 +243,10 @@ func (t *testImpl) GetFileName() string {
 
 func (t *testImpl) Clone() models.TestInterface {
 	res := *t
-	if t.MocksDefinition != nil {
-		res.MocksDefinition = map[string]interface{}{}
-		for s := range t.MocksDefinition {
-			res.MocksDefinition[s] = deepClone(t.MocksDefinition[s])
+	if t.Mocks != nil {
+		res.Mocks = map[string]interface{}{}
+		for s := range t.Mocks {
+			res.Mocks[s] = deepClone(t.Mocks[s])
 		}
 	}
 	return &res
@@ -257,9 +257,9 @@ func (t *testImpl) SetStatus(status models.Status) {
 }
 
 func (t *testImpl) ApplyVariables(perform func(string) string) {
-	t.QueryParams = performQuery(t.QueryParams, perform)
+	t.Query = performQuery(t.Query, perform)
 	t.Method = perform(t.Method)
-	t.RequestURL = perform(t.RequestURL)
+	t.TestDefinition.Path = perform(t.TestDefinition.Path)
 	t.Request = perform(t.Request)
 
 	dbChecks := []models.DatabaseCheck{}
@@ -279,7 +279,7 @@ func (t *testImpl) ApplyVariables(perform func(string) string) {
 	t.DbChecks = dbChecks
 
 	t.Responses = performResponses(t.Responses, perform)
-	t.HeadersVal = performHeaders(t.HeadersVal, perform)
+	t.TestDefinition.Headers = performHeaders(t.TestDefinition.Headers, perform)
 
 	resHeaders := map[int]map[string]string{}
 	for key, val := range t.ResponseHeaders {
