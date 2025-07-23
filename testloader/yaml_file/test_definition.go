@@ -5,33 +5,33 @@ import (
 )
 
 type TestDefinition struct {
-	Name                     string                    `json:"name" yaml:"name"`
-	Description              string                    `json:"description" yaml:"description"`
-	Status                   StatusEnum                `json:"status" yaml:"status"`
-	Variables                map[string]string         `json:"variables" yaml:"variables"`
-	VariablesToSet           VariablesToSet            `json:"variables_to_set" yaml:"variables_to_set"`
-	Form                     *Form                     `json:"form" yaml:"form"`
-	Method                   string                    `json:"method" yaml:"method"`
-	RequestURL               string                    `json:"path" yaml:"path"`
-	QueryParams              string                    `json:"query" yaml:"query"`
-	RequestTmpl              string                    `json:"request" yaml:"request"`
-	ResponseTmpls            map[int]string            `json:"response" yaml:"response"`
-	ResponseHeaders          map[int]map[string]string `json:"responseHeaders" yaml:"responseHeaders"`
-	BeforeScriptParams       scriptParams              `json:"beforeScript" yaml:"beforeScript"`
-	AfterRequestScriptParams scriptParams              `json:"afterRequestScript" yaml:"afterRequestScript"`
-	HeadersVal               map[string]string         `json:"headers" yaml:"headers"`
-	CookiesVal               map[string]string         `json:"cookies" yaml:"cookies"`
-	Cases                    []CaseData                `json:"cases" yaml:"cases"`
-	ComparisonParams         compare.Params            `json:"comparisonParams" yaml:"comparisonParams"`
-	FixtureFiles             []string                  `json:"fixtures" yaml:"fixtures"`
-	MocksDefinition          map[string]interface{}    `json:"mocks" yaml:"mocks"`
-	PauseValue               Duration                  `json:"pause" yaml:"pause"`
-	AfterRequestPauseValue   Duration                  `json:"afterRequestPause" yaml:"afterRequestPause"`
-	DbQueryTmpl              string                    `json:"dbQuery" yaml:"dbQuery"`
-	DbResponseTmpl           []string                  `json:"dbResponse" yaml:"dbResponse"`
-	DatabaseChecks           []DatabaseCheck           `json:"dbChecks" yaml:"dbChecks"`
-	RetryPolicy              retryPolicy               `json:"retryPolicy" yaml:"retryPolicy"`
-	Meta                     map[string]interface{}    `json:"meta" yaml:"meta"`
+	Name               string                    `json:"name" yaml:"name"`
+	Description        string                    `json:"description" yaml:"description"`
+	Status             StatusEnum                `json:"status" yaml:"status"`
+	Variables          map[string]string         `json:"variables" yaml:"variables"`
+	VariablesToSet     VariablesToSet            `json:"variables_to_set" yaml:"variables_to_set"`
+	Form               *Form                     `json:"form" yaml:"form"`
+	Method             string                    `json:"method" yaml:"method"`
+	Path               string                    `json:"path" yaml:"path"`
+	Query              string                    `json:"query" yaml:"query"`
+	Request            string                    `json:"request" yaml:"request"`
+	Response           map[int]string            `json:"response" yaml:"response"`
+	ResponseHeaders    map[int]map[string]string `json:"responseHeaders" yaml:"responseHeaders"`
+	BeforeScript       ScriptParams              `json:"beforeScript" yaml:"beforeScript"`
+	AfterRequestScript ScriptParams              `json:"afterRequestScript" yaml:"afterRequestScript"`
+	Headers            map[string]string         `json:"headers" yaml:"headers"`
+	Cookies            map[string]string         `json:"cookies" yaml:"cookies"`
+	Cases              []CaseData                `json:"cases" yaml:"cases"`
+	ComparisonParams   compare.Params            `json:"comparisonParams" yaml:"comparisonParams"`
+	Fixtures           []string                  `json:"fixtures" yaml:"fixtures"`
+	Mocks              map[string]interface{}    `json:"mocks" yaml:"mocks"`
+	Pause              Duration                  `json:"pause" yaml:"pause"`
+	AfterRequestPause  Duration                  `json:"afterRequestPause" yaml:"afterRequestPause"`
+	DbQuery            string                    `json:"dbQuery" yaml:"dbQuery"`
+	DbResponse         []string                  `json:"dbResponse" yaml:"dbResponse"`
+	DbChecks           []DatabaseCheck           `json:"dbChecks" yaml:"dbChecks"`
+	RetryPolicy        RetryPolicy               `json:"retryPolicy" yaml:"retryPolicy"`
+	Meta               map[string]interface{}    `json:"meta" yaml:"meta"`
 }
 
 type CaseData struct {
@@ -53,20 +53,20 @@ type Form struct {
 }
 
 type DatabaseCheck struct {
-	DbQueryTmpl      string         `json:"dbQuery" yaml:"dbQuery"`
-	DbResponseTmpl   []string       `json:"dbResponse" yaml:"dbResponse"`
+	DbQuery          string         `json:"dbQuery" yaml:"dbQuery"`
+	DbResponse       []string       `json:"dbResponse" yaml:"dbResponse"`
 	ComparisonParams compare.Params `json:"comparisonParams" yaml:"comparisonParams"`
 }
 
-type retryPolicy struct {
+type RetryPolicy struct {
 	Attempts     int      `json:"attempts" yaml:"attempts"`
 	Delay        Duration `json:"delay" yaml:"delay"`
-	SuccessCount int      `json:"successInRow" yaml:"successInRow"`
+	SuccessInRow int      `json:"successInRow" yaml:"successInRow"`
 }
 
-type scriptParams struct {
-	PathTmpl string   `json:"path" yaml:"path"`
-	Timeout  Duration `json:"timeout" yaml:"timeout"`
+type ScriptParams struct {
+	Path    string   `json:"path" yaml:"path"`
+	Timeout Duration `json:"timeout" yaml:"timeout"`
 }
 
 type VariablesToSet map[int]map[string]string
