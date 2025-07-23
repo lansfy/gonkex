@@ -11,7 +11,7 @@ import (
 	"github.com/lansfy/gonkex/testloader"
 )
 
-type FileReadFun func(filePath string, content []byte) ([]TestDefinition, error)
+type FileReadFun func(filePath string, content []byte) ([]*TestDefinition, error)
 
 type LoaderOpts struct {
 	CustomFileRead FileReadFun
