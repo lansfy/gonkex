@@ -26,7 +26,7 @@ func parseTestDefinitionContent(f FileReadFun, absPath string, data []byte) ([]m
 		return nil, err
 	}
 
-	tests := []*Test{}
+	tests := []*testImpl{}
 	for i := range testDefinitions {
 		testCases, err := makeTestFromDefinition(absPath, &testDefinitions[i])
 		if err != nil {
@@ -49,6 +49,12 @@ func parseTestDefinitionContent(f FileReadFun, absPath string, data []byte) ([]m
 	return result, nil
 }
 
+// DefaultFileRead reads and unmarshals the YAML content of a test definition file (default implementation).
+//
+// It takes the file path (used only for error reporting) and the raw content in bytes,
+// then attempts to strictly unmarshal the content into a slice of TestDefinition structs.
+//
+// Returns the parsed test definitions or an error if unmarshalling fails.
 func DefaultFileRead(filePath string, content []byte) ([]TestDefinition, error) {
 	testDefinitions := []TestDefinition{}
 
@@ -107,11 +113,11 @@ func substituteArgsToMap(tmpl map[string]string, args map[string]interface{}) (m
 }
 
 // Make tests from the given test definition.
-func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]*Test, error) {
+func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]*testImpl, error) {
 	// test definition has no cases, so using request/response as is
 	if len(testDefinition.Cases) == 0 {
 		test := makeOneTest(filePath, testDefinition)
-		return []*Test{test}, nil
+		return []*testImpl{test}, nil
 	}
 
 	combinedVariables := map[string]string{}
@@ -120,11 +126,11 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 	}
 
 	var err error
-	tests := []*Test{}
+	tests := []*testImpl{}
 
 	// produce as many tests as cases defined
 	for caseIdx, testCase := range testDefinition.Cases {
-		test := &Test{
+		test := &testImpl{
 			TestDefinition: *testDefinition,
 			Filename:       filePath,
 		}
@@ -227,8 +233,8 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 	return tests, nil
 }
 
-func makeOneTest(filePath string, testDefinition *TestDefinition) *Test {
-	test := &Test{
+func makeOneTest(filePath string, testDefinition *TestDefinition) *testImpl {
+	test := &testImpl{
 		TestDefinition:         *testDefinition,
 		Filename:               filePath,
 		Request:                testDefinition.RequestTmpl,
