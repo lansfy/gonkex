@@ -27,8 +27,8 @@ func parseTestDefinitionContent(f FileReadFun, absPath string, data []byte) ([]m
 	}
 
 	tests := []*testImpl{}
-	for i := range testDefinitions {
-		testCases, err := makeTestFromDefinition(absPath, &testDefinitions[i])
+	for _, item := range testDefinitions {
+		testCases, err := makeTestFromDefinition(absPath, item)
 		if err != nil {
 			return nil, fmt.Errorf("preprocess file %s: %w", absPath, err)
 		}
@@ -55,8 +55,8 @@ func parseTestDefinitionContent(f FileReadFun, absPath string, data []byte) ([]m
 // then attempts to strictly unmarshal the content into a slice of TestDefinition structs.
 //
 // Returns the parsed test definitions or an error if unmarshalling fails.
-func DefaultFileRead(filePath string, content []byte) ([]TestDefinition, error) {
-	testDefinitions := []TestDefinition{}
+func DefaultFileRead(filePath string, content []byte) ([]*TestDefinition, error) {
+	testDefinitions := []*TestDefinition{}
 
 	// reading the test source file
 	if err := yaml.UnmarshalStrict(content, &testDefinitions); err != nil {
