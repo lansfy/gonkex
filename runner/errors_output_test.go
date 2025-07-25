@@ -96,7 +96,7 @@ func Test_Error_Examples(t *testing.T) {
 			opts := &terminal.OutputOpts{}
 			if !showOnScreen {
 				opts.Policy = terminal.PolicyForceNoColor
-				opts.CustomWriter = buf
+				opts.Writer = buf
 			}
 
 			output := terminal.NewOutput(opts)
