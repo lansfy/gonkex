@@ -9,7 +9,7 @@ import (
 )
 
 func Test_getRequiredStringKey(t *testing.T) {
-	inputMap := map[interface{}]interface{}{
+	inputMap := map[string]interface{}{
 		"key":          "value",
 		"nonStringKey": 123,
 		"emptyKey":     "",
@@ -68,7 +68,7 @@ func Test_getRequiredStringKey(t *testing.T) {
 }
 
 func Test_getOptionalStringKey(t *testing.T) {
-	inputMap := map[interface{}]interface{}{
+	inputMap := map[string]interface{}{
 		"key":          "value",
 		"nonStringKey": 123,
 		"emptyKey":     "",
@@ -127,7 +127,7 @@ func Test_getOptionalStringKey(t *testing.T) {
 }
 
 func Test_getOptionalIntKey(t *testing.T) {
-	inputMap := map[interface{}]interface{}{
+	inputMap := map[string]interface{}{
 		"key":         42,
 		"stringKey":   "84",
 		"nonIntKey":   "aaaa",
@@ -201,13 +201,13 @@ func Test_getOptionalIntKey(t *testing.T) {
 func Test_readCompareParams(t *testing.T) {
 	tests := []struct {
 		description string
-		input       map[interface{}]interface{}
+		input       map[string]interface{}
 		want        *compare.Params
 		wantErr     string
 	}{
 		{
 			description: "default params when no 'comparisonParams' key",
-			input: map[interface{}]interface{}{
+			input: map[string]interface{}{
 				"someOtherKey": true,
 			},
 			want: &compare.Params{
@@ -216,8 +216,8 @@ func Test_readCompareParams(t *testing.T) {
 		},
 		{
 			description: "valid 'comparisonParams' values (1)",
-			input: map[interface{}]interface{}{
-				"comparisonParams": map[interface{}]interface{}{
+			input: map[string]interface{}{
+				"comparisonParams": map[string]interface{}{
 					"ignoreValues":         true,
 					"ignoreArraysOrdering": false,
 					"disallowExtraFields":  true,
@@ -231,8 +231,8 @@ func Test_readCompareParams(t *testing.T) {
 		},
 		{
 			description: "valid 'comparisonParams' values (2)",
-			input: map[interface{}]interface{}{
-				"comparisonParams": map[interface{}]interface{}{
+			input: map[string]interface{}{
+				"comparisonParams": map[string]interface{}{
 					"ignoreValues":         false,
 					"ignoreArraysOrdering": true,
 					"disallowExtraFields":  false,
@@ -246,8 +246,8 @@ func Test_readCompareParams(t *testing.T) {
 		},
 		{
 			description: "valid 'comparisonParams' values (3)",
-			input: map[interface{}]interface{}{
-				"comparisonParams": map[interface{}]interface{}{
+			input: map[string]interface{}{
+				"comparisonParams": map[string]interface{}{
 					"ignoreValues":         true,
 					"ignoreArraysOrdering": true,
 					"disallowExtraFields":  false,
@@ -261,24 +261,15 @@ func Test_readCompareParams(t *testing.T) {
 		},
 		{
 			description: "non-map 'comparisonParams' value",
-			input: map[interface{}]interface{}{
+			input: map[string]interface{}{
 				"comparisonParams": "invalidType",
 			},
-			wantErr: "section 'comparisonParams': section can't be parsed",
-		},
-		{
-			description: "non-string key in 'comparisonParams'",
-			input: map[interface{}]interface{}{
-				"comparisonParams": map[interface{}]interface{}{
-					123: true,
-				},
-			},
-			wantErr: "section 'comparisonParams': key '123' has non-string type",
+			wantErr: "section 'comparisonParams': must be a map",
 		},
 		{
 			description: "non-bool value in 'comparisonParams'",
-			input: map[interface{}]interface{}{
-				"comparisonParams": map[interface{}]interface{}{
+			input: map[string]interface{}{
+				"comparisonParams": map[string]interface{}{
 					"ignoreValues": "notBool",
 				},
 			},
@@ -286,8 +277,8 @@ func Test_readCompareParams(t *testing.T) {
 		},
 		{
 			description: "unexpected key in 'comparisonParams'",
-			input: map[interface{}]interface{}{
-				"comparisonParams": map[interface{}]interface{}{
+			input: map[string]interface{}{
+				"comparisonParams": map[string]interface{}{
 					"someKey": true,
 				},
 			},
@@ -312,14 +303,14 @@ func Test_readCompareParams(t *testing.T) {
 func Test_loadHeaders(t *testing.T) {
 	tests := []struct {
 		description string
-		input       map[interface{}]interface{}
+		input       map[string]interface{}
 		want        map[string]string
 		wantErr     string
 	}{
 		{
 			description: "valid headers",
-			input: map[interface{}]interface{}{
-				"headers": map[interface{}]interface{}{
+			input: map[string]interface{}{
+				"headers": map[string]interface{}{
 					"Header1": "value1",
 					"Header2": "value2",
 				},
@@ -332,26 +323,16 @@ func Test_loadHeaders(t *testing.T) {
 		},
 		{
 			description: "headers is not a map",
-			input: map[interface{}]interface{}{
+			input: map[string]interface{}{
 				"headers": "invalid",
 			},
 			want:    nil,
-			wantErr: "map under 'headers' key required",
-		},
-		{
-			description: "header key is not a string",
-			input: map[interface{}]interface{}{
-				"headers": map[interface{}]interface{}{
-					123: "value",
-				},
-			},
-			want:    nil,
-			wantErr: "'headers' requires string keys",
+			wantErr: "map under 'headers' key is required",
 		},
 		{
 			description: "header value is not a string",
-			input: map[interface{}]interface{}{
-				"headers": map[interface{}]interface{}{
+			input: map[string]interface{}{
+				"headers": map[string]interface{}{
 					"key": 123,
 				},
 			},
@@ -360,7 +341,7 @@ func Test_loadHeaders(t *testing.T) {
 		},
 		{
 			description: "no headers key",
-			input:       map[interface{}]interface{}{},
+			input:       map[string]interface{}{},
 			want:        nil,
 			wantErr:     "",
 		},

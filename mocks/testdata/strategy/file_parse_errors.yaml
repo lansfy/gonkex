@@ -25,7 +25,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': strategy 'file': map under 'headers' key required
+       load definition for 'someservice': strategy 'file': map under 'headers' key is required
 
 - name: WHEN 'filename' key absent in 'file' strategy load definition MUST fail with error
   method: GET

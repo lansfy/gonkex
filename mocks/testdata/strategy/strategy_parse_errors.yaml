@@ -21,7 +21,7 @@
     someservice: []
   meta:
     expected: |
-       load definition for 'someservice': path '$': definition must be key-values
+       load definition for 'someservice': path '$': must be a map
 
 - name: WHEN 'strategy' field absent load definition MUST fail with error
   method: GET
@@ -79,7 +79,7 @@
       200: value
   meta:
     expected: |
-       load definition for 'someservice': strategy 'constant': key '200' has non-string type
+       load definition for 'someservice': path '$': key '200' has non-string type
 
 - name: WHEN constraint has unknown name load definition MUST fail with error
   method: GET

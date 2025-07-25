@@ -7,7 +7,7 @@ import (
 	"github.com/lansfy/gonkex/colorize"
 )
 
-func loadMethodConstraint(def map[interface{}]interface{}) (verifier, error) {
+func loadMethodConstraint(def map[string]interface{}) (verifier, error) {
 	method, err := getRequiredStringKey(def, "method", false)
 	if err != nil {
 		return nil, err

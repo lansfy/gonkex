@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-func (l *loaderImpl) loadBasedOnRequestReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *loaderImpl) loadBasedOnRequestReplyStrategy(path string, def map[string]interface{}) (ReplyStrategy, error) {
 	u, ok := def["uris"]
 	if !ok {
 		return nil, errors.New("'uris' key required")
@@ -20,9 +20,9 @@ func (l *loaderImpl) loadBasedOnRequestReplyStrategy(path string, def map[interf
 
 	uris := []*Definition{}
 	for i, v := range urisList {
-		v, ok := v.(map[interface{}]interface{})
-		if !ok {
-			return nil, errors.New("'uris' list item must be a map")
+		v, err := loadStringMap(v, "uris")
+		if err != nil {
+			return nil, err
 		}
 		def, err := l.loadDefinition(fmt.Sprintf("%s.uris[%d]", path, i), v)
 		if err != nil {

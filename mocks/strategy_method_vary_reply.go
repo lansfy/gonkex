@@ -2,28 +2,23 @@ package mocks
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 )
 
-func (l *loaderImpl) loadMethodVaryStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *loaderImpl) loadMethodVaryStrategy(path string, def map[string]interface{}) (ReplyStrategy, error) {
 	u, ok := def["methods"]
 	if !ok {
 		return nil, errors.New("'methods' key required")
 	}
 
-	methodsMap, ok := u.(map[interface{}]interface{})
-	if !ok {
-		return nil, errors.New("map under 'methods' key required")
+	methodsMap, err := loadStringMap(u, "methods")
+	if err != nil {
+		return nil, err
 	}
 
 	methods := map[string]*Definition{}
-	for method, v := range methodsMap {
-		methodStr, ok := method.(string)
-		if !ok {
-			return nil, fmt.Errorf("method '%v' has non-string name", method)
-		}
+	for methodStr, v := range methodsMap {
 		def, err := l.loadDefinition(path+".methods."+methodStr, v)
 		if err != nil {
 			return nil, err

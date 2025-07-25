@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-func (l *loaderImpl) loadSequenceReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *loaderImpl) loadSequenceReplyStrategy(path string, def map[string]interface{}) (ReplyStrategy, error) {
 	if _, ok := def["sequence"]; !ok {
 		return nil, errors.New("'sequence' key required")
 	}

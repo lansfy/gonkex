@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func (l *loaderImpl) loadFileStrategy(def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *loaderImpl) loadFileStrategy(def map[string]interface{}) (ReplyStrategy, error) {
 	filename, err := getRequiredStringKey(def, "filename", false)
 	if err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func (l *loaderImpl) loadFileStrategy(def map[interface{}]interface{}) (ReplyStr
 	return NewConstantReplyWithCode(content, statusCode, headers), nil
 }
 
-func (l *loaderImpl) loadConstantStrategy(def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *loaderImpl) loadConstantStrategy(def map[string]interface{}) (ReplyStrategy, error) {
 	body, err := getRequiredStringKey(def, "body", true)
 	if err != nil {
 		return nil, err

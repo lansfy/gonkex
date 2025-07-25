@@ -9,7 +9,7 @@ import (
 	"text/template"
 )
 
-func (l *loaderImpl) loadTemplateReplyStrategy(def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *loaderImpl) loadTemplateReplyStrategy(def map[string]interface{}) (ReplyStrategy, error) {
 	body, err := getRequiredStringKey(def, "body", true)
 	if err != nil {
 		return nil, err

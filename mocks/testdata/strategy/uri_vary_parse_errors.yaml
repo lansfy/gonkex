@@ -21,7 +21,7 @@
       uris: []
   meta:
     expected: |
-       load definition for 'someservice': strategy 'uriVary': map under 'uris' key required
+       load definition for 'someservice': strategy 'uriVary': map under 'uris' key is required
 
 - name: WHEN uri in 'uris' has wrong type in uriVary strategy MUST fail with error
   method: get
@@ -38,7 +38,7 @@
           statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': strategy 'uriVary': uri '42' has non-string name
+       load definition for 'someservice': strategy 'uriVary': key '42' has non-string type
 
 - name: WHEN parsing of uriVary internals fail parser MUST fail with error
   method: get

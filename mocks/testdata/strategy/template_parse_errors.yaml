@@ -38,7 +38,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': strategy 'template': map under 'headers' key required
+       load definition for 'someservice': strategy 'template': map under 'headers' key is required
 
 - name: WHEN 'template' strategy has invalid template strategy MUST fail with error
   method: POST

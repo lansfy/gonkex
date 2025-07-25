@@ -46,9 +46,26 @@ func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definitio
 		return colorize.NewEntityError("path %s", path).SetSubError(err)
 	}
 
-	def, ok := rawDef.(map[interface{}]interface{})
-	if !ok {
-		return nil, wrapPath(path, errors.New("definition must be key-values"))
+	def, err := loadStringMap(rawDef, "")
+	if err != nil {
+		return nil, wrapPath(path, err)
+	}
+
+	// load reply strategy
+	strategyName, err := getRequiredStringKey(def, "strategy", false)
+	if err != nil {
+		return nil, wrapPath(path, err)
+	}
+
+	wrap := func(err error) error {
+		if colorize.HasPathComponent(err) {
+			return err
+		}
+		err = colorize.NewEntityError("strategy %s", strategyName).SetSubError(err)
+		if path == "$" {
+			return err
+		}
+		return colorize.NewEntityError("path %s", path).SetSubError(err)
 	}
 
 	// load request constraints
@@ -75,23 +92,6 @@ func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definitio
 		"order",
 	}
 
-	// load reply strategy
-	strategyName, err := getRequiredStringKey(def, "strategy", false)
-	if err != nil {
-		return nil, wrapPath(path, err)
-	}
-
-	wrap := func(err error) error {
-		if colorize.HasPathComponent(err) {
-			return err
-		}
-		err = colorize.NewEntityError("strategy %s", strategyName).SetSubError(err)
-		if path == "$" {
-			return err
-		}
-		return colorize.NewEntityError("path %s", path).SetSubError(err)
-	}
-
 	replyStrategy, err := l.loadStrategy(path, strategyName, def, &ak)
 	if err != nil {
 		return nil, wrap(err)
@@ -113,7 +113,7 @@ func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definitio
 	return res, nil
 }
 
-func (l *loaderImpl) loadStrategy(path, strategyName string, definition map[interface{}]interface{},
+func (l *loaderImpl) loadStrategy(path, strategyName string, definition map[string]interface{},
 	ak *[]string) (ReplyStrategy, error) {
 	switch strategyName {
 	case "nop":
@@ -151,9 +151,9 @@ func loadConstraint(definition interface{}) (verifier, error) {
 		return colorize.NewError("load constraint").SetSubError(err)
 	}
 
-	def, ok := definition.(map[interface{}]interface{})
-	if !ok {
-		return nil, wrap(errors.New("must be map"))
+	def, err := loadStringMap(definition, "")
+	if err != nil {
+		return nil, wrap(err)
 	}
 	kind, err := getRequiredStringKey(def, "kind", false)
 	if err != nil {
@@ -176,7 +176,7 @@ func loadConstraint(definition interface{}) (verifier, error) {
 	return c, nil
 }
 
-func loadConstraintOfKind(kind string, def map[interface{}]interface{}, ak *[]string) (verifier, error) {
+func loadConstraintOfKind(kind string, def map[string]interface{}, ak *[]string) (verifier, error) {
 	switch kind {
 	case "nop":
 		return &nopConstraint{}, nil
@@ -221,16 +221,8 @@ func loadConstraintOfKind(kind string, def map[interface{}]interface{}, ak *[]st
 	return nil, errors.New("unknown constraint")
 }
 
-func validateMapKeys(m map[interface{}]interface{}, allowedKeys []string) error {
-	for key := range m {
-		skey, ok := key.(string)
-		if !ok {
-			return colorize.NewEntityError(
-				"key %s has non-string type",
-				fmt.Sprintf("%v", key),
-			)
-		}
-
+func validateMapKeys(m map[string]interface{}, allowedKeys []string) error {
+	for skey := range m {
 		found := false
 		for _, ak := range allowedKeys {
 			if ak == skey {

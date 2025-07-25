@@ -7,7 +7,7 @@ import (
 	"github.com/lansfy/gonkex/compare"
 )
 
-func loadHeaderConstraint(def map[interface{}]interface{}) (verifier, error) {
+func loadHeaderConstraint(def map[string]interface{}) (verifier, error) {
 	header, err := getRequiredStringKey(def, "header", false)
 	if err != nil {
 		return nil, err

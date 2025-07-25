@@ -8,7 +8,7 @@ import (
 	"github.com/lansfy/gonkex/types"
 )
 
-func loadBodyMatchesConstraint(def map[interface{}]interface{}, bodyType types.BodyType) (verifier, error) {
+func loadBodyMatchesConstraint(def map[string]interface{}, bodyType types.BodyType) (verifier, error) {
 	body, err := getRequiredStringKey(def, "body", true)
 	if err != nil {
 		return nil, err

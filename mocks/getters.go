@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/lansfy/gonkex/colorize"
 	"github.com/lansfy/gonkex/compare"
 )
 
@@ -15,7 +16,7 @@ func wrongTypeError(key, typeName string) error {
 	return fmt.Errorf("key '%s' has non-%s value", key, typeName)
 }
 
-func getRequiredStringKey(def map[interface{}]interface{}, name string, allowedEmpty bool) (string, error) {
+func getRequiredStringKey(def map[string]interface{}, name string, allowedEmpty bool) (string, error) {
 	f, ok := def[name]
 	if !ok {
 		return "", fmt.Errorf("'%s' key required", name)
@@ -31,7 +32,7 @@ func getRequiredStringKey(def map[interface{}]interface{}, name string, allowedE
 	return value, nil
 }
 
-func getOptionalStringKey(def map[interface{}]interface{}, name string, allowedEmpty bool) (string, error) {
+func getOptionalStringKey(def map[string]interface{}, name string, allowedEmpty bool) (string, error) {
 	f, ok := def[name]
 	if !ok {
 		return "", nil
@@ -46,7 +47,7 @@ func getOptionalStringKey(def map[interface{}]interface{}, name string, allowedE
 	return value, nil
 }
 
-func getOptionalIntKey(def map[interface{}]interface{}, name string, defaultValue int) (int, error) {
+func getOptionalIntKey(def map[string]interface{}, name string, defaultValue int) (int, error) {
 	c, ok := def[name]
 	if !ok {
 		return defaultValue, nil
@@ -71,23 +72,43 @@ func getOptionalIntKey(def map[interface{}]interface{}, name string, defaultValu
 	return parsedValue, nil
 }
 
-func loadHeaders(def map[interface{}]interface{}) (map[string]string, error) {
+func loadStringMap(def interface{}, key string) (map[string]interface{}, error) {
+	if sMap, ok := def.(map[string]interface{}); ok {
+		return sMap, nil
+	}
+
+	if iMap, ok := def.(map[interface{}]interface{}); ok {
+		result := map[string]interface{}{}
+		for ikey, ivalue := range iMap {
+			skey, ok := ikey.(string)
+			if !ok {
+				return nil, fmt.Errorf("key '%v' has non-string type", ikey)
+			}
+			result[skey] = ivalue
+		}
+		return result, nil
+	}
+
+	if key == "" {
+		return nil, errors.New("must be a map")
+	}
+
+	return nil, colorize.NewEntityError("map under %s key is required", key)
+}
+
+func loadHeaders(def map[string]interface{}) (map[string]string, error) {
 	h, ok := def["headers"]
 	if !ok {
 		return nil, nil
 	}
 
-	hMap, ok := h.(map[interface{}]interface{})
-	if !ok {
-		return nil, errors.New("map under 'headers' key required")
+	hMap, err := loadStringMap(h, "headers")
+	if err != nil {
+		return nil, err
 	}
 
 	headers := map[string]string{}
-	for k, v := range hMap {
-		key, ok := k.(string)
-		if !ok {
-			return nil, errors.New("'headers' requires string keys")
-		}
+	for key, v := range hMap {
 		value, ok := v.(string)
 		if !ok {
 			return nil, errors.New("'headers' requires string values")
@@ -97,7 +118,7 @@ func loadHeaders(def map[interface{}]interface{}) (map[string]string, error) {
 	return headers, nil
 }
 
-func readCompareParams(def map[interface{}]interface{}) (compare.Params, error) {
+func readCompareParams(def map[string]interface{}) (compare.Params, error) {
 	params := compare.Params{
 		IgnoreArraysOrdering: true,
 	}
@@ -111,9 +132,9 @@ func readCompareParams(def map[interface{}]interface{}) (compare.Params, error) 
 		return fmt.Errorf("section 'comparisonParams': %w", err)
 	}
 
-	values, ok := p.(map[interface{}]interface{})
-	if !ok {
-		return params, wrap(errors.New("section can't be parsed"))
+	values, err := loadStringMap(p, "")
+	if err != nil {
+		return params, wrap(err)
 	}
 
 	mapping := map[string]*bool{
@@ -123,12 +144,7 @@ func readCompareParams(def map[interface{}]interface{}) (compare.Params, error) 
 	}
 	allowedKeys := []string{"ignoreValues", "ignoreArraysOrdering", "disallowExtraFields"}
 
-	for key, val := range values {
-		skey, ok := key.(string)
-		if !ok {
-			return params, wrap(fmt.Errorf("key '%v' has non-string type", key))
-		}
-
+	for skey, val := range values {
 		bval, ok := val.(bool)
 		if !ok {
 			return params, wrap(wrongTypeError(skey, "bool"))
