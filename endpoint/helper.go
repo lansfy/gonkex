@@ -9,7 +9,7 @@ import (
 
 	"github.com/lansfy/gonkex/mocks"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type MetaProvider interface {
@@ -63,7 +63,7 @@ func (h *helperImpl) GetRequestAsJson(v interface{}) error {
 }
 
 func (h *helperImpl) GetRequestAsYaml(v interface{}) error {
-	err := yaml.UnmarshalStrict(h.requestBytes, v)
+	err := yaml.Unmarshal(h.requestBytes, v)
 	if err != nil {
 		return internalError("GetRequestAsYaml", err)
 	}
