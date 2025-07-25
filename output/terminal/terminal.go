@@ -29,7 +29,9 @@ var resultTmpl string
 type OutputOpts struct {
 	Policy       ColorPolicy
 	ShowSuccess  bool
-	CustomWriter io.Writer
+	Template     string
+	TemplateFunc template.FuncMap
+	Writer       io.Writer
 	PrettyBody   bool
 }
 
@@ -57,8 +59,12 @@ func NewOutput(opts *OutputOpts) *Output {
 		o.fprintf = color.New().Fprintf
 	}
 
-	if o.opts.CustomWriter == nil {
-		o.opts.CustomWriter = colorable.NewColorableStdout()
+	if o.opts.Writer == nil {
+		o.opts.Writer = colorable.NewColorableStdout()
+	}
+
+	if o.opts.Template == "" {
+		o.opts.Template = resultTmpl
 	}
 
 	return o
@@ -70,7 +76,7 @@ func (o *Output) Process(_ models.TestInterface, result *models.Result) error {
 		if err != nil {
 			return err
 		}
-		_, _ = o.fprintf(o.opts.CustomWriter, "%s", text)
+		_, _ = o.fprintf(o.opts.Writer, "%s", text)
 	}
 
 	return nil
@@ -78,7 +84,7 @@ func (o *Output) Process(_ models.TestInterface, result *models.Result) error {
 
 func (o *Output) renderResult(result *models.Result) (string, error) {
 	var buffer bytes.Buffer
-	t := template.Must(template.New("report").Funcs(o.getTemplateFuncMap()).Parse(resultTmpl))
+	t := template.Must(template.New("report").Funcs(o.getTemplateFuncMap()).Parse(o.opts.Template))
 	if err := t.Execute(&buffer, result); err != nil {
 		return "", err
 	}
@@ -113,6 +119,10 @@ func (o *Output) getTemplateFuncMap() template.FuncMap {
 			return body
 		}
 		return makePretty(body)
+	}
+
+	for name, f := range o.opts.TemplateFunc {
+		funcMap[name] = f
 	}
 
 	return funcMap
