@@ -1185,7 +1185,7 @@ Checks that the GET request parameters correspond to the ones defined in the `qu
 
 Parameters:
 
-- `expectedQuery` (mandatory) - a list of parameters to compare the parameter string to. The order of parameters is not important.
+- `query` (mandatory) - a list of parameters to compare the parameter string to. The order of parameters is not important.
 
 Examples:
 
@@ -1198,9 +1198,11 @@ Examples:
         # and the values are key1=value1, key1=value11 и key2=value2.
         # Keys not mentioned here are omitted while running the check.
         - kind: queryMatches
-          expectedQuery:  key1=value1&key2=value2&key1=value11
+          query:  key1=value1&key2=value2&key1=value11
     ...
 ```
+
+*NOTE*: For backward compatibility, the use of the `expectedQuery` parameter instead of `query` is also supported.
 
 ##### queryMatchesRegexp
 
@@ -1208,7 +1210,7 @@ Expands `queryMatches` so it can be used with regexp pattern matching.
 
 Parameters:
 
-- `expectedQuery` (mandatory) - a list of parameters to compare the parameter string to. The order of parameters is not important.
+- `query` (mandatory) - a list of parameters to compare the parameter string to. The order of parameters is not important.
 
 Example:
 
@@ -1219,9 +1221,11 @@ Example:
       requestConstraints:
         # works similarly to queryMatches with an addition of $matchRegexp usage
         - kind: queryMatchesRegexp
-          expectedQuery:  key1=value1&key2=$matchRegexp(\\d+)&key1=value11
+          query:  key1=value1&key2=$matchRegexp(\\d+)&key1=value11
     ...
 ```
+
+*NOTE*: For backward compatibility, the use of the `expectedQuery` parameter instead of `query` is also supported.
 
 ##### bodyMatchesText
 
@@ -1606,20 +1610,20 @@ Example:
               "ok": true
             }
           requestConstraints:
-            - kind: queryMatches
-              expectedQuery: "key=value1"
             - kind: pathMatches
               path: /request
+            - kind: queryMatches
+              query: "key=value1"
         - strategy: constant
           body: >
             {
              "ok": true
             }
           requestConstraints:
-            - kind: queryMatches
-              expectedQuery: "key=value2"
             - kind: pathMatches
               path: /request
+            - kind: queryMatches
+              query: "key=value2"
     ...
 ```
 

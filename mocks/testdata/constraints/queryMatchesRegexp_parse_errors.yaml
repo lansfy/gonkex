@@ -1,4 +1,4 @@
-- name: WHEN field 'expectedQuery' absent in queryMatchesRegexp parser MUST fail with error
+- name: WHEN field 'query' absent in queryMatchesRegexp parser MUST fail with error
   method: GET
   path: /test/case
   response:
@@ -12,7 +12,59 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatchesRegexp': 'expectedQuery' key required
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatchesRegexp': 'query' key required
+
+- name: WHEN field 'query' has invalid type in queryMatchesRegexp parser MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatchesRegexp
+          query: 5
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatchesRegexp': key 'query' has non-string value
+
+- name: WHEN field 'query' consists several '=' in queryMatchesRegexp parser MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatchesRegexp
+          query: food=cake&people==3
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatchesRegexp': failed to parse query 'people==3'
+
+- name: WHEN 'queryMatchesRegexp' constraint has unknown key load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatchesRegexp
+          query: ?foo=bar
+          invalid: invalid
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatchesRegexp': unexpected key 'invalid' (allowed only [kind query expectedQuery])
 
 - name: WHEN field 'expectedQuery' has invalid type in queryMatchesRegexp parser MUST fail with error
   method: GET
@@ -47,21 +99,3 @@
   meta:
     expected: |
        load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatchesRegexp': failed to parse query 'people==3'
-
-- name: WHEN 'queryMatchesRegexp' constraint has unknown key load definition MUST fail with error
-  method: GET
-  path: /test/case
-  response:
-    200: "result"
-  mocks:
-    someservice:
-      requestConstraints:
-        - kind: queryMatchesRegexp
-          expectedQuery: ?foo=bar
-          invalid: invalid
-      strategy: constant
-      body: "result"
-      statusCode: 200
-  meta:
-    expected: |
-       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatchesRegexp': unexpected key 'invalid' (allowed only [kind expectedQuery])

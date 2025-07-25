@@ -1,4 +1,4 @@
-- name: WHEN request query matches expectedQuery constraint check MUST be successful
+- name: WHEN request query matches queryMatches constraint check MUST be successful
   method: GET
   path: /test/case
   query: "{{ $query }}"
@@ -8,7 +8,7 @@
     someservice:
       requestConstraints:
         - kind: queryMatches
-          expectedQuery: ?people=2&food=tea&food=cake
+          query: ?people=2&food=tea&food=cake
       strategy: constant
       body: "result"
       statusCode: 200
@@ -39,7 +39,7 @@
     someservice:
       requestConstraints:
         - kind: queryMatches
-          expectedQuery: ?people=2&food=tea&food=cake
+          query: ?people=2&food=tea&food=cake
       strategy: constant
       body: "result"
       statusCode: 200
@@ -57,7 +57,7 @@
     someservice:
       requestConstraints:
         - kind: queryMatches
-          expectedQuery: ?people=3&food=beer
+          query: ?people=3&food=beer
       strategy: constant
       body: "result"
       statusCode: 200
@@ -77,7 +77,7 @@
     someservice:
       requestConstraints:
         - kind: queryMatches
-          expectedQuery: ?people=2&food=tea&food=cake
+          query: ?people=2&food=tea&food=cake
       strategy: constant
       body: "result"
       statusCode: 200
@@ -89,3 +89,38 @@
        2) mock 'someservice': request constraint 'queryMatches': parameter 'people': values do not match:
             expected: 2
               actual: 3
+
+- name: queryMatches constraint MUST support expectedQuery for backward compatibility (1)
+  method: GET
+  path: /test/case
+  query: "people=2&food=tea&food=cake"
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatches
+          expectedQuery: ?people=2&food=tea&food=cake
+      strategy: constant
+      body: "result"
+      statusCode: 200
+
+- name: queryMatches constraint MUST support expectedQuery for backward compatibility (2)
+  method: GET
+  path: /test/case
+  query: food=cake&food=beer&people=3
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatches
+          query: ?people=3&food=beer
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'queryMatches': number of values for parameter 'food' is not equal to expected:
+            expected: [beer cake]
+              actual: [beer]

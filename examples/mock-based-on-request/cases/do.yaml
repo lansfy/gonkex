@@ -9,26 +9,26 @@
               "value": 1
             }
           requestConstraints:
-            - kind: queryMatches
-              expectedQuery: "key=value1"
             - kind: pathMatches
               path: /request
+            - kind: queryMatches
+              query: "key=value1"
         - strategy: constant
           body: >
             {
               "value": 22
             }
           requestConstraints:
-            - kind: queryMatches
-              expectedQuery: "key=value2"
             - kind: pathMatches
               path: /request
+            - kind: queryMatches
+              query: "key=value2"
         - strategy: template
           requestConstraints:
-            - kind: queryMatches
-              expectedQuery: "value=3"
             - kind: pathMatches
               path: /request
+            - kind: queryMatches
+              query: "value=3"
           body: >
             {
               "value": {{ .request.Query "value" }},
@@ -36,10 +36,10 @@
             }
         - strategy: template
           requestConstraints:
-            - kind: queryMatches
-              expectedQuery: "value=4"
             - kind: pathMatches
               path: /request
+            - kind: queryMatches
+              query: "value=4"
           body: >
             {
               "value": {{ .request.Json.data.value }}
