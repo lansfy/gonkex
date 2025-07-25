@@ -56,10 +56,12 @@ func parseTestDefinitionContent(f FileReadFun, absPath string, data []byte) ([]m
 //
 // Returns the parsed test definitions or an error if unmarshalling fails.
 func DefaultFileRead(filePath string, content []byte) ([]*TestDefinition, error) {
-	testDefinitions := []*TestDefinition{}
+	decoder := yaml.NewDecoder(bytes.NewReader(content))
+	decoder.KnownFields(true)
 
 	// reading the test source file
-	if err := yaml.Unmarshal(content, &testDefinitions); err != nil {
+	testDefinitions := []*TestDefinition{}
+	if err := decoder.Decode(&testDefinitions); err != nil {
 		return nil, fmt.Errorf("unmarshal file %s: %w", filePath, err)
 	}
 

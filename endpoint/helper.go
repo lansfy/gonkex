@@ -63,7 +63,9 @@ func (h *helperImpl) GetRequestAsJson(v interface{}) error {
 }
 
 func (h *helperImpl) GetRequestAsYaml(v interface{}) error {
-	err := yaml.Unmarshal(h.requestBytes, v)
+	decoder := yaml.NewDecoder(bytes.NewBuffer(h.requestBytes))
+	decoder.KnownFields(true)
+	err := decoder.Decode(v)
 	if err != nil {
 		return internalError("GetRequestAsYaml", err)
 	}
