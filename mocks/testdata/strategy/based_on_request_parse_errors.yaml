@@ -37,7 +37,7 @@
         - 3
   meta:
     expected: |
-       load definition for 'someservice': strategy 'basedOnRequest': 'uris' list item must be a map
+       load definition for 'someservice': strategy 'basedOnRequest': map under 'uris' key is required
 
 - name: WHEN parsing of basedOnRequest internals fail parser MUST fail with error
   method: get

@@ -6,7 +6,7 @@ import (
 	"github.com/lansfy/gonkex/compare"
 )
 
-func loadBodyMatchesTextConstraint(def map[interface{}]interface{}) (verifier, error) {
+func loadBodyMatchesTextConstraint(def map[string]interface{}) (verifier, error) {
 	bodyStr, err := getOptionalStringKey(def, "body", true)
 	if err != nil {
 		return nil, err

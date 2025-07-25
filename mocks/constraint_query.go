@@ -10,7 +10,7 @@ import (
 	"github.com/lansfy/gonkex/colorize"
 )
 
-func loadQueryConstraint(def map[interface{}]interface{}) (verifier, error) {
+func loadQueryConstraint(def map[string]interface{}) (verifier, error) {
 	query, err := getRequiredStringKey(def, "expectedQuery", false)
 	if err != nil {
 		return nil, err

@@ -18,6 +18,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
 )
 
 func init() {
@@ -138,6 +139,17 @@ func multiRequest(h endpoint.Helper) error {
 	return nil
 }
 
+func fileReaderWithYampV2(filePath string, content []byte) ([]*yaml_file.TestDefinition, error) {
+	testDefinitions := []*yaml_file.TestDefinition{}
+
+	// reading the test source file
+	if err := yaml.Unmarshal(content, &testDefinitions); err != nil {
+		return nil, fmt.Errorf("unmarshal file %s: %w", filePath, err)
+	}
+
+	return testDefinitions, nil
+}
+
 func Test_Declarative(t *testing.T) {
 	m := mocks.NewNop("someservice")
 	err := m.Start()
@@ -160,6 +172,12 @@ func Test_Declarative(t *testing.T) {
 	}
 
 	r := runner.New(yaml_file.NewLoader("testdata"), opts)
+	err = r.Run()
+	require.NoError(t, err)
+
+	r = runner.New(yaml_file.NewFileLoader("testdata", &yaml_file.LoaderOpts{
+		CustomFileRead: fileReaderWithYampV2,
+	}), opts)
 	err = r.Run()
 	require.NoError(t, err)
 }

@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func loadQueryRegexpConstraint(def map[interface{}]interface{}) (verifier, error) {
+func loadQueryRegexpConstraint(def map[string]interface{}) (verifier, error) {
 	query, err := getRequiredStringKey(def, "expectedQuery", false)
 	if err != nil {
 		return nil, err

@@ -2,14 +2,11 @@ package mocks
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/lansfy/gonkex/colorize"
 )
 
-func (l *loaderImpl) loadUriVaryReplyStrategy(path string, def map[interface{}]interface{}) (ReplyStrategy, error) {
+func (l *loaderImpl) loadUriVaryReplyStrategy(path string, def map[string]interface{}) (ReplyStrategy, error) {
 	basePath, err := getOptionalStringKey(def, "basePath", true)
 	if err != nil {
 		return nil, err
@@ -20,17 +17,13 @@ func (l *loaderImpl) loadUriVaryReplyStrategy(path string, def map[interface{}]i
 		return nil, errors.New("'uris' key required")
 	}
 
-	urisMap, ok := u.(map[interface{}]interface{})
-	if !ok {
-		return nil, colorize.NewEntityError("map under %s key required", "uris")
+	urisMap, err := loadStringMap(u, "uris")
+	if err != nil {
+		return nil, err
 	}
 
 	uris := map[string]*Definition{}
-	for uri, v := range urisMap {
-		uriStr, ok := uri.(string)
-		if !ok {
-			return nil, fmt.Errorf("uri '%v' has non-string name", uri)
-		}
+	for uriStr, v := range urisMap {
 		def, err := l.loadDefinition(path+".uris."+uriStr, v)
 		if err != nil {
 			return nil, err

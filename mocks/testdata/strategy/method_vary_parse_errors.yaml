@@ -21,7 +21,7 @@
       methods: []
   meta:
     expected: |
-       load definition for 'someservice': strategy 'methodVary': map under 'methods' key required
+       load definition for 'someservice': strategy 'methodVary': map under 'methods' key is required
 
 - name: WHEN method name in 'methods' has wrong type in methodVary strategy MUST fail with error
   method: get
@@ -38,7 +38,7 @@
           statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': strategy 'methodVary': method '42' has non-string name
+       load definition for 'someservice': strategy 'methodVary': key '42' has non-string type
 
 - name: WHEN parsing of methodVary internals fail parser MUST fail with error
   method: get

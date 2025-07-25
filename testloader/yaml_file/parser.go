@@ -10,7 +10,7 @@ import (
 
 	"github.com/lansfy/gonkex/models"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -59,7 +59,7 @@ func DefaultFileRead(filePath string, content []byte) ([]*TestDefinition, error)
 	testDefinitions := []*TestDefinition{}
 
 	// reading the test source file
-	if err := yaml.UnmarshalStrict(content, &testDefinitions); err != nil {
+	if err := yaml.Unmarshal(content, &testDefinitions); err != nil {
 		return nil, fmt.Errorf("unmarshal file %s: %w", filePath, err)
 	}
 
@@ -332,6 +332,12 @@ func cloneVariables(s map[string]string) map[string]string {
 
 func deepClone(src interface{}) interface{} {
 	switch v := src.(type) {
+	case map[string]interface{}:
+		clone := map[string]interface{}{}
+		for key, value := range v {
+			clone[key] = deepClone(value)
+		}
+		return clone
 	case map[interface{}]interface{}:
 		clone := map[interface{}]interface{}{}
 		for key, value := range v {

@@ -38,7 +38,7 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': strategy 'constant': map under 'headers' key required
+       load definition for 'someservice': strategy 'constant': map under 'headers' key is required
 
 - name: WHEN 'constant' strategy has unknown key load definition MUST fail with error
   method: GET

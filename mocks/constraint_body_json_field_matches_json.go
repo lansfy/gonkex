@@ -10,7 +10,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-func loadBodyJSONFieldMatchesJSONConstraint(def map[interface{}]interface{}) (verifier, error) {
+func loadBodyJSONFieldMatchesJSONConstraint(def map[string]interface{}) (verifier, error) {
 	path, err := getRequiredStringKey(def, "path", false)
 	if err != nil {
 		return nil, err

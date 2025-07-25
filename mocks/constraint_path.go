@@ -6,7 +6,7 @@ import (
 	"github.com/lansfy/gonkex/compare"
 )
 
-func loadPathConstraint(def map[interface{}]interface{}) (verifier, error) {
+func loadPathConstraint(def map[string]interface{}) (verifier, error) {
 	pathStr, err := getOptionalStringKey(def, "path", true)
 	if err != nil {
 		return nil, err

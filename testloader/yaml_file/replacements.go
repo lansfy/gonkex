@@ -16,6 +16,15 @@ func performQuery(val string, perform func(string) string) string {
 }
 
 func performInterface(value interface{}, perform func(string) string) {
+	if mapValue, ok := value.(map[string]interface{}); ok {
+		for key := range mapValue {
+			if strValue, ok := mapValue[key].(string); ok {
+				mapValue[key] = perform(strValue)
+			} else {
+				performInterface(mapValue[key], perform)
+			}
+		}
+	}
 	if mapValue, ok := value.(map[interface{}]interface{}); ok {
 		for key := range mapValue {
 			if strValue, ok := mapValue[key].(string); ok {
