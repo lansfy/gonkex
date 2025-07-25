@@ -11,11 +11,45 @@ import (
 )
 
 func loadQueryConstraint(def map[string]interface{}) (verifier, error) {
-	query, err := getRequiredStringKey(def, "expectedQuery", false)
+	return makeQueryConstraint(def, newQueryConstraint)
+}
+
+func loadQueryRegexpConstraint(def map[string]interface{}) (verifier, error) {
+	return makeQueryConstraint(def, newQueryRegexpConstraint)
+}
+
+func makeQueryConstraint(def map[string]interface{},
+	creator func(query string) (*queryConstraint, error)) (verifier, error) {
+	key := "expectedQuery" // backward compatibility key name
+	if !hasKey(def, key) {
+		key = "query"
+	}
+	query, err := getRequiredStringKey(def, key, false)
 	if err != nil {
 		return nil, err
 	}
-	return newQueryConstraint(query)
+	return creator(query)
+}
+
+func newQueryRegexpConstraint(query string) (*queryConstraint, error) {
+	// user may begin his query with '?', just omit it in this case
+	query = strings.TrimPrefix(query, "?")
+
+	expectedQuery := map[string][]string{}
+	for _, rawParam := range strings.Split(query, "&") {
+		parts := strings.Split(rawParam, "=")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("failed to parse query '%s'", rawParam)
+		}
+
+		_, ok := expectedQuery[parts[0]]
+		if !ok {
+			expectedQuery[parts[0]] = []string{}
+		}
+		expectedQuery[parts[0]] = append(expectedQuery[parts[0]], parts[1])
+	}
+
+	return &queryConstraint{"queryMatchesRegexp", expectedQuery}, nil
 }
 
 func newQueryConstraint(query string) (*queryConstraint, error) {

@@ -29,7 +29,7 @@
         - kind: pathMatches
           path: /test/vars-usage/some-value
         - kind: queryMatches
-          expectedQuery: param=some-value
+          query: param=some-value
         - kind: bodyMatchesJSON
           body: >
             {
@@ -79,7 +79,7 @@
         - kind: pathMatches
           path: "/test/vars-usage/{{ $someVar }}"
         - kind: queryMatches
-          expectedQuery: "param={{ $someVar }}"
+          query: "param={{ $someVar }}"
         - kind: bodyMatchesJSON
           body: >
             {

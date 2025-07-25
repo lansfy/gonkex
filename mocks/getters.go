@@ -16,6 +16,11 @@ func wrongTypeError(key, typeName string) error {
 	return fmt.Errorf("key '%s' has non-%s value", key, typeName)
 }
 
+func hasKey(def map[string]interface{}, name string) bool {
+	_, ok := def[name]
+	return ok
+}
+
 func getRequiredStringKey(def map[string]interface{}, name string, allowedEmpty bool) (string, error) {
 	f, ok := def[name]
 	if !ok {

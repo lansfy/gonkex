@@ -198,10 +198,10 @@ func loadConstraintOfKind(kind string, def map[string]interface{}, ak *[]string)
 		*ak = append(*ak, "path", "regexp")
 		return loadPathConstraint(def)
 	case "queryMatches":
-		*ak = append(*ak, "expectedQuery")
+		*ak = append(*ak, "query", "expectedQuery")
 		return loadQueryConstraint(def)
 	case "queryMatchesRegexp":
-		*ak = append(*ak, "expectedQuery")
+		*ak = append(*ak, "query", "expectedQuery")
 		return loadQueryRegexpConstraint(def)
 	case "bodyMatchesText":
 		*ak = append(*ak, "body", "regexp")

@@ -1,4 +1,4 @@
-- name: WHEN request query matches expectedQuery constraint check MUST be successful
+- name: WHEN request query matches queryMatchesRegexp constraint check MUST be successful
   method: GET
   path: /test/case
   query: "{{ $query }}"
@@ -8,7 +8,7 @@
     someservice:
       requestConstraints:
         - kind: queryMatchesRegexp
-          expectedQuery: ?people=2&food=tea&food=cake
+          query: ?people=2&food=tea&food=cake
       strategy: constant
       body: "result"
       statusCode: 200
@@ -29,7 +29,7 @@
         # unexpected keys are ignored
         query: food=cake&food=tea&people=2&one-more=person
 
-- name: WHEN request query matches expectedQuery with regexp constraint check MUST be successful
+- name: WHEN request query matches queryMatchesRegexp with regexp constraint check MUST be successful
   method: GET
   path: /test/case
   query: "{{ $query }}"
@@ -39,7 +39,7 @@
     someservice:
       requestConstraints:
         - kind: queryMatchesRegexp
-          expectedQuery: ?food=cake&food=$matchRegexp(\w+)&people=$matchRegexp(\d+)
+          query: ?food=cake&food=$matchRegexp(\w+)&people=$matchRegexp(\d+)
       strategy: constant
       body: "result"
       statusCode: 200
@@ -70,7 +70,7 @@
     someservice:
       requestConstraints:
         - kind: queryMatchesRegexp
-          expectedQuery: ?people=2&food=tea&food=cake
+          query: ?people=2&food=tea&food=cake
       strategy: constant
       body: "result"
       statusCode: 200
@@ -88,7 +88,7 @@
     someservice:
       requestConstraints:
         - kind: queryMatchesRegexp
-          expectedQuery: ?people=3&food=beer
+          query: ?people=3&food=beer
       strategy: constant
       body: "result"
       statusCode: 200
@@ -108,7 +108,7 @@
     someservice:
       requestConstraints:
         - kind: queryMatchesRegexp
-          expectedQuery: ?people=2&food=$matchRegexp(^c.*$)&food=tea
+          query: ?people=2&food=$matchRegexp(^c.*$)&food=tea
       strategy: constant
       body: "result"
       statusCode: 200
@@ -120,3 +120,38 @@
        2) mock 'someservice': request constraint 'queryMatchesRegexp': parameter 'people': values do not match:
             expected: 2
               actual: 3
+
+- name: queryMatchesRegexp constraint MUST support expectedQuery for backward compatibility (1)
+  method: GET
+  path: /test/case
+  query: "people=2&food=tea&food=cake"
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatchesRegexp
+          expectedQuery: ?food=cake&food=$matchRegexp(\w+)&people=$matchRegexp(\d+)
+      strategy: constant
+      body: "result"
+      statusCode: 200
+
+- name: queryMatchesRegexp constraint MUST support expectedQuery for backward compatibility (2)
+  method: GET
+  path: /test/case
+  query: food=cake&food=beer&people=3
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatchesRegexp
+          expectedQuery: ?people=3&food=beer
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'queryMatchesRegexp': number of values for parameter 'food' is not equal to expected:
+            expected: [beer cake]
+              actual: [beer]

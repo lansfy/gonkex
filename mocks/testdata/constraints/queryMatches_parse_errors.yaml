@@ -1,4 +1,4 @@
-- name: WHEN field 'expectedQuery' absent in queryMatches parser MUST fail with error
+- name: WHEN field 'query' absent in queryMatches parser MUST fail with error
   method: GET
   path: /test/case
   response:
@@ -12,9 +12,63 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatches': 'expectedQuery' key required
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatches': 'query' key required
 
-- name: WHEN field 'expectedQuery' has invalid type in queryMatches parser MUST fail with error
+- name: WHEN field 'query' has invalid type in queryMatches parser MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatches
+          query: 5
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatches': key 'query' has non-string value
+
+# TODO: improve error
+- name: WHEN 'query' field has invalid format load definition MUST fail with error
+  method: GET
+  path: /test/case
+  query: food=cake&food=tea
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatches
+          query: ?foo=invalid%zz
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatches': invalid URL escape "%zz"
+
+- name: WHEN 'queryMatches' constraint has unknown key load definition MUST fail with error
+  method: GET
+  path: /test/case
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: queryMatches
+          query: ?foo=bar
+          invalid: invalid
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatches': unexpected key 'invalid' (allowed only [kind query expectedQuery])
+
+- name: WHEN backward compatibility field 'expectedQuery' has invalid type in queryMatches parser MUST fail with error
   method: GET
   path: /test/case
   response:
@@ -32,7 +86,7 @@
        load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatches': key 'expectedQuery' has non-string value
 
 # TODO: improve error
-- name: WHEN 'expectedQuery' field has invalid format load definition MUST fail with error
+- name: WHEN backward compatibility 'expectedQuery' field has invalid format load definition MUST fail with error
   method: GET
   path: /test/case
   query: food=cake&food=tea
@@ -49,21 +103,3 @@
   meta:
     expected: |
        load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatches': invalid URL escape "%zz"
-
-- name: WHEN 'queryMatches' constraint has unknown key load definition MUST fail with error
-  method: GET
-  path: /test/case
-  response:
-    200: "result"
-  mocks:
-    someservice:
-      requestConstraints:
-        - kind: queryMatches
-          expectedQuery: ?foo=bar
-          invalid: invalid
-      strategy: constant
-      body: "result"
-      statusCode: 200
-  meta:
-    expected: |
-       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'queryMatches': unexpected key 'invalid' (allowed only [kind expectedQuery])
