@@ -1,0 +1,12 @@
+- name: loader MUST generate separate test for every case
+  description: original description
+  method: POST
+  path: /some/path
+  request: requestbody
+  response:
+    200: someresponsebody
+  cases:
+    - name: subcase1
+    - {} # testcase without any override
+    - name: subcase3
+      description: overrided description

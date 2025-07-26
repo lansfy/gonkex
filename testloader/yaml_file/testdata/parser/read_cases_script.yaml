@@ -1,0 +1,18 @@
+- name: loader MUST substitute beforeScriptArgs/afterRequestScript to script path
+  method: GET
+  path: /some/path
+  response:
+    200: "aaabbb"
+  beforeScript:
+    path: '/some/path/{{ .foo }}'
+  afterRequestScript:
+    path: '/some/path/{{ .bar }}'
+  cases:
+    - beforeScriptArgs:
+        foo: "script1.sh"
+      afterRequestScriptArgs:
+        bar: "otherscript1.sh"
+    - beforeScriptArgs:
+        foo: "script2.sh"
+      afterRequestScriptArgs:
+        bar: "otherscript2.sh"

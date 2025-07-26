@@ -1,0 +1,3 @@
+# TODO: error
+# process 'testdata/parser/error_cases_db_check_query.yaml': test 'loader MUST fail if cannot substitute dbQueryArgs to query request #1': template: $.dbChecks[0].dbQuery:1: unexpected "}" in operand
+- Error: 'preprocess file testdata/parser/error_cases_db_check_query.yaml: template: :1: unexpected "}" in operand'

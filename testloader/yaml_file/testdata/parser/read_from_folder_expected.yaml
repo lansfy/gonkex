@@ -1,0 +1,27 @@
+- GetName: "simple request test 11"
+  GetMethod: GET
+  Path: /some/path/11
+  GetRequest: 11requestbody11
+  GetResponses:
+    200: "11aaabbb11"
+  GetFileName: testdata/parser/read_from_folder.yaml/somefile1.yml
+  FirstTestInFile: true
+
+- GetName: "simple request test 12"
+  GetMethod: GET
+  Path: /some/path/12
+  GetRequest: 12requestbody12
+  GetResponses:
+    200: "12aaabbb12"
+  GetFileName: testdata/parser/read_from_folder.yaml/somefile1.yml
+  LastTestInFile: true
+
+- GetName: "simple request test 2"
+  GetMethod: GET
+  Path: /some/path/2
+  GetRequest: 2requestbody2
+  GetResponses:
+    200: "2aaabbb2"
+  GetFileName: testdata/parser/read_from_folder.yaml/somefile2.yaml
+  FirstTestInFile: true
+  LastTestInFile: true

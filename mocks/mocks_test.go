@@ -176,7 +176,7 @@ func Test_Declarative(t *testing.T) {
 	require.NoError(t, err)
 
 	r = runner.New(yaml_file.NewFileLoader("testdata", &yaml_file.LoaderOpts{
-		CustomFileRead: fileReaderWithYampV2,
+		CustomFileParse: fileReaderWithYampV2,
 	}), opts)
 	err = r.Run()
 	require.NoError(t, err)

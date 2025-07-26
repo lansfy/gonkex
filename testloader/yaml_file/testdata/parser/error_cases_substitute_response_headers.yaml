@@ -1,0 +1,12 @@
+- name: loader MUST substitute responseArgs to response components
+  method: GET
+  path: /some/path
+  response:
+    200: 'responsebody'
+  responseHeaders:
+    200:
+      X-Header: '{{ .foo }'
+  cases:
+    - responseArgs:
+        200:
+          foo: "value1"

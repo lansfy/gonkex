@@ -44,7 +44,7 @@ type CaseData struct {
 	DbQueryArgs            map[string]interface{}         `json:"dbQueryArgs" yaml:"dbQueryArgs"`
 	DbResponseArgs         map[string]interface{}         `json:"dbResponseArgs" yaml:"dbResponseArgs"`
 	DbResponse             []string                       `json:"dbResponse" yaml:"dbResponse"`
-	Variables              map[string]interface{}         `json:"variables" yaml:"variables"`
+	Variables              map[string]string              `json:"variables" yaml:"variables"`
 }
 
 type Form struct {

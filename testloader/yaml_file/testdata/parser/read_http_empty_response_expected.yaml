@@ -1,0 +1,7 @@
+- GetName: simple request test without response
+  GetMethod: GET
+  Path: /some/path
+  GetRequest: requestbody
+  GetFileName: testdata/parser/read_http_empty_response.yaml
+  FirstTestInFile: true
+  LastTestInFile: true

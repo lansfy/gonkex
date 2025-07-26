@@ -1,0 +1,13 @@
+- name: loader MUST fail if cannot substitute dbQueryArgs to query request
+  method: GET
+  path: /some/path
+  response:
+    200: "aaabbb"
+  dbChecks:
+    - dbQuery: "SELECT {{ .foo }"
+      dbResponse:
+        - 'item1'
+        - 'item2'
+  cases:
+    - dbQueryArgs:
+        foo: value1

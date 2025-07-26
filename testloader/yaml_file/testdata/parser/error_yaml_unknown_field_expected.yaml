@@ -1,0 +1,1 @@
+- Error: "unmarshal file testdata/parser/error_yaml_unknown_field.yaml: yaml: unmarshal errors:\n  line 2: field invalidfield not found in type yaml_file.TestDefinition"

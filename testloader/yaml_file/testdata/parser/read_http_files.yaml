@@ -1,0 +1,11 @@
+- name: loader MUST read upload files requests
+  method: POST
+  headers:
+    Content-Type: multipart/form-data
+  path: /some/path
+  form:
+    files:
+      file1: "testdata/upload-files/file1.txt"
+      file2: "testdata/upload-files/file2.log"
+  response:
+    200: "aaabbb"

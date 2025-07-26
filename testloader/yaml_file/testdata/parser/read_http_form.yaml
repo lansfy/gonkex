@@ -1,0 +1,11 @@
+- name: loader MUST read form requests
+  method: POST
+  headers:
+    Content-Type: multipart/form-data
+  path: /some/path
+  form:
+    fields:
+      field_name1: value1
+      field_name2: value2
+  response:
+    200: "aaabbb"

@@ -1,0 +1,10 @@
+- name: loader MUST fail if cannot substitute beforeScriptArgs to request body
+  method: GET
+  path: /some/path
+  response:
+    200: "aaabbb"
+  beforeScript:
+    path: '/some/path/{{ .foo }'
+  cases:
+    - beforeScriptArgs:
+        foo: "script1.sh"

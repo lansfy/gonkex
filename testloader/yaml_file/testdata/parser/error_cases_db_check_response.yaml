@@ -1,0 +1,13 @@
+- name: loader MUST fail if cannot substitute dbResponseArgs to query response
+  method: GET
+  path: /some/path
+  response:
+    200: "aaabbb"
+  dbChecks:
+    - dbQuery: "SELECT ALL"
+      dbResponse:
+        - '{{ .bar } item1'
+        - '{{ .bar }} item2'
+  cases:
+    - dbResponseArgs:
+        bar: value1

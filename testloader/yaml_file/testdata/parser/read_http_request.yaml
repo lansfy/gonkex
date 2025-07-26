@@ -1,0 +1,16 @@
+- name: simple request test
+  description: simple request test description
+  method: POST
+  headers:
+    X-Request-Header: header_value_1
+  cookies:
+    somecookie1: someid1
+    somecookie2: someid1
+  query: ?param=value
+  path: /some/path
+  request: "requestbody"
+  response:
+    200: "aaabbb"
+  responseHeaders:
+    200:
+      X-Header: header_value_2

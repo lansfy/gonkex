@@ -1,0 +1,11 @@
+- name: loader MUST read tests with variables
+  method: POST
+  path: /some/path
+  request: requestbody
+  response:
+    200: someresponsebody
+  cases:
+    - variables:
+        foo1: bar1
+        foo2:
+          not: string_value

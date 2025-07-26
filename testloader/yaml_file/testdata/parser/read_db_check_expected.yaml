@@ -1,0 +1,23 @@
+- GetName: loader MUST read tests with database check
+  GetMethod: GET
+  Path: /some/path
+  GetResponses:
+    200: "aaabbb"
+  GetDatabaseChecks:
+    - DbQueryString: "SELECT ALL"
+      DbResponseJson:
+        - item1
+        - item2
+      GetComparisonParams:
+        IgnoreArraysOrdering: true
+        DisallowExtraFields: true
+    - DbQueryString: "UPDATE ALL"
+      DbResponseJson:
+        - item3
+      GetComparisonParams:
+        IgnoreValuesChecking: true
+    - DbQueryString: "DELETE ALL"
+      DbResponseJson: []
+  GetFileName: testdata/parser/read_db_check.yaml
+  FirstTestInFile: true
+  LastTestInFile: true

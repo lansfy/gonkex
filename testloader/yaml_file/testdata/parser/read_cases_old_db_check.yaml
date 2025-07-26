@@ -1,0 +1,22 @@
+- name: loader MUST substitute dbQueryArgs/dbResponseArgs/dbResponse to obsolete dbRequests
+  method: GET
+  path: /some/path
+  response:
+    200: "aaabbb"
+  dbQuery: "SELECT {{ .foo }}"
+  dbResponse:
+    - "{{ .bar }} item1"
+    - "{{ .bar }} item2"
+  cases:
+    - name: make variable substitution
+      dbQueryArgs:
+        foo: value1
+      dbResponseArgs:
+        bar: value2
+    - name: redefine db response
+      dbQueryArgs:
+        foo: value22
+      dbResponse:
+        - "otheritem1 {{ .bar }}"
+        - otheritem2
+        - otheritem3

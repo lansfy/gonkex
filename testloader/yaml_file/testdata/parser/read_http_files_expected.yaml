@@ -1,0 +1,15 @@
+- GetName: loader MUST read upload files requests
+  GetMethod: POST
+  Path: /some/path
+  ContentType: multipart/form-data
+  Headers:
+    Content-Type: multipart/form-data
+  GetForm:
+    GetFiles:
+      file1: "testdata/upload-files/file1.txt"
+      file2: "testdata/upload-files/file2.log"
+  GetResponses:
+    200: "aaabbb"
+  GetFileName: testdata/parser/read_http_files.yaml
+  FirstTestInFile: true
+  LastTestInFile: true

@@ -1,0 +1,4 @@
+- name: simple request test without response
+  method: GET
+  path: /some/path
+  request: "requestbody"

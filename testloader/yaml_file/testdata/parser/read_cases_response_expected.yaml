@@ -1,0 +1,35 @@
+- GetName: "loader MUST substitute responseArgs to response components #1"
+  GetMethod: GET
+  Path: /some/path
+  GetResponses:
+    200: '{"hello": value1 }'
+    400: '{"hello": value2 }'
+    500: '{"hello": {{ .foo }} }' # not part of cases
+  GetResponseHeaders:
+    200:
+      X-Header: 'value1'
+    400:
+      X-Header: 'value2'
+    500:
+      X-Header: '{{ .foo }}' # not part of cases
+  GetFileName: testdata/parser/read_cases_response.yaml
+  OneOfCase: true
+  FirstTestInFile: true
+
+- GetName: "loader MUST substitute responseArgs to response components #2"
+  GetMethod: GET
+  Path: /some/path
+  GetResponses:
+    200: '{"hello": value3 }'
+    400: '{"hello": value4 }'
+    500: '{"hello": {{ .foo }} }' # not part of cases
+  GetResponseHeaders:
+    200:
+      X-Header: 'value3'
+    400:
+      X-Header: 'value4'
+    500:
+      X-Header: '{{ .foo }}' # not part of cases
+  GetFileName: testdata/parser/read_cases_response.yaml
+  OneOfCase: true
+  LastTestInFile: true

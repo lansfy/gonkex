@@ -1,0 +1,12 @@
+- name: loader MUST fail if cannot substitute requestArgs to request cookies
+  method: POST
+  path: /some/path
+  cookies:
+    "Cookie": "{{ .foo }"
+  request: "requestbody"
+  response:
+    200: "somebody"
+  cases:
+    - requestArgs:
+        foo: 'value 1'
+        bar: other1

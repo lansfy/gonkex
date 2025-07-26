@@ -1,0 +1,43 @@
+- GetName: 'loader MUST substitute dbQueryArgs/dbResponseArgs/dbResponse to dbChecks #1'
+  GetMethod: GET
+  Path: /some/path
+  GetResponses:
+    200: "aaabbb"
+  GetDatabaseChecks:
+    - DbQueryString: "SELECT value1"
+      DbResponseJson:
+        - value2 item1
+        - value2 item2
+      GetComparisonParams:
+        IgnoreArraysOrdering: true
+        IgnoreValuesChecking: true
+    - DbQueryString: "UPDATE value1"
+      DbResponseJson:
+        - item3 value2 
+      GetComparisonParams:
+        DisallowExtraFields: true
+  GetFileName: testdata/parser/read_cases_db_check.yaml
+  OneOfCase: true
+  FirstTestInFile: true
+
+- GetName: 'loader MUST substitute dbQueryArgs/dbResponseArgs/dbResponse to dbChecks #2'
+  GetMethod: GET
+  Path: /some/path
+  GetResponses:
+    200: "aaabbb"
+  GetDatabaseChecks:
+    - DbQueryString: "SELECT value21"
+      DbResponseJson:
+        - value22 item1
+        - value22 item2
+      GetComparisonParams:
+        IgnoreArraysOrdering: true
+        IgnoreValuesChecking: true
+    - DbQueryString: "UPDATE value21"
+      DbResponseJson:
+        - item3 value22
+      GetComparisonParams:
+        DisallowExtraFields: true
+  GetFileName: testdata/parser/read_cases_db_check.yaml
+  OneOfCase: true
+  LastTestInFile: true

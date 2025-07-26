@@ -1,0 +1,1 @@
+- Error: "unmarshal file testdata/parser/error_cases_variable.yaml: yaml: unmarshal errors:\n  line 11: cannot unmarshal !!map into string"

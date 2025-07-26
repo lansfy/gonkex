@@ -1,0 +1,13 @@
+- name: loader MUST read tests with metadata
+  method: POST
+  path: /some/path
+  request: "requestbody"
+  response:
+    200: "aaabbb"
+  meta:
+    key1: value1
+    key2: 44444
+    key3:
+      subkey1: subvalue1
+      subkey2: subvalue2
+    key4: [arr1, arr2]

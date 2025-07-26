@@ -1,0 +1,6 @@
+- name: simple request test 2
+  method: GET
+  path: /some/path/2
+  request: "2requestbody2"
+  response:
+    200: "2aaabbb2"

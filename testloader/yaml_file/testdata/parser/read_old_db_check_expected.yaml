@@ -1,0 +1,13 @@
+- GetName: loader MUST read tests with obsolete database check
+  GetMethod: GET
+  Path: /some/path
+  GetResponses:
+    200: "aaabbb"
+  GetDatabaseChecks:
+    - DbQueryString: "SELECT ALL"
+      DbResponseJson:
+        - item1
+        - item2
+  GetFileName: testdata/parser/read_old_db_check.yaml
+  FirstTestInFile: true
+  LastTestInFile: true
