@@ -1,1 +1,1 @@
-- Error: 'preprocess file testdata/parser/error_cases_substitute_request_cookies.yaml: template: :1: unexpected "}" in operand'
+- Error: "process 'testdata/parser/error_cases_substitute_request_cookies.yaml': test 'loader MUST fail if cannot substitute requestArgs to request cookies #1': template: $.cookies:1: unexpected \"}\" in operand"

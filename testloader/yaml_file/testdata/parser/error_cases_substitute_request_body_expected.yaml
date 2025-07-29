@@ -1,1 +1,1 @@
-- Error: 'preprocess file testdata/parser/error_cases_substitute_request_body.yaml: template: :1: unexpected "}" in operand'
+- Error: "process 'testdata/parser/error_cases_substitute_request_body.yaml': test 'loader MUST fail if cannot substitute requestArgs to request body #1': template: $.request:1: unexpected \"}\" in operand"

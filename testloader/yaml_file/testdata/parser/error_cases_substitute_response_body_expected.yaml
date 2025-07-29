@@ -1,1 +1,1 @@
-- Error: 'preprocess file testdata/parser/error_cases_substitute_response_body.yaml: template: :1: unexpected "}" in operand'
+- Error: "process 'testdata/parser/error_cases_substitute_response_body.yaml': test 'loader MUST substitute responseArgs to response components #1': template: $.response.200:1: unexpected \"}\" in operand"

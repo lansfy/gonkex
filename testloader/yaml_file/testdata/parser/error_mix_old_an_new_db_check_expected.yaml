@@ -1,1 +1,1 @@
-- Error: "preprocess file testdata/parser/error_mix_old_an_new_db_check.yaml: mix of old dbQuery/dbResponse and dbChecks in one test forbidden"
+- Error: "process 'testdata/parser/error_mix_old_an_new_db_check.yaml': mix of old dbQuery/dbResponse and dbChecks in one test forbidden"

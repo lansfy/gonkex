@@ -30,7 +30,7 @@ func parseTestDefinitionContent(f FileParseFun, absPath string, data []byte) ([]
 	for _, item := range testDefinitions {
 		testCases, err := makeTestFromDefinition(absPath, item)
 		if err != nil {
-			return nil, fmt.Errorf("preprocess file %s: %w", absPath, err)
+			return nil, fmt.Errorf("process '%s': %w", absPath, err)
 		}
 
 		tests = append(tests, testCases...)
@@ -82,10 +82,10 @@ func parseTestDefinitionFile(f FileParseFun, absPath string) ([]models.TestInter
 	return moreTests, nil
 }
 
-func substituteArgs(tmpl string, args map[string]interface{}) (string, error) {
+func substituteArgs(path, tmpl string, args map[string]interface{}) (string, error) {
 	tmpl = gonkexProtectTemplate.ReplaceAllString(tmpl, gonkexProtectSubstitute)
 
-	compiledTmpl, err := template.New("").Parse(tmpl)
+	compiledTmpl, err := template.New("$." + path).Parse(tmpl)
 	if err != nil {
 		return "", err
 	}
@@ -101,11 +101,11 @@ func substituteArgs(tmpl string, args map[string]interface{}) (string, error) {
 	return tmpl, nil
 }
 
-func substituteArgsToMap(tmpl map[string]string, args map[string]interface{}) (map[string]string, error) {
+func substituteArgsToMap(path string, tmpl map[string]string, args map[string]interface{}) (map[string]string, error) {
 	res := map[string]string{}
 	for key, value := range tmpl {
 		var err error
-		res[key], err = substituteArgs(value, args)
+		res[key], err = substituteArgs(path, value, args)
 		if err != nil {
 			return nil, err
 		}
@@ -122,7 +122,7 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 
 	// test definition has no cases, so using request/response as is
 	if len(testDefinition.Cases) == 0 {
-		return makeOneTest(filePath, testDefinition)
+		return makeOneTest(filePath, testDefinition), nil
 	}
 
 	combinedVariables := map[string]string{}
@@ -130,7 +130,6 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 		combinedVariables = testDefinition.Variables
 	}
 
-	var err error
 	tests := []*testImpl{}
 
 	// produce as many tests as cases defined
@@ -152,45 +151,51 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 			test.Description = testCase.Description
 		}
 
+		wrap := func(err error) error {
+			return fmt.Errorf("test '%s': %w", test.Name, err)
+		}
+
+		var err error
 		// substitute RequestArgs to different parts of request
-		test.TestDefinition.Path, err = substituteArgs(testDefinition.Path, testCase.RequestArgs)
+		test.TestDefinition.Path, err = substituteArgs("path", testDefinition.Path, testCase.RequestArgs)
 		if err != nil {
-			return nil, err
+			return nil, wrap(err)
 		}
 
-		test.Request, err = substituteArgs(testDefinition.Request, testCase.RequestArgs)
+		test.Request, err = substituteArgs("request", testDefinition.Request, testCase.RequestArgs)
 		if err != nil {
-			return nil, err
+			return nil, wrap(err)
 		}
 
-		test.Query, err = substituteArgs(testDefinition.Query, testCase.RequestArgs)
+		test.Query, err = substituteArgs("query", testDefinition.Query, testCase.RequestArgs)
 		if err != nil {
-			return nil, err
+			return nil, wrap(err)
 		}
 
-		test.TestDefinition.Headers, err = substituteArgsToMap(testDefinition.Headers, testCase.RequestArgs)
+		test.TestDefinition.Headers, err = substituteArgsToMap("headers", testDefinition.Headers, testCase.RequestArgs)
 		if err != nil {
-			return nil, err
+			return nil, wrap(err)
 		}
 
-		test.TestDefinition.Cookies, err = substituteArgsToMap(testDefinition.Cookies, testCase.RequestArgs)
+		test.TestDefinition.Cookies, err = substituteArgsToMap("cookies", testDefinition.Cookies, testCase.RequestArgs)
 		if err != nil {
-			return nil, err
+			return nil, wrap(err)
 		}
 
 		// substitute ResponseArgs to different parts of response
 		responses := map[int]string{}
 		for status, tpl := range testDefinition.Response {
 			args, ok := testCase.ResponseArgs[status]
-			if ok {
-				// found args for response status
-				responses[status], err = substituteArgs(tpl, args)
-				if err != nil {
-					return nil, err
-				}
-			} else {
+			if !ok {
 				// not found args, using response as is
 				responses[status] = tpl
+				continue
+			}
+
+			// found args for response status
+			responses[status], err = substituteArgs(fmt.Sprintf("response.%d", status), tpl, args)
+			if err != nil {
+				return nil, wrap(err)
 			}
 		}
 		test.Response = responses
@@ -198,26 +203,29 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 		test.ResponseHeaders = map[int]map[string]string{}
 		for status, respHeaders := range testDefinition.ResponseHeaders {
 			args, ok := testCase.ResponseArgs[status]
-			if ok {
-				// found args for response status
-				test.ResponseHeaders[status], err = substituteArgsToMap(respHeaders, args)
-				if err != nil {
-					return nil, err
-				}
-			} else {
+			if !ok {
 				// not found args, using response as is
 				test.ResponseHeaders[status] = respHeaders
+				continue
+			}
+
+			// found args for response status
+			test.ResponseHeaders[status], err = substituteArgsToMap(fmt.Sprintf("responseHeaders.%d", status), respHeaders, args)
+			if err != nil {
+				return nil, wrap(err)
 			}
 		}
 
-		test.TestDefinition.BeforeScript.Path, err = substituteArgs(testDefinition.BeforeScript.Path, testCase.BeforeScriptArgs)
+		test.TestDefinition.BeforeScript.Path, err = substituteArgs("beforeScript.path",
+			testDefinition.BeforeScript.Path, testCase.BeforeScriptArgs)
 		if err != nil {
-			return nil, err
+			return nil, wrap(err)
 		}
 
-		test.TestDefinition.AfterRequestScript.Path, err = substituteArgs(testDefinition.AfterRequestScript.Path, testCase.AfterRequestScriptArgs)
+		test.TestDefinition.AfterRequestScript.Path, err = substituteArgs("afterRequestScript.path",
+			testDefinition.AfterRequestScript.Path, testCase.AfterRequestScriptArgs)
 		if err != nil {
-			return nil, err
+			return nil, wrap(err)
 		}
 
 		for key, value := range testCase.Variables {
@@ -231,7 +239,7 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 			test.DbChecks, err = readDatabaseCheck(testDefinition, &testCase)
 		}
 		if err != nil {
-			return nil, err
+			return nil, wrap(err)
 		}
 		tests = append(tests, test)
 	}
@@ -239,7 +247,7 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 	return tests, nil
 }
 
-func makeOneTest(filePath string, testDefinition *TestDefinition) ([]*testImpl, error) {
+func makeOneTest(filePath string, testDefinition *TestDefinition) []*testImpl {
 	test := &testImpl{
 		TestDefinition:    *testDefinition,
 		Filename:          filePath,
@@ -263,11 +271,11 @@ func makeOneTest(filePath string, testDefinition *TestDefinition) ([]*testImpl, 
 		})
 	}
 	test.DbChecks = dbChecks
-	return []*testImpl{test}, nil
+	return []*testImpl{test}
 }
 
 func readObsoleteDatabaseCheck(def *TestDefinition, testCase *CaseData) ([]models.DatabaseCheck, error) {
-	tmpDbQuery, err := substituteArgs(def.DbQuery, testCase.DbQueryArgs)
+	tmpDbQuery, err := substituteArgs("dbQuery", def.DbQuery, testCase.DbQueryArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +291,7 @@ func readObsoleteDatabaseCheck(def *TestDefinition, testCase *CaseData) ([]model
 	}
 
 	for _, tpl := range def.DbResponse {
-		responseString, err := substituteArgs(tpl, testCase.DbResponseArgs)
+		responseString, err := substituteArgs("dbResponse", tpl, testCase.DbResponseArgs)
 		if err != nil {
 			return nil, err
 		}
@@ -294,8 +302,8 @@ func readObsoleteDatabaseCheck(def *TestDefinition, testCase *CaseData) ([]model
 
 func readDatabaseCheck(def *TestDefinition, testCase *CaseData) ([]models.DatabaseCheck, error) {
 	dbChecks := []models.DatabaseCheck{}
-	for _, check := range def.DbChecks {
-		query, err := substituteArgs(check.DbQuery, testCase.DbQueryArgs)
+	for idx, check := range def.DbChecks {
+		query, err := substituteArgs(fmt.Sprintf("dbChecks[%d].dbQuery", idx), check.DbQuery, testCase.DbQueryArgs)
 		if err != nil {
 			return nil, err
 		}
@@ -304,8 +312,8 @@ func readDatabaseCheck(def *TestDefinition, testCase *CaseData) ([]models.Databa
 			query:  query,
 			params: check.ComparisonParams,
 		}
-		for _, tpl := range check.DbResponse {
-			responseString, err := substituteArgs(tpl, testCase.DbResponseArgs)
+		for i, tpl := range check.DbResponse {
+			responseString, err := substituteArgs(fmt.Sprintf("dbChecks[%d].dbResponse[%d]", idx, i), tpl, testCase.DbResponseArgs)
 			if err != nil {
 				return nil, err
 			}

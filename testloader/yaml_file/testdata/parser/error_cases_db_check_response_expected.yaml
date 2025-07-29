@@ -1,1 +1,1 @@
-- Error: 'preprocess file testdata/parser/error_cases_db_check_response.yaml: template: :1: unexpected "}" in operand'
+- Error: "process 'testdata/parser/error_cases_db_check_response.yaml': test 'loader MUST fail if cannot substitute dbResponseArgs to query response #1': template: $.dbChecks[0].dbResponse[0]:1: unexpected \"}\" in operand"
