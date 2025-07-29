@@ -1,0 +1,27 @@
+- name: loader MUST substitute dbQueryArgs/dbResponseArgs/dbResponse to dbChecks
+  method: GET
+  path: /some/path
+  response:
+    200: "aaabbb"
+  dbChecks:
+    - dbQuery: "SELECT {{ .foo }}"
+      dbResponse:
+        - '{{ .bar }} item1'
+        - '{{ .bar }} item2'
+      comparisonParams:
+         ignoreArraysOrdering: true
+         ignoreValues: true
+    - dbQuery: "UPDATE {{ .foo }}"
+      dbResponse:
+        - 'item3 {{ .bar }}'
+      comparisonParams:
+         disallowExtraFields: true
+  cases:
+    - dbQueryArgs:
+        foo: value1
+      dbResponseArgs:
+        bar: value2
+    - dbQueryArgs:
+        foo: value21
+      dbResponseArgs:
+        bar: value22

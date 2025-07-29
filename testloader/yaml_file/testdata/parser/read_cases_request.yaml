@@ -1,0 +1,18 @@
+- name: loader MUST substitute requestArgs to requests components
+  method: POST
+  path: /some/path/{{ .foo }}
+  request: "{{ .foo }} - {{ .bar }} {{ $var }}"
+  headers:
+    X-Header: "{{ .foo }}"
+  cookies:
+    "Cookie": "{{ .bar }}"
+  query: ?{{ .bar }}={{ .foo }}
+  response:
+    200: "{{ .foo }} - not affected by requestArgs"
+  cases:
+    - requestArgs:
+        foo: 'value 1'
+        bar: other1
+    - requestArgs:
+        foo: 'value 2'
+        bar: other2

@@ -1,0 +1,29 @@
+- GetName: "loader MUST substitute requestArgs to requests components #1"
+  GetMethod: POST
+  Headers:
+    X-Header: value 1
+  Cookies:
+    Cookie: other1
+  GetRequest: "value 1 - other1 {{ $var }}"
+  Path: /some/path/value 1
+  ToQuery: ?other1=value 1
+  GetResponses:
+    200: "{{ .foo }} - not affected by requestArgs"
+  GetFileName: testdata/parser/read_cases_request.yaml
+  OneOfCase: true
+  FirstTestInFile: true
+
+- GetName: "loader MUST substitute requestArgs to requests components #2"
+  GetMethod: POST
+  Headers:
+    X-Header: value 2
+  Cookies:
+    Cookie: other2
+  Path: /some/path/value 2
+  ToQuery: ?other2=value 2
+  GetRequest: "value 2 - other2 {{ $var }}"
+  GetResponses:
+    200: "{{ .foo }} - not affected by requestArgs"
+  GetFileName: testdata/parser/read_cases_request.yaml
+  OneOfCase: true
+  LastTestInFile: true

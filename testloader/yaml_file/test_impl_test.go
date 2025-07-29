@@ -11,23 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestParse_TestWithCases(t *testing.T) {
-	tests, err := parseTestDefinitionFile(DefaultFileRead, "testdata/cases.yaml")
-	require.NoError(t, err)
-	require.Len(t, tests, 2)
-
-	require.Equal(t, "testdata/cases.yaml", tests[0].GetFileName())
-	require.Equal(t, "testdata/cases.yaml", tests[1].GetFileName())
-
-	require.JSONEq(t, `{"foo": "bar", "hello": "world" }`, tests[0].GetRequest())
-	require.JSONEq(t, `{"foo": "bar", "hello": "world2" }`, tests[1].GetRequest())
-}
-
 func TestParse_TestWithEniromentVariables(t *testing.T) {
 	err := godotenv.Load("testdata/test.env")
 	require.NoError(t, err)
 
-	tests, err := parseTestDefinitionFile(DefaultFileRead, "testdata/variables-enviroment.yaml")
+	tests, err := parseTestDefinitionFile(DefaultFileParse, "testdata/variables-enviroment.yaml")
 	require.NoError(t, err)
 
 	testOriginal := tests[0]
@@ -44,7 +32,7 @@ func TestParse_TestWithEniromentVariables(t *testing.T) {
 }
 
 func TestParse_TestsWithVariables(t *testing.T) {
-	tests, err := parseTestDefinitionFile(DefaultFileRead, "testdata/variables.yaml")
+	tests, err := parseTestDefinitionFile(DefaultFileParse, "testdata/variables.yaml")
 	require.NoError(t, err)
 
 	testOriginal := tests[0]
@@ -63,7 +51,7 @@ func TestParse_TestsWithVariables(t *testing.T) {
 }
 
 func TestParse_TestsWithCombinedVariables(t *testing.T) {
-	tests, err := parseTestDefinitionFile(DefaultFileRead, "testdata/combined-variables.yaml")
+	tests, err := parseTestDefinitionFile(DefaultFileParse, "testdata/combined-variables.yaml")
 	require.NoError(t, err)
 
 	testOriginal := tests[0]

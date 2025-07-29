@@ -71,12 +71,11 @@ func (f *formValues) GetFields() map[string]string {
 }
 
 type script struct {
-	cmd    string
 	params ScriptParams
 }
 
 func (s *script) CmdLine() string {
-	return s.cmd
+	return s.params.Path
 }
 
 func (s *script) Timeout() time.Duration {
@@ -86,17 +85,9 @@ func (s *script) Timeout() time.Duration {
 type testImpl struct {
 	TestDefinition
 
-	Filename string
-
-	Request                string
-	Responses              map[int]string
-	ResponseHeaders        map[int]map[string]string
-	BeforeScriptPath       string
-	AfterRequestScriptPath string
-
+	Filename          string
 	CombinedVariables map[string]string
-
-	DbChecks []models.DatabaseCheck
+	DbChecks          []models.DatabaseCheck
 
 	FirstTest   bool
 	LastTest    bool
@@ -120,11 +111,11 @@ func (t *testImpl) GetRequest() string {
 }
 
 func (t *testImpl) GetResponses() map[int]string {
-	return t.Responses
+	return t.Response
 }
 
 func (t *testImpl) GetResponse(code int) (string, bool) {
-	val, ok := t.Responses[code]
+	val, ok := t.Response[code]
 	return val, ok
 }
 
@@ -169,14 +160,12 @@ func (t *testImpl) Pause() time.Duration {
 
 func (t *testImpl) BeforeScript() models.Script {
 	return &script{
-		cmd:    t.BeforeScriptPath,
 		params: t.TestDefinition.BeforeScript,
 	}
 }
 
 func (t *testImpl) AfterRequestScript() models.Script {
 	return &script{
-		cmd:    t.AfterRequestScriptPath,
 		params: t.TestDefinition.AfterRequestScript,
 	}
 }
@@ -278,7 +267,7 @@ func (t *testImpl) ApplyVariables(perform func(string) string) {
 	}
 	t.DbChecks = dbChecks
 
-	t.Responses = performResponses(t.Responses, perform)
+	t.Response = performResponses(t.Response, perform)
 	t.TestDefinition.Headers = performHeaders(t.TestDefinition.Headers, perform)
 
 	resHeaders := map[int]map[string]string{}

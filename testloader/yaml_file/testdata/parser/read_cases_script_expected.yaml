@@ -1,0 +1,25 @@
+- GetName: 'loader MUST substitute beforeScriptArgs/afterRequestScript to script path #1'
+  GetMethod: GET
+  Path: /some/path
+  GetResponses:
+    200: "aaabbb"
+  BeforeScript:
+    CmdLine: /some/path/script1.sh
+  AfterRequestScript:
+    CmdLine: /some/path/otherscript1.sh
+  GetFileName: testdata/parser/read_cases_script.yaml
+  OneOfCase: true
+  FirstTestInFile: true
+
+- GetName: 'loader MUST substitute beforeScriptArgs/afterRequestScript to script path #2'
+  GetMethod: GET
+  Path: /some/path
+  GetResponses:
+    200: "aaabbb"
+  BeforeScript:
+    CmdLine: /some/path/script2.sh
+  AfterRequestScript:
+    CmdLine: /some/path/otherscript2.sh
+  GetFileName: testdata/parser/read_cases_script.yaml
+  OneOfCase: true
+  LastTestInFile: true

@@ -1,0 +1,6 @@
+- name: this file MUST be ignored because filter
+  method: GET
+  path: /some/path/11
+  request: "11requestbody11"
+  response:
+    200: "11aaabbb11"

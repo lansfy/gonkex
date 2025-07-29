@@ -20,7 +20,7 @@ const (
 
 var gonkexProtectTemplate = regexp.MustCompile(`{{\s*\$`)
 
-func parseTestDefinitionContent(f FileReadFun, absPath string, data []byte) ([]models.TestInterface, error) {
+func parseTestDefinitionContent(f FileParseFun, absPath string, data []byte) ([]models.TestInterface, error) {
 	testDefinitions, err := f(absPath, data)
 	if err != nil {
 		return nil, err
@@ -49,13 +49,13 @@ func parseTestDefinitionContent(f FileReadFun, absPath string, data []byte) ([]m
 	return result, nil
 }
 
-// DefaultFileRead reads and unmarshals the YAML content of a test definition file (default implementation).
+// DefaultFileParse reads and unmarshals the YAML content of a test definition file (default implementation).
 //
 // It takes the file path (used only for error reporting) and the raw content in bytes,
 // then attempts to strictly unmarshal the content into a slice of TestDefinition structs.
 //
 // Returns the parsed test definitions or an error if unmarshalling fails.
-func DefaultFileRead(filePath string, content []byte) ([]*TestDefinition, error) {
+func DefaultFileParse(filePath string, content []byte) ([]*TestDefinition, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(content))
 	decoder.KnownFields(true)
 
@@ -68,7 +68,7 @@ func DefaultFileRead(filePath string, content []byte) ([]*TestDefinition, error)
 	return testDefinitions, nil
 }
 
-func parseTestDefinitionFile(f FileReadFun, absPath string) ([]models.TestInterface, error) {
+func parseTestDefinitionFile(f FileParseFun, absPath string) ([]models.TestInterface, error) {
 	data, err := os.ReadFile(absPath)
 	if err != nil {
 		return nil, fmt.Errorf("read file %s: %w", absPath, err)
@@ -116,10 +116,13 @@ func substituteArgsToMap(tmpl map[string]string, args map[string]interface{}) (m
 
 // Make tests from the given test definition.
 func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]*testImpl, error) {
+	if testDefinition.DbQuery != "" && len(testDefinition.DbChecks) != 0 {
+		return nil, fmt.Errorf("mix of old dbQuery/dbResponse and dbChecks in one test forbidden")
+	}
+
 	// test definition has no cases, so using request/response as is
 	if len(testDefinition.Cases) == 0 {
-		test := makeOneTest(filePath, testDefinition)
-		return []*testImpl{test}, nil
+		return makeOneTest(filePath, testDefinition)
 	}
 
 	combinedVariables := map[string]string{}
@@ -176,20 +179,21 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 		}
 
 		// substitute ResponseArgs to different parts of response
-		test.Responses = map[int]string{}
+		responses := map[int]string{}
 		for status, tpl := range testDefinition.Response {
 			args, ok := testCase.ResponseArgs[status]
 			if ok {
 				// found args for response status
-				test.Responses[status], err = substituteArgs(tpl, args)
+				responses[status], err = substituteArgs(tpl, args)
 				if err != nil {
 					return nil, err
 				}
 			} else {
 				// not found args, using response as is
-				test.Responses[status] = tpl
+				responses[status] = tpl
 			}
 		}
+		test.Response = responses
 
 		test.ResponseHeaders = map[int]map[string]string{}
 		for status, respHeaders := range testDefinition.ResponseHeaders {
@@ -206,26 +210,26 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 			}
 		}
 
-		test.BeforeScriptPath, err = substituteArgs(testDefinition.BeforeScript.Path, testCase.BeforeScriptArgs)
+		test.TestDefinition.BeforeScript.Path, err = substituteArgs(testDefinition.BeforeScript.Path, testCase.BeforeScriptArgs)
 		if err != nil {
 			return nil, err
 		}
 
-		test.AfterRequestScriptPath, err = substituteArgs(testDefinition.AfterRequestScript.Path, testCase.AfterRequestScriptArgs)
+		test.TestDefinition.AfterRequestScript.Path, err = substituteArgs(testDefinition.AfterRequestScript.Path, testCase.AfterRequestScriptArgs)
 		if err != nil {
 			return nil, err
 		}
 
 		for key, value := range testCase.Variables {
-			var ok bool
-			combinedVariables[key], ok = value.(string)
-			if !ok {
-				return nil, fmt.Errorf("variable %q has non-string value %v", key, value)
-			}
+			combinedVariables[key] = value
 		}
 		test.CombinedVariables = cloneVariables(combinedVariables)
 
-		test.DbChecks, err = readDatabaseCheck(testDefinition, &testCase)
+		if testDefinition.DbQuery != "" {
+			test.DbChecks, err = readObsoleteDatabaseCheck(testDefinition, &testCase)
+		} else {
+			test.DbChecks, err = readDatabaseCheck(testDefinition, &testCase)
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -235,16 +239,11 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 	return tests, nil
 }
 
-func makeOneTest(filePath string, testDefinition *TestDefinition) *testImpl {
+func makeOneTest(filePath string, testDefinition *TestDefinition) ([]*testImpl, error) {
 	test := &testImpl{
-		TestDefinition:         *testDefinition,
-		Filename:               filePath,
-		Request:                testDefinition.Request,
-		Responses:              testDefinition.Response,
-		ResponseHeaders:        testDefinition.ResponseHeaders,
-		BeforeScriptPath:       testDefinition.BeforeScript.Path,
-		AfterRequestScriptPath: testDefinition.AfterRequestScript.Path,
-		CombinedVariables:      testDefinition.Variables,
+		TestDefinition:    *testDefinition,
+		Filename:          filePath,
+		CombinedVariables: testDefinition.Variables,
 	}
 
 	dbChecks := []models.DatabaseCheck{}
@@ -255,6 +254,7 @@ func makeOneTest(filePath string, testDefinition *TestDefinition) *testImpl {
 			response: testDefinition.DbResponse,
 		})
 	}
+
 	for _, check := range testDefinition.DbChecks {
 		dbChecks = append(dbChecks, &dbCheck{
 			query:    check.DbQuery,
@@ -263,43 +263,37 @@ func makeOneTest(filePath string, testDefinition *TestDefinition) *testImpl {
 		})
 	}
 	test.DbChecks = dbChecks
-	return test
+	return []*testImpl{test}, nil
 }
 
-func readDatabaseCheck(def *TestDefinition, testCase *CaseData) ([]models.DatabaseCheck, error) {
+func readObsoleteDatabaseCheck(def *TestDefinition, testCase *CaseData) ([]models.DatabaseCheck, error) {
 	tmpDbQuery, err := substituteArgs(def.DbQuery, testCase.DbQueryArgs)
 	if err != nil {
 		return nil, err
 	}
 
-	// compile DbResponse
-	tmpDbResponse := []string{}
+	c := &dbCheck{
+		query: tmpDbQuery,
+	}
+
 	if testCase.DbResponse != nil {
 		// DbResponse from test case has top priority
-		tmpDbResponse = testCase.DbResponse
-	} else {
-		if len(def.DbResponse) != 0 {
-			// compile DbResponse string by string
-			for _, tpl := range def.DbResponse {
-				dbResponseString, err := substituteArgs(tpl, testCase.DbResponseArgs)
-				if err != nil {
-					return nil, err
-				}
-				tmpDbResponse = append(tmpDbResponse, dbResponseString)
-			}
-		} else {
-			tmpDbResponse = def.DbResponse
+		c.response = testCase.DbResponse
+		return []models.DatabaseCheck{c}, nil
+	}
+
+	for _, tpl := range def.DbResponse {
+		responseString, err := substituteArgs(tpl, testCase.DbResponseArgs)
+		if err != nil {
+			return nil, err
 		}
+		c.response = append(c.response, responseString)
 	}
+	return []models.DatabaseCheck{c}, nil
+}
 
+func readDatabaseCheck(def *TestDefinition, testCase *CaseData) ([]models.DatabaseCheck, error) {
 	dbChecks := []models.DatabaseCheck{}
-	if tmpDbQuery != "" {
-		dbChecks = append(dbChecks, &dbCheck{
-			query:    tmpDbQuery,
-			response: tmpDbResponse,
-		})
-	}
-
 	for _, check := range def.DbChecks {
 		query, err := substituteArgs(check.DbQuery, testCase.DbQueryArgs)
 		if err != nil {
@@ -318,7 +312,6 @@ func readDatabaseCheck(def *TestDefinition, testCase *CaseData) ([]models.Databa
 
 			c.response = append(c.response, responseString)
 		}
-
 		dbChecks = append(dbChecks, c)
 	}
 	return dbChecks, nil

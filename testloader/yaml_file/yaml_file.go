@@ -11,13 +11,13 @@ import (
 	"github.com/lansfy/gonkex/testloader"
 )
 
-type FileReadFun func(filePath string, content []byte) ([]*TestDefinition, error)
+type FileParseFun func(filePath string, content []byte) ([]*TestDefinition, error)
 
 type LoaderOpts struct {
-	CustomFileRead FileReadFun
+	CustomFileParse FileParseFun
 }
 
-type YamlFileLoader struct {
+type yamlFileLoader struct {
 	testsLocation string
 	opts          LoaderOpts
 	filterFunc    func(fileName string) bool
@@ -28,19 +28,19 @@ func NewLoader(testsLocation string) testloader.LoaderInterface {
 }
 
 func NewFileLoader(testsLocation string, opts *LoaderOpts) testloader.LoaderInterface {
-	l := &YamlFileLoader{
+	l := &yamlFileLoader{
 		testsLocation: testsLocation,
 	}
 	if opts != nil {
 		l.opts = *opts
 	}
-	if l.opts.CustomFileRead == nil {
-		l.opts.CustomFileRead = DefaultFileRead
+	if l.opts.CustomFileParse == nil {
+		l.opts.CustomFileParse = DefaultFileParse
 	}
 	return l
 }
 
-func (l *YamlFileLoader) Load() ([]models.TestInterface, error) {
+func (l *yamlFileLoader) Load() ([]models.TestInterface, error) {
 	_, err := os.Stat(l.testsLocation)
 	if err != nil && os.IsNotExist(err) {
 		return nil, fmt.Errorf("file or directory with tests '%s' does not exist", l.testsLocation)
@@ -48,15 +48,11 @@ func (l *YamlFileLoader) Load() ([]models.TestInterface, error) {
 
 	var tests []models.TestInterface
 	err = filepath.WalkDir(l.testsLocation, func(relpath string, d fs.DirEntry, err error) error {
-		if err != nil {
+		if err != nil || d.IsDir() || !isYmlFile(relpath) || !l.fitsFilter(relpath) {
 			return err
 		}
 
-		if d.IsDir() || !isYmlFile(relpath) || !l.fitsFilter(relpath) {
-			return nil
-		}
-
-		moreTests, err := parseTestDefinitionFile(l.opts.CustomFileRead, relpath)
+		moreTests, err := parseTestDefinitionFile(l.opts.CustomFileParse, relpath)
 		if err != nil {
 			return err
 		}
@@ -68,11 +64,11 @@ func (l *YamlFileLoader) Load() ([]models.TestInterface, error) {
 	return tests, err
 }
 
-func (l *YamlFileLoader) SetFilter(filterFunc func(fileName string) bool) {
+func (l *yamlFileLoader) SetFilter(filterFunc func(fileName string) bool) {
 	l.filterFunc = filterFunc
 }
 
-func (l *YamlFileLoader) fitsFilter(fileName string) bool {
+func (l *yamlFileLoader) fitsFilter(fileName string) bool {
 	return l.filterFunc == nil || l.filterFunc(fileName)
 }
 

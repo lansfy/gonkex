@@ -1,0 +1,15 @@
+- GetName: loader MUST read form requests
+  GetMethod: POST
+  Path: /some/path
+  ContentType: multipart/form-data
+  Headers:
+    Content-Type: multipart/form-data
+  GetForm:
+    GetFields:
+      field_name1: value1
+      field_name2: value2
+  GetResponses:
+    200: "aaabbb"
+  GetFileName: testdata/parser/read_http_form.yaml
+  FirstTestInFile: true
+  LastTestInFile: true

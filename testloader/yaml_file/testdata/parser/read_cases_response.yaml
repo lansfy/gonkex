@@ -1,0 +1,25 @@
+- name: loader MUST substitute responseArgs to response components
+  method: GET
+  path: /some/path
+  response:
+    200: '{"hello": {{ .foo }} }'
+    400: '{"hello": {{ .foo }} }'
+    500: '{"hello": {{ .foo }} }'
+  responseHeaders:
+    200:
+      X-Header: '{{ .foo }}'
+    400:
+      X-Header: '{{ .foo }}'
+    500:
+      X-Header: '{{ .foo }}'
+  cases:
+    - responseArgs:
+        200:
+          foo: "value1"
+        400:
+          foo: "value2"
+    - responseArgs:
+        200:
+          foo: "value3"
+        400:
+          foo: "value4"

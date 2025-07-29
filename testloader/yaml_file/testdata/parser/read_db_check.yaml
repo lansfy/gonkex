@@ -1,0 +1,20 @@
+- name: loader MUST read tests with database check
+  method: GET
+  path: /some/path
+  response:
+    200: "aaabbb"
+  dbChecks:
+    - dbQuery: "SELECT ALL"
+      dbResponse:
+        - item1
+        - item2
+      comparisonParams:
+         ignoreArraysOrdering: true
+         disallowExtraFields: true
+    - dbQuery: "UPDATE ALL"
+      dbResponse:
+        - item3
+      comparisonParams:
+         ignoreValues: true
+    - dbQuery: "DELETE ALL"
+      dbResponse: []

@@ -1,0 +1,10 @@
+- name: loader MUST fail if cannot substitute afterRequestScriptArgs to request body
+  method: GET
+  path: /some/path
+  response:
+    200: "aaabbb"
+  afterRequestScript:
+    path: '/some/path/{{ .bar }'
+  cases:
+    - afterRequestScriptArgs:
+        bar: "otherscript1.sh"

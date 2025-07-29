@@ -1,0 +1,9 @@
+- name: loader MUST read tests with obsolete database check
+  method: GET
+  path: /some/path
+  response:
+    200: "aaabbb"
+  dbQuery: "SELECT ALL"
+  dbResponse:
+    - item1
+    - item2

@@ -1,0 +1,16 @@
+- GetName: simple request test
+  GetDescription: simple request test description
+  GetMethod: POST
+  Headers:
+    X-Request-Header: header_value_1
+  Cookies:
+    somecookie1: someid1
+    somecookie2: someid1
+  Path: /some/path
+  ToQuery: ?param=value
+  GetRequest: requestbody
+  GetResponses:
+    200: "aaabbb"
+  GetFileName: testdata/parser/read_http_request.yaml
+  FirstTestInFile: true
+  LastTestInFile: true

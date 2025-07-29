@@ -1,0 +1,18 @@
+- name: loader MUST read tests with variables_to_set section
+  method: POST
+  path: /some/path
+  request: requestbody
+  response:
+    200: body200
+    300: body300
+    400: body400
+  variables_to_set:
+    200:
+      var1: "path21"
+      var22: "path22"
+    300:
+      var1: "path31"
+      var33: "path33"
+    400:
+      var1: "path41"
+      var44: "path44"

@@ -1,0 +1,21 @@
+- GetName: loader MUST read tests with variables_to_set section
+  GetMethod: POST
+  Path: /some/path
+  GetRequest: requestbody
+  GetResponses:
+    200: body200
+    300: body300
+    400: body400
+  GetVariablesToSet:
+    200:
+      var1: "path21"
+      var22: "path22"
+    300:
+      var1: "path31"
+      var33: "path33"
+    400:
+      var1: "path41"
+      var44: "path44"
+  GetFileName: testdata/parser/read_variables_to_set.yaml
+  FirstTestInFile: true
+  LastTestInFile: true

@@ -54,10 +54,14 @@ func performStringMap(src map[string]string, perform func(string) string) map[st
 }
 
 func performForm(form *Form, perform func(string) string) *Form {
-	return &Form{
-		Files:  performStringMap(form.Files, perform),
-		Fields: performStringMap(form.Fields, perform),
+	result := &Form{}
+	if form.Files != nil {
+		result.Files = performStringMap(form.Files, perform)
 	}
+	if form.Fields != nil {
+		result.Fields = performStringMap(form.Fields, perform)
+	}
+	return result
 }
 
 func performHeaders(headers map[string]string, perform func(string) string) map[string]string {
@@ -66,24 +70,16 @@ func performHeaders(headers map[string]string, perform func(string) string) map[
 
 func performResponses(responses map[int]string, perform func(string) string) map[int]string {
 	res := map[int]string{}
-
 	for k, v := range responses {
 		res[k] = perform(v)
 	}
-
 	return res
 }
 
 func performDbResponses(responses []string, perform func(string) string) []string {
-	if responses == nil {
-		return nil
-	}
-
 	res := make([]string, len(responses))
-
 	for idx, v := range responses {
 		res[idx] = perform(v)
 	}
-
 	return res
 }

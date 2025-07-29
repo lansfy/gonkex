@@ -1,0 +1,11 @@
+- name: loader MUST read tests with script data
+  method: GET
+  path: /some/path
+  response:
+    200: "aaabbb"
+  beforeScript:
+    path: script1.sh
+    timeout: 10
+  afterRequestScript:
+    path: script2.sh
+    timeout: 500ms

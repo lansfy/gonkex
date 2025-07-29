@@ -1,0 +1,16 @@
+- GetName: loader MUST read tests with metadata
+  GetMethod: POST
+  Path: /some/path
+  GetRequest: requestbody
+  GetResponses:
+    200: "aaabbb"
+  GetMeta:
+    key1: value1
+    key2: 44444
+    key3:
+      subkey1: subvalue1
+      subkey2: subvalue2
+    key4: [arr1, arr2]
+  GetFileName: testdata/parser/read_meta.yaml
+  FirstTestInFile: true
+  LastTestInFile: true

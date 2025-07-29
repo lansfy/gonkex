@@ -1,0 +1,31 @@
+- GetName: "loader MUST generate separate test for every case #1 (subcase1)"
+  GetDescription: original description
+  GetMethod: POST
+  Path: /some/path
+  GetRequest: requestbody
+  GetResponses:
+    200: "someresponsebody"
+  GetFileName: testdata/parser/read_cases_base.yaml
+  OneOfCase: true
+  FirstTestInFile: true
+
+- GetName: "loader MUST generate separate test for every case #2"
+  GetDescription: original description
+  GetMethod: POST
+  Path: /some/path
+  GetRequest: requestbody
+  GetResponses:
+    200: "someresponsebody"
+  GetFileName: testdata/parser/read_cases_base.yaml
+  OneOfCase: true
+
+- GetName: "loader MUST generate separate test for every case #3 (subcase3)"
+  GetDescription: overrided description
+  GetMethod: POST
+  Path: /some/path
+  GetRequest: requestbody
+  GetResponses:
+    200: "someresponsebody"
+  GetFileName: testdata/parser/read_cases_base.yaml
+  OneOfCase: true
+  LastTestInFile: true

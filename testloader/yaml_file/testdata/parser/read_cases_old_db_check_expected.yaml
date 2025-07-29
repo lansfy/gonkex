@@ -1,0 +1,28 @@
+- GetName: 'loader MUST substitute dbQueryArgs/dbResponseArgs/dbResponse to obsolete dbRequests #1 (make variable substitution)'
+  GetMethod: GET
+  Path: /some/path
+  GetResponses:
+    200: "aaabbb"
+  GetDatabaseChecks:
+    - DbQueryString: "SELECT value1"
+      DbResponseJson:
+        - value2 item1
+        - value2 item2
+  GetFileName: testdata/parser/read_cases_old_db_check.yaml
+  OneOfCase: true
+  FirstTestInFile: true
+
+- GetName: 'loader MUST substitute dbQueryArgs/dbResponseArgs/dbResponse to obsolete dbRequests #2 (redefine db response)'
+  GetMethod: GET
+  Path: /some/path
+  GetResponses:
+    200: "aaabbb"
+  GetDatabaseChecks:
+    - DbQueryString: "SELECT value22"
+      DbResponseJson:
+        - "otheritem1 {{ .bar }}" # no substitution here
+        - otheritem2
+        - otheritem3
+  GetFileName: testdata/parser/read_cases_old_db_check.yaml
+  OneOfCase: true
+  LastTestInFile: true

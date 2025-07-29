@@ -1,0 +1,10 @@
+- name: loader MUST fail if cannot substitute requestArgs to request body
+  method: POST
+  path: /some/path
+  request: "{{ .foo }"
+  response:
+    200: "somebody"
+  cases:
+    - requestArgs:
+        foo: 'value 1'
+        bar: other1

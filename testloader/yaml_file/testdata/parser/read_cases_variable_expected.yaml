@@ -1,0 +1,26 @@
+- GetName: "loader MUST read tests with variables #1"
+  GetMethod: POST
+  Path: /some/path
+  GetRequest: requestbody
+  GetResponses:
+    200: "someresponsebody"
+  GetCombinedVariables:
+    foo1: bar1
+    foo2: bar2
+  GetFileName: testdata/parser/read_cases_variable.yaml
+  OneOfCase: true
+  FirstTestInFile: true
+
+- GetName: "loader MUST read tests with variables #2"
+  GetMethod: POST
+  Path: /some/path
+  GetRequest: requestbody
+  GetResponses:
+    200: "someresponsebody"
+  GetCombinedVariables:
+    foo1: bar21
+    foo2: bar2
+    foo3: bar22
+  GetFileName: testdata/parser/read_cases_variable.yaml
+  OneOfCase: true
+  LastTestInFile: true

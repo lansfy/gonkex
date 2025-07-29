@@ -1,0 +1,14 @@
+- GetName: loader MUST read tests with script data
+  GetMethod: GET
+  Path: /some/path
+  GetResponses:
+    200: "aaabbb"
+  BeforeScript:
+    CmdLine: script1.sh
+    Timeout: 10s
+  AfterRequestScript:
+    CmdLine: script2.sh
+    Timeout: 500ms
+  GetFileName: testdata/parser/read_script.yaml
+  FirstTestInFile: true
+  LastTestInFile: true

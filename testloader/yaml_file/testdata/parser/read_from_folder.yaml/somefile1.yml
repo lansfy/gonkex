@@ -1,0 +1,13 @@
+- name: simple request test 11
+  method: GET
+  path: /some/path/11
+  request: "11requestbody11"
+  response:
+    200: "11aaabbb11"
+
+- name: simple request test 12
+  method: GET
+  path: /some/path/12
+  request: "12requestbody12"
+  response:
+    200: "12aaabbb12"

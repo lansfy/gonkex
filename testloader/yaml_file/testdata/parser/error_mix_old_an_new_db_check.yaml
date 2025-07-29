@@ -1,0 +1,12 @@
+- name: WHEN use depricated and new style with dbChecks loader MUST fail with error
+  method: GET
+  path: /some/path
+  response:
+    200: "aaabbb"
+  dbQuery: "SELECT ALL"
+  dbResponse:
+    - item1
+  dbChecks:
+    - dbQuery: "UPDATE ALL"
+      dbResponse:
+        - item2
