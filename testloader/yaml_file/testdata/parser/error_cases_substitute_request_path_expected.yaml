@@ -1,1 +1,1 @@
-- Error: 'preprocess file testdata/parser/error_cases_substitute_request_path.yaml: template: :1: unexpected "}" in operand'
+- Error: "process 'testdata/parser/error_cases_substitute_request_path.yaml': test 'loader MUST fail if cannot substitute requestArgs to request path #1': template: $.path:1: unexpected \"}\" in operand"

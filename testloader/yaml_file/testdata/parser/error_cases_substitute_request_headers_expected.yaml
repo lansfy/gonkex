@@ -1,1 +1,1 @@
-- Error: 'preprocess file testdata/parser/error_cases_substitute_request_headers.yaml: template: :1: unexpected "}" in operand'
+- Error: "process 'testdata/parser/error_cases_substitute_request_headers.yaml': test 'loader MUST fail if cannot substitute requestArgs to request headers #1': template: $.headers:1: unexpected \"}\" in operand"
