@@ -1,4 +1,4 @@
-- name: WHEN use depricated and new style with dbChecks loader MUST fail with error
+- name: WHEN use deprecated and new style with dbChecks loader MUST fail with error
   method: GET
   path: /some/path
   response:

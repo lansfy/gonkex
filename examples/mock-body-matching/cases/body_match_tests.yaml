@@ -1,0 +1,43 @@
+- name: simple body matching test
+  method: POST
+  path: /do
+  response:
+    200: |
+      {
+        "data": {
+          "hero": {
+            "name": "R2-D2",
+            "friends": [
+              {"name": "Luke Skywalker"},
+              {"name": "Han Solo"},
+              {"name": "Leia Organa"}
+            ]
+          }
+        }
+      }
+  mocks:
+    backend:
+      calls: 1
+      strategy: constant
+      requestConstraints:
+        - kind: pathMatches
+          path: /process
+        # match body as regexp
+        - kind: bodyMatchesText
+          regexp: (HeroNameAndFriends)
+        # .. same regexp check but with matcher syntax
+        - kind: bodyMatchesText
+          body: $matchRegexp(HeroNameAndFriends)
+        # match body as exact text (>- and |- remove the line feed, remove the trailing blank lines)
+        - kind: bodyMatchesText
+          body: |-
+            query HeroNameAndFriends {
+                  hero {
+                    name
+                    friends {
+                      name
+                    }
+                  }
+                }
+      body: "OK"
+      statusCode: 200

@@ -100,14 +100,21 @@ func (h *helperImpl) SetResponseAsJson(response interface{}) error {
 	return nil
 }
 
-func (h *helperImpl) SetResponseAsYaml(response interface{}) error {
-	b, err := yaml.Marshal(response)
+func (h *helperImpl) SetResponseAsYaml(response interface{}) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = internalError("SetResponseAsYaml", fmt.Errorf("%v", r))
+		}
+	}()
+
+	var out []byte
+	out, err = yaml.Marshal(response)
 	if err != nil {
 		return internalError("SetResponseAsYaml", err)
 	}
 	h.contentType = "application/yaml"
-	h.responseBytes = b
-	return nil
+	h.responseBytes = out
+	return err
 }
 
 func (h *helperImpl) SetResponseAsBytes(response []byte) error {
