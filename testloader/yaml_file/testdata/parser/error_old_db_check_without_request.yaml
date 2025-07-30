@@ -1,0 +1,7 @@
+- name: WHEN use dbResponse without dbQuery MUST fail with error
+  method: GET
+  path: /some/path
+  response:
+    200: "aaabbb"
+  dbResponse:
+    - item1

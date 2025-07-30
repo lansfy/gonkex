@@ -17,18 +17,24 @@ func initServer() {
 	http.HandleFunc("/do", Do)
 }
 
+const response = `{
+  "data": {
+    "hero": {
+      "name": "R2-D2",
+      "friends": [{"name": "Luke Skywalker"}, {"name": "Han Solo"},{"name": "Leia Organa"}]
+    }
+  }
+}`
+
 func Do(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
 	if err := BackendPost(); err != nil {
 		log.Print(err)
-		_, _ = w.Write([]byte("{\"status\": \"error\"}"))
+		_, _ = w.Write([]byte(`{"status": "error"}`))
 		return
 	}
 
-	w.Header().Add("Content-Type", "application/json")
-	_, _ = w.Write([]byte("{\n  \"data\": {\n    \"hero\": {\n      \"name\": \"R2-D2\",\n   " +
-		"   \"friends\": [\n        {\n          \"name\": \"Luke Skywalker\"\n        },\n        " +
-		"{\n          \"name\": \"Han Solo\"\n        },\n        {\n          \"name\": \"Leia Organa\"\n   " +
-		"     }\n      ]\n    }\n  }\n}"))
+	_, _ = w.Write([]byte(response))
 }
 
 func BackendPost() error {

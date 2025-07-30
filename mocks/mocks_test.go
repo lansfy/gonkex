@@ -32,6 +32,7 @@ type errorChecker struct {
 	t         *testing.T
 	errorInfo string
 	lastTest  models.TestInterface
+	wasError  bool
 }
 
 func normalizeString(s string) string {
@@ -68,7 +69,9 @@ func (c *errorChecker) Handle(t models.TestInterface, f runner.TestExecutor) (bo
 		}
 	}
 
-	assert.Equal(c.t, c.getExpected(), normalizeString(content), c.errorInfo)
+	if !assert.Equal(c.t, c.getExpected(), normalizeString(content), c.errorInfo) {
+		c.wasError = true
+	}
 	return false, nil
 }
 
@@ -139,7 +142,7 @@ func multiRequest(h endpoint.Helper) error {
 	return nil
 }
 
-func fileReaderWithYampV2(filePath string, content []byte) ([]*yaml_file.TestDefinition, error) {
+func fileReaderWithYamlV2(filePath string, content []byte) ([]*yaml_file.TestDefinition, error) {
 	testDefinitions := []*yaml_file.TestDefinition{}
 
 	// reading the test source file
@@ -175,8 +178,13 @@ func Test_Declarative(t *testing.T) {
 	err = r.Run()
 	require.NoError(t, err)
 
+	if checker.wasError {
+		// skip yaml v2 tests in case of problem with yaml v3
+		return
+	}
+
 	r = runner.New(yaml_file.NewFileLoader("testdata", &yaml_file.LoaderOpts{
-		CustomFileParse: fileReaderWithYampV2,
+		CustomFileParse: fileReaderWithYamlV2,
 	}), opts)
 	err = r.Run()
 	require.NoError(t, err)

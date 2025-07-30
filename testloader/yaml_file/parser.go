@@ -114,77 +114,97 @@ func substituteArgsToMap(path string, tmpl map[string]string, args map[string]in
 	return res, nil
 }
 
+func hasObsoleteDbCheck(def *TestDefinition) bool {
+	return def.DbQuery != "" || def.DbResponse != nil
+}
+
+func validateDbChecks(test *testImpl) error {
+	for _, item := range test.GetDatabaseChecks() {
+		if item.DbQueryString() == "" && len(item.DbResponseJson()) != 0 {
+			return fmt.Errorf("'dbResponse' found without corresponding 'dbQuery'")
+		}
+	}
+	return nil
+}
+
 // Make tests from the given test definition.
-func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]*testImpl, error) {
-	if testDefinition.DbQuery != "" && len(testDefinition.DbChecks) != 0 {
-		return nil, fmt.Errorf("mix of old dbQuery/dbResponse and dbChecks in one test forbidden")
+func makeTestFromDefinition(filePath string, def *TestDefinition) ([]*testImpl, error) {
+	wrap := func(err error) error {
+		return fmt.Errorf("test '%s': %w", def.Name, err)
+	}
+
+	if hasObsoleteDbCheck(def) && len(def.DbChecks) != 0 {
+		return nil, wrap(fmt.Errorf("mixing old dbQuery/dbResponse with dbChecks in a single test is forbidden"))
 	}
 
 	// test definition has no cases, so using request/response as is
-	if len(testDefinition.Cases) == 0 {
-		return makeOneTest(filePath, testDefinition), nil
+	if len(def.Cases) == 0 {
+		test := makeOneTest(filePath, def)
+		err := validateDbChecks(test)
+		if err != nil {
+			return nil, wrap(err)
+		}
+		return []*testImpl{test}, nil
 	}
 
 	combinedVariables := map[string]string{}
-	if testDefinition.Variables != nil {
-		combinedVariables = testDefinition.Variables
+	if def.Variables != nil {
+		combinedVariables = def.Variables
 	}
 
 	tests := []*testImpl{}
 
 	// produce as many tests as cases defined
-	for caseIdx, testCase := range testDefinition.Cases {
+	for caseIdx, testCase := range def.Cases {
 		test := &testImpl{
-			TestDefinition: *testDefinition,
+			TestDefinition: *def,
 			Filename:       filePath,
+			IsOneOfCase:    true,
 		}
 
-		postfix := ""
+		test.Name = fmt.Sprintf("%s #%d", test.Name, caseIdx+1)
 		if testCase.Name != "" {
-			postfix = " (" + testCase.Name + ")"
+			test.Name += " (" + testCase.Name + ")"
 		}
-
-		test.Name = fmt.Sprintf("%s #%d%s", test.Name, caseIdx+1, postfix)
-		test.IsOneOfCase = true
 
 		if testCase.Description != "" {
 			test.Description = testCase.Description
 		}
 
-		wrap := func(err error) error {
+		wrap = func(err error) error {
 			return fmt.Errorf("test '%s': %w", test.Name, err)
 		}
 
 		var err error
 		// substitute RequestArgs to different parts of request
-		test.TestDefinition.Path, err = substituteArgs("path", testDefinition.Path, testCase.RequestArgs)
+		test.TestDefinition.Path, err = substituteArgs("path", def.Path, testCase.RequestArgs)
 		if err != nil {
 			return nil, wrap(err)
 		}
 
-		test.Request, err = substituteArgs("request", testDefinition.Request, testCase.RequestArgs)
+		test.Request, err = substituteArgs("request", def.Request, testCase.RequestArgs)
 		if err != nil {
 			return nil, wrap(err)
 		}
 
-		test.Query, err = substituteArgs("query", testDefinition.Query, testCase.RequestArgs)
+		test.Query, err = substituteArgs("query", def.Query, testCase.RequestArgs)
 		if err != nil {
 			return nil, wrap(err)
 		}
 
-		test.TestDefinition.Headers, err = substituteArgsToMap("headers", testDefinition.Headers, testCase.RequestArgs)
+		test.TestDefinition.Headers, err = substituteArgsToMap("headers", def.Headers, testCase.RequestArgs)
 		if err != nil {
 			return nil, wrap(err)
 		}
 
-		test.TestDefinition.Cookies, err = substituteArgsToMap("cookies", testDefinition.Cookies, testCase.RequestArgs)
+		test.TestDefinition.Cookies, err = substituteArgsToMap("cookies", def.Cookies, testCase.RequestArgs)
 		if err != nil {
 			return nil, wrap(err)
 		}
 
 		// substitute ResponseArgs to different parts of response
 		responses := map[int]string{}
-		for status, tpl := range testDefinition.Response {
+		for status, tpl := range def.Response {
 			args, ok := testCase.ResponseArgs[status]
 			if !ok {
 				// not found args, using response as is
@@ -201,7 +221,7 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 		test.Response = responses
 
 		test.ResponseHeaders = map[int]map[string]string{}
-		for status, respHeaders := range testDefinition.ResponseHeaders {
+		for status, respHeaders := range def.ResponseHeaders {
 			args, ok := testCase.ResponseArgs[status]
 			if !ok {
 				// not found args, using response as is
@@ -217,13 +237,13 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 		}
 
 		test.TestDefinition.BeforeScript.Path, err = substituteArgs("beforeScript.path",
-			testDefinition.BeforeScript.Path, testCase.BeforeScriptArgs)
+			def.BeforeScript.Path, testCase.BeforeScriptArgs)
 		if err != nil {
 			return nil, wrap(err)
 		}
 
 		test.TestDefinition.AfterRequestScript.Path, err = substituteArgs("afterRequestScript.path",
-			testDefinition.AfterRequestScript.Path, testCase.AfterRequestScriptArgs)
+			def.AfterRequestScript.Path, testCase.AfterRequestScriptArgs)
 		if err != nil {
 			return nil, wrap(err)
 		}
@@ -233,37 +253,43 @@ func makeTestFromDefinition(filePath string, testDefinition *TestDefinition) ([]
 		}
 		test.CombinedVariables = cloneVariables(combinedVariables)
 
-		if testDefinition.DbQuery != "" {
-			test.DbChecks, err = readObsoleteDatabaseCheck(testDefinition, &testCase)
+		if hasObsoleteDbCheck(def) {
+			test.DbChecks, err = readObsoleteDatabaseCheck(def, &testCase)
 		} else {
-			test.DbChecks, err = readDatabaseCheck(testDefinition, &testCase)
+			test.DbChecks, err = readDatabaseCheck(def, &testCase)
 		}
 		if err != nil {
 			return nil, wrap(err)
 		}
+
+		err = validateDbChecks(test)
+		if err != nil {
+			return nil, wrap(err)
+		}
+
 		tests = append(tests, test)
 	}
 
 	return tests, nil
 }
 
-func makeOneTest(filePath string, testDefinition *TestDefinition) []*testImpl {
+func makeOneTest(filePath string, def *TestDefinition) *testImpl {
 	test := &testImpl{
-		TestDefinition:    *testDefinition,
+		TestDefinition:    *def,
 		Filename:          filePath,
-		CombinedVariables: testDefinition.Variables,
+		CombinedVariables: def.Variables,
 	}
 
 	dbChecks := []models.DatabaseCheck{}
-	if testDefinition.DbQuery != "" {
+	if hasObsoleteDbCheck(def) {
 		// old style db checks
 		dbChecks = append(dbChecks, &dbCheck{
-			query:    testDefinition.DbQuery,
-			response: testDefinition.DbResponse,
+			query:    def.DbQuery,
+			response: def.DbResponse,
 		})
 	}
 
-	for _, check := range testDefinition.DbChecks {
+	for _, check := range def.DbChecks {
 		dbChecks = append(dbChecks, &dbCheck{
 			query:    check.DbQuery,
 			response: check.DbResponse,
@@ -271,7 +297,7 @@ func makeOneTest(filePath string, testDefinition *TestDefinition) []*testImpl {
 		})
 	}
 	test.DbChecks = dbChecks
-	return []*testImpl{test}
+	return test
 }
 
 func readObsoleteDatabaseCheck(def *TestDefinition, testCase *CaseData) ([]models.DatabaseCheck, error) {

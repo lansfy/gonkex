@@ -1,0 +1,23 @@
+- name: WHEN backend returns not expected http code service MUST fail with error
+  method: POST
+  path: /do
+  response:
+    200: |
+      {"status": "error"}
+  mocks:
+    backend:
+      calls: 1
+      strategy: constant
+      body: "FAIL"
+      statusCode: 400
+
+- name: WHEN backend drop request service MUST fail with error
+  method: POST
+  path: /do
+  response:
+    200: |
+      {"status": "error"}
+  mocks:
+    backend:
+      calls: 1
+      strategy: dropRequest
