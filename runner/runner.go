@@ -19,6 +19,7 @@ import (
 	"github.com/lansfy/gonkex/mocks"
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/output"
+	"github.com/lansfy/gonkex/output/allure"
 	"github.com/lansfy/gonkex/storage"
 	"github.com/lansfy/gonkex/testloader"
 	"github.com/lansfy/gonkex/variables"
@@ -144,6 +145,18 @@ func (r *Runner) AddCheckers(c ...checker.CheckerInterface) {
 func (r *Runner) Run() error {
 	if filterFlag != "" {
 		setStringFilter(r.loader, filterFlag)
+	}
+
+	if allureDirFlag != "" {
+		allureOutput, err := allure.NewOutput("Gonkex", allureDirFlag)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			// ? add error check here
+			_ = allureOutput.Finalize()
+		}()
+		r.AddOutput(allureOutput)
 	}
 
 	tests, err := r.loader.Load()

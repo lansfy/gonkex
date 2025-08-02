@@ -87,6 +87,10 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 		setStringFilter(yamlLoader, os.Getenv("GONKEX_FILE_FILTER"))
 	}
 
+	if allureDirFlag == "" {
+		allureDirFlag = os.Getenv("GONKEX_ALLURE_DIR")
+	}
+
 	handler := &testingHandler{
 		t: t,
 	}

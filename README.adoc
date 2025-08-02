@@ -1872,12 +1872,9 @@ Example:
 [source,yaml]
 ----
   ...
-  dbChecks:
-    - dbQuery: >
-        SELECT code, partner_id FROM mark_paid_schedule AS m WHERE DATE(m.purchase_date) BETWEEN '{{ .fromDate }}' AND '{{ .toDate }}'
-
-      dbResponse:
-        - '{"code":"{{ .cert1 }}","partner_id":1}'
+  dbQuery: "SELECT code, partner_id FROM mark_paid_schedule AS m WHERE DATE(m.purchase_date) BETWEEN '{{ .fromDate }}' AND '{{ .toDate }}'"
+  dbResponse:
+    - '{"code":"{{ .cert1 }}","partner_id":1}'
   ...
   cases:
     - dbQueryArgs:
@@ -1889,10 +1886,15 @@ Example:
     - dbQueryArgs:
         fromDate: "2030-02-01"
         toDate: "2030-02-05"
-      dbResponseFull:
+      dbResponse:
         - '{"code":"GIFT100000-000002","partner_id":1}'
         - '{"code":"GIFT100000-000003","partner_id":1}'
 ----
+
+[WARNING]
+====
+For some reason this functionality works for legacy style only.
+====
 
 === Ignoring ordering in database response
 
