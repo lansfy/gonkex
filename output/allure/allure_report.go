@@ -3,6 +3,7 @@ package allure
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/lansfy/gonkex/models"
@@ -20,7 +21,7 @@ func NewOutput(suiteName, location string) (*Output, error) {
 	}
 
 	err = mkDir(resultsDir, 0o777)
-	if err != nil {
+	if err != nil && !os.IsExist(err) {
 		return nil, err
 	}
 
