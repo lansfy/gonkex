@@ -82,9 +82,8 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 		proxyURL = httpURL
 	}
 
-	yamlLoader := yaml_file.NewLoader(opts.TestsDir)
-	if os.Getenv("GONKEX_FILE_FILTER") != "" {
-		setStringFilter(yamlLoader, os.Getenv("GONKEX_FILE_FILTER"))
+	if filterFlag == "" {
+		filterFlag = os.Getenv("GONKEX_FILE_FILTER")
 	}
 
 	if allureDirFlag == "" {
@@ -95,7 +94,7 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 		t: t,
 	}
 	runner := New(
-		yamlLoader,
+		yaml_file.NewLoader(opts.TestsDir),
 		&RunnerOpts{
 			Host:  serverURL,
 			Mocks: opts.Mocks,
