@@ -1,0 +1,17 @@
+- name: loader MUST ignore all duplicates file
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1", "file1", "file1"]
+     fs:
+        file1: |
+           tables:
+              table1:
+                - field1: "value1"
+                  field2: 1
+
+  response: 
+    200: |
+       table1:
+       - field1: value1
+         field2: 1

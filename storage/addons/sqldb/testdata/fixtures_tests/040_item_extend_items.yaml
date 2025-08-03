@@ -1,0 +1,35 @@
+- name: loader MUST support extend of existing items
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1"]
+     fs:
+        file1: |
+           tables:
+             table1:
+               - $name: ref1
+                 f1: value1
+                 f2: value2
+
+             table2:
+               - $name: ref2
+                 $extend: ref1
+                 f1: value1 overwritten
+                 f3: $eval("1" || "2" || 3 + 5)
+
+             table3:
+               - $extend: ref2
+                 f3: eval overwritten
+  response: 
+    200: |
+       table1:
+       - f1: value1
+         f2: value2
+       table2:
+       - f1: value1 overwritten
+         f2: value2
+         f3: RAW="1" || "2" || 3 + 5
+       table3:
+       - f1: value1 overwritten
+         f2: value2
+         f3: eval overwritten

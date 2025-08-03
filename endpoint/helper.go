@@ -122,6 +122,10 @@ func (h *helperImpl) SetResponseAsBytes(response []byte) error {
 	return nil
 }
 
+func (h *helperImpl) SetContentType(contentType string) {
+	h.contentType = contentType
+}
+
 func (h *helperImpl) SetStatusCode(code int) {
 	h.responseCode = code
 }

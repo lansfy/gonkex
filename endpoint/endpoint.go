@@ -37,6 +37,8 @@ type Helper interface {
 
 	// SetStatusCode sets the HTTP response status code.
 	SetStatusCode(code int)
+	// SetContentType sets custom content type to HTTP response.
+	SetContentType(contentType string)
 }
 
 type Endpoint func(Helper) error

@@ -1,15 +1,10 @@
 package sqldb
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
-	"os"
 	"sort"
 	"strings"
-	"testing/fstest"
-
-	"github.com/lansfy/gonkex/storage/addons/sqldb/testfixtures"
 
 	"gopkg.in/yaml.v2"
 )
@@ -35,44 +30,15 @@ type loadedTable struct {
 }
 
 type loadContext struct {
-	location       string
-	files          map[string]bool
+	loader         ContentLoader
 	tables         []loadedTable
 	refsDefinition map[string]tableRow
 	refsInserted   map[string]tableRow
 }
 
-func LoadFixtures(dialect SQLType, db *sql.DB, location string, names []string) error {
-	data, err := convertToTestFixtures(location, names)
-	if err != nil {
-		return err
-	}
-
-	vfs := fstest.MapFS{
-		virtualFileName: &fstest.MapFile{
-			Data: data,
-		},
-	}
-
-	fixtures, err := testfixtures.New(
-		testfixtures.Database(db),
-		testfixtures.Dialect(string(dialect)),
-		testfixtures.FS(vfs),
-		testfixtures.FilesMultiTables(virtualFileName),
-		testfixtures.DangerousSkipTestDatabaseCheck(),
-		testfixtures.SkipTableChecksumComputation(),
-		testfixtures.ResetSequencesTo(1),
-	)
-	if err != nil {
-		return err
-	}
-	return fixtures.Load()
-}
-
-func convertToTestFixtures(location string, names []string) ([]byte, error) {
+func ConvertToTestFixtures(loader ContentLoader, names []string) ([]byte, error) {
 	ctx := &loadContext{
-		location:       location,
-		files:          map[string]bool{},
+		loader:         loader,
 		refsDefinition: map[string]tableRow{},
 		refsInserted:   map[string]tableRow{},
 	}
@@ -93,42 +59,14 @@ func convertToTestFixtures(location string, names []string) ([]byte, error) {
 	return data, nil
 }
 
-func findFixturePath(location, name string) (string, error) {
-	candidates := []string{
-		location + "/" + name,
-		location + "/" + name + ".yml",
-		location + "/" + name + ".yaml",
-	}
-
-	var err error
-	for _, candidate := range candidates {
-		if _, err = os.Stat(candidate); err == nil {
-			return candidate, nil
-		}
-	}
-	if os.IsNotExist(err) {
-		return "", errors.New("file not exists")
-	}
-	return "", err
-}
-
 func (ctx *loadContext) loadFile(name string) error {
-	file, err := findFixturePath(ctx.location, name)
+	_, data, err := ctx.loader.Load(name)
 	if err != nil {
 		return err
 	}
-
-	// skip previously loaded files
-	if ctx.files[file] {
+	if len(data) == 0 {
 		return nil
 	}
-	ctx.files[file] = true
-
-	data, err := os.ReadFile(file)
-	if err != nil {
-		return err
-	}
-
 	return ctx.loadYml(data)
 }
 
