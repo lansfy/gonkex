@@ -1,0 +1,20 @@
+- name: WHEN $extend consists from referens loader MUST fail with error
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1"]
+     fs:
+        file1: |
+           tables:
+             table1:
+               - $name: ref1
+                 f1: value1
+                 f2: value2
+
+             table2:
+               - $name: ref2
+                 $extend: wrongref
+                 f1: value1 overwritten
+  response: 
+    200: |-
+       error: processing table 'table2': undefined reference 'wrongref'

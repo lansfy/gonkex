@@ -1,0 +1,59 @@
+- name: loader MUST support extend of templates items
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1"]
+     fs:
+        file1: |
+           templates:
+             baseTpl:
+               f1: tplVal1
+             ref3:
+               $extend: baseTpl
+               f2: tplVal2
+           tables:
+             table1:
+               - $extend: baseTpl
+                 f3: value3
+               - $extend: ref3
+                 f3: value33
+  response: 
+    200: |
+       table1:
+       - f1: tplVal1
+         f3: value3
+       - f1: tplVal1
+         f2: tplVal2
+         f3: value33
+
+- name: loader MUST support load of template from other file
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1"]
+     fs:
+        file1: |
+           inherits:
+             - file2
+           tables:
+             table1:
+               - $extend: baseTpl
+                 f3: value3
+               - $extend: ref3
+                 f3: value33
+
+        file2: |
+           templates:
+             baseTpl:
+               f1: tplVal1
+             ref3:
+               $extend: baseTpl
+               f2: tplVal2
+  response: 
+    200: |
+       table1:
+       - f1: tplVal1
+         f3: value3
+       - f1: tplVal1
+         f2: tplVal2
+         f3: value33

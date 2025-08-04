@@ -1,9 +1,0 @@
-table1:
-- f1: value1
-  f2: value2
-table2:
-- f1: value2
-  f2: value1
-table3:
-- f1: value1
-  f2: value2

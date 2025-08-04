@@ -1,0 +1,20 @@
+- name: loader MUST successfully substitute values via custom actions
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1"]
+     fs:
+        file1: |
+           tables:
+              table1:
+                - field1: $custom_action(value1)
+                  field2: 1
+                - field1: $custom_action(value2)
+                  field2: 2
+  response: 
+    200: |
+       table1:
+       - field1: '!!!value1!!!'
+         field2: 1
+       - field1: '!!!value2!!!'
+         field2: 2

@@ -1,27 +1,12 @@
-package sqldb
+package fixtures
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
-	"os"
-	"sort"
 	"strings"
-	"testing/fstest"
-
-	"github.com/lansfy/gonkex/storage/addons/sqldb/testfixtures"
 
 	"gopkg.in/yaml.v2"
 )
-
-const (
-	actionExtend    = "$extend"
-	actionEval      = "$eval"
-	virtualFileName = "fake.yml"
-)
-
-type tableRow map[string]interface{}
-type table []tableRow
 
 type fixture struct {
 	Inherits  []string
@@ -29,106 +14,22 @@ type fixture struct {
 	Templates yaml.MapSlice
 }
 
-type loadedTable struct {
-	name string
-	rows table
-}
-
 type loadContext struct {
-	location       string
-	files          map[string]bool
-	tables         []loadedTable
-	refsDefinition map[string]tableRow
-	refsInserted   map[string]tableRow
-}
-
-func LoadFixtures(dialect SQLType, db *sql.DB, location string, names []string) error {
-	data, err := convertToTestFixtures(location, names)
-	if err != nil {
-		return err
-	}
-
-	vfs := fstest.MapFS{
-		virtualFileName: &fstest.MapFile{
-			Data: data,
-		},
-	}
-
-	fixtures, err := testfixtures.New(
-		testfixtures.Database(db),
-		testfixtures.Dialect(string(dialect)),
-		testfixtures.FS(vfs),
-		testfixtures.FilesMultiTables(virtualFileName),
-		testfixtures.DangerousSkipTestDatabaseCheck(),
-		testfixtures.SkipTableChecksumComputation(),
-		testfixtures.ResetSequencesTo(1),
-	)
-	if err != nil {
-		return err
-	}
-	return fixtures.Load()
-}
-
-func convertToTestFixtures(location string, names []string) ([]byte, error) {
-	ctx := &loadContext{
-		location:       location,
-		files:          map[string]bool{},
-		refsDefinition: map[string]tableRow{},
-		refsInserted:   map[string]tableRow{},
-	}
-
-	// gather data from files
-	for _, name := range names {
-		err := ctx.loadFile(name)
-		if err != nil {
-			return nil, fmt.Errorf("parse file for fixture %q: %w", name, err)
-		}
-	}
-
-	data, err := ctx.generateTestFixtures()
-	if err != nil {
-		return nil, fmt.Errorf("generate global fixtures: %w", err)
-	}
-
-	return data, nil
-}
-
-func findFixturePath(location, name string) (string, error) {
-	candidates := []string{
-		location + "/" + name,
-		location + "/" + name + ".yml",
-		location + "/" + name + ".yaml",
-	}
-
-	var err error
-	for _, candidate := range candidates {
-		if _, err = os.Stat(candidate); err == nil {
-			return candidate, nil
-		}
-	}
-	if os.IsNotExist(err) {
-		return "", errors.New("file not exists")
-	}
-	return "", err
+	loader         ContentLoader
+	tables         []*Collection
+	refsDefinition map[string]Item
+	refsInserted   map[string]Item
+	customActions  map[string]func(string) string
 }
 
 func (ctx *loadContext) loadFile(name string) error {
-	file, err := findFixturePath(ctx.location, name)
+	_, data, err := ctx.loader.Load(name)
 	if err != nil {
 		return err
 	}
-
-	// skip previously loaded files
-	if ctx.files[file] {
+	if len(data) == 0 {
 		return nil
 	}
-	ctx.files[file] = true
-
-	data, err := os.ReadFile(file)
-	if err != nil {
-		return err
-	}
-
 	return ctx.loadYml(data)
 }
 
@@ -153,7 +54,7 @@ func (ctx *loadContext) loadYml(data []byte) error {
 		}
 
 		fields := template.Value.(yaml.MapSlice)
-		row := make(tableRow, len(fields))
+		row := make(Item, len(fields))
 		for _, field := range fields {
 			key := field.Key.(string)
 			row[key] = field.Value
@@ -179,18 +80,18 @@ func (ctx *loadContext) loadYml(data []byte) error {
 		if !ok {
 			return errors.New("expected array at root level")
 		}
-		rows := make(table, len(sourceRows))
+		rows := make([]Item, len(sourceRows))
 		for i := range sourceRows {
 			sourceFields := sourceRows[i].(yaml.MapSlice)
-			fields := make(tableRow, len(sourceFields))
+			fields := make(Item, len(sourceFields))
 			for j := range sourceFields {
 				fields[sourceFields[j].Key.(string)] = sourceFields[j].Value
 			}
 			rows[i] = fields
 		}
-		lt := loadedTable{
-			name: sourceTable.Key.(string),
-			rows: rows,
+		lt := &Collection{
+			Name:  sourceTable.Key.(string),
+			Items: rows,
 		}
 		ctx.tables = append(ctx.tables, lt)
 	}
@@ -198,50 +99,34 @@ func (ctx *loadContext) loadYml(data []byte) error {
 	return nil
 }
 
-func (ctx *loadContext) generateTestFixtures() ([]byte, error) {
-	tables := []tableContent{}
+func (ctx *loadContext) generateSummary() ([]*Collection, error) {
+	tables := []*Collection{}
 	for _, lt := range ctx.tables {
-		items, err := ctx.processTableContent(lt.rows)
+		items, err := ctx.processTableContent(lt.Items)
 		if err != nil {
-			return nil, fmt.Errorf("processing table '%s': %w", lt.name, err)
+			return nil, fmt.Errorf("processing table '%s': %w", lt.Name, err)
 		}
 		// append rows to global tables
 		found := false
 		for idx := range tables {
-			if tables[idx].name == lt.name {
-				tables[idx].items = append(tables[idx].items, items...)
+			if tables[idx].Name == lt.Name {
+				tables[idx].Items = append(tables[idx].Items, items...)
 				found = true
 				break
 			}
 		}
 
 		if !found {
-			tables = append(tables, tableContent{name: lt.name, items: items})
+			tables = append(tables, &Collection{
+				Name:  lt.Name,
+				Items: items,
+			})
 		}
 	}
-
-	yamlTables := yaml.MapSlice{}
-	for _, t := range tables {
-		yamlTables = append(yamlTables, yaml.MapItem{
-			Key:   t.name,
-			Value: t.items,
-		})
-	}
-
-	out, err := yaml.Marshal(yamlTables)
-	if err != nil {
-		return nil, err
-	}
-
-	return out, nil
+	return tables, nil
 }
 
-type tableContent struct {
-	name  string
-	items []yaml.MapSlice
-}
-
-func (ctx *loadContext) processTableContent(rows table) ([]yaml.MapSlice, error) {
+func (ctx *loadContext) processTableContent(rows []Item) ([]Item, error) {
 	// $extend keyword allows to import values from a named row
 	for i, row := range rows {
 		if _, ok := row[actionExtend]; !ok {
@@ -258,7 +143,7 @@ func (ctx *loadContext) processTableContent(rows table) ([]yaml.MapSlice, error)
 		rows[i] = baseRow
 	}
 
-	items := []yaml.MapSlice{}
+	items := []Item{}
 	for _, row := range rows {
 		values, err := ctx.loadRow(row)
 		if err != nil {
@@ -269,7 +154,7 @@ func (ctx *loadContext) processTableContent(rows table) ([]yaml.MapSlice, error)
 	return items, nil
 }
 
-func (ctx *loadContext) loadRow(row tableRow) (yaml.MapSlice, error) {
+func (ctx *loadContext) loadRow(row Item) (Item, error) {
 	fields := make([]string, 0, len(row))
 	for name := range row {
 		if !strings.HasPrefix(name, "$") {
@@ -277,19 +162,12 @@ func (ctx *loadContext) loadRow(row tableRow) (yaml.MapSlice, error) {
 		}
 	}
 
-	sort.Strings(fields)
-
-	rowValues := tableRow{}
-	values := yaml.MapSlice{}
+	rowValues := Item{}
 	for _, name := range fields {
 		val, err := ctx.resolveExpression(row[name])
 		if err != nil {
-			return values, err
+			return rowValues, err
 		}
-		values = append(values, yaml.MapItem{
-			Key:   name,
-			Value: val,
-		})
 		rowValues[name] = val
 	}
 
@@ -303,12 +181,12 @@ func (ctx *loadContext) loadRow(row tableRow) (yaml.MapSlice, error) {
 		ctx.refsInserted[name] = rowValues
 	}
 
-	return values, nil
+	return rowValues, nil
 }
 
 // resolveExpression converts expressions starting with dollar sign into a value
 // supporting expressions:
-// - $eval()               - executes an SQL expression, e.g. $eval(CURRENT_DATE)
+// - $some_action(...)     - transform value in bracked with specified action's function
 // - $recordName.fieldName - using value of previously inserted named record
 func (ctx *loadContext) resolveExpression(value interface{}) (interface{}, error) {
 	expr, ok := value.(string)
@@ -316,11 +194,18 @@ func (ctx *loadContext) resolveExpression(value interface{}) (interface{}, error
 		return value, nil
 	}
 
-	if strings.HasPrefix(expr, actionEval+"(") {
+	idxStart := strings.Index(expr, "(")
+	if idxStart != -1 {
 		if !strings.HasSuffix(expr, ")") {
-			return "", fmt.Errorf("incorrect %s() usage: %s", actionEval, expr)
+			return "", fmt.Errorf("incorrect action usage '$someaction(...)' for '%s'", expr)
 		}
-		return "RAW=" + expr[len(actionEval)+1:len(expr)-1], nil
+		action := expr[1:idxStart]
+		actionValue := expr[idxStart+1 : len(expr)-1]
+		f, ok := ctx.customActions[action]
+		if !ok {
+			return "", fmt.Errorf("unknown action '%s' in '%s'", action, expr)
+		}
+		return f(actionValue), nil
 	}
 
 	value, err := resolveFieldReference(ctx.refsInserted, expr)
@@ -332,14 +217,14 @@ func (ctx *loadContext) resolveExpression(value interface{}) (interface{}, error
 }
 
 // resolveReference finds previously stored reference by its name
-func resolveReference(refs map[string]tableRow, refName string) (tableRow, error) {
+func resolveReference(refs map[string]Item, refName string) (Item, error) {
 	target, ok := refs[refName]
 	if !ok {
 		return nil, fmt.Errorf("undefined reference '%s'", refName)
 	}
 	// make a copy of referencing data to prevent spoiling the source
 	// by the way removing $-records from base row
-	targetCopy := make(tableRow, len(target))
+	targetCopy := make(Item, len(target))
 	for k, v := range target {
 		if k == "" || k[0] != '$' {
 			targetCopy[k] = v
@@ -351,7 +236,7 @@ func resolveReference(refs map[string]tableRow, refName string) (tableRow, error
 
 // resolveFieldReference finds previously stored reference by name
 // and return value of its field
-func resolveFieldReference(refs map[string]tableRow, ref string) (interface{}, error) {
+func resolveFieldReference(refs map[string]Item, ref string) (interface{}, error) {
 	parts := strings.SplitN(ref, ".", 2)
 	if len(parts) < 2 || len(parts[0]) < 2 || len(parts[1]) < 1 {
 		return nil, fmt.Errorf("invalid reference '%s', correct form is '$refName.field'", ref)

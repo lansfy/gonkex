@@ -1,0 +1,60 @@
+- name: WHEN loader find several templates with same name parser MUST fail with error
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1", "file2"]
+     fs:
+        file1: |
+           templates:
+             baseTpl:
+               f1: tplVal1
+           tables:
+             table1:
+               - f3: value3
+        file2: |
+           templates:
+             baseTpl:
+               f2: tplVal2
+           tables:
+             table1:
+               - f3: value3
+  response: 
+    200: |-
+       error: parse file for fixture "file2": unable to load template baseTpl: duplicating ref name
+
+- name: WHEN file from 'inherits' not exists loader MUST fail with error
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1"]
+     fs:
+        file1: |
+           inherits:
+             - file2
+           tables:
+             table1:
+               - $extend: baseTpl
+                 f3: value3
+               - $extend: ref3
+                 f3: value33
+
+  response: 
+    200: |-
+       error: parse file for fixture "file1": file not exists
+
+- name: WHEN template extend unknown template loader MUST fail with error
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1"]
+     fs:
+        file1: |
+           templates:
+             baseTpl:
+               f1: tplVal1
+             ref3:
+               $extend: wrongTpl
+               f2: tplVal2
+  response: 
+    200: |-
+       error: parse file for fixture "file1": undefined reference 'wrongTpl'
