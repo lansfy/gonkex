@@ -1,0 +1,92 @@
+- name: loader MUST successfully process simple fixtures file
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1"]
+     fs:
+        file1: |
+           tables:
+              table1:
+                - field1: "value1"
+                  field2: 1
+                - field1: "value2"
+                  field2: 2
+                  field3: 2.569947773654566473
+              table2:
+                - field4: false
+                  field5: null
+                  field1: '"'
+                - field1: "'"
+                  field5:
+                    - 1
+                    - '2'
+              table3:
+                - field1: $custom_action(NOW())
+
+  response: 
+    200: |
+       table1:
+       - field1: value1
+         field2: 1
+       - field1: value2
+         field2: 2
+         field3: 2.5699477736545666
+       table2:
+       - field1: '"'
+         field4: false
+         field5: null
+       - field1: ''''
+         field5:
+         - 1
+         - "2"
+       table3:
+       - field1: '!!!NOW()!!!'
+
+- name: loader MUST join data for same collections from different files
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1", "file2"]
+     fs:
+        file1: |
+           tables:
+              table1:
+                - field1: "value1"
+                  field2: 1
+              table2:
+                - field4: false
+                  field5: null
+                  field1: '"'
+              table3:
+                - field1: $custom_action(value1)
+        file2: |
+           tables:
+              table1:
+                - field1: "value2"
+                  field2: 2
+              table2:
+                - field1: "'"
+                  field5:
+                    - 1
+                    - '2'
+              table3:
+                - field1: $custom_action(value2)
+
+  response: 
+    200: |
+       table1:
+       - field1: value1
+         field2: 1
+       - field1: value2
+         field2: 2
+       table2:
+       - field1: '"'
+         field4: false
+         field5: null
+       - field1: ''''
+         field5:
+         - 1
+         - "2"
+       table3:
+       - field1: '!!!value1!!!'
+       - field1: '!!!value2!!!'

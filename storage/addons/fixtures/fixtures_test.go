@@ -1,4 +1,4 @@
-package sqldb_test
+package fixtures
 
 import (
 	"errors"
@@ -7,7 +7,6 @@ import (
 
 	"github.com/lansfy/gonkex/endpoint"
 	"github.com/lansfy/gonkex/runner"
-	"github.com/lansfy/gonkex/storage/addons/sqldb"
 )
 
 type testLoaderImpl struct {
@@ -48,7 +47,15 @@ func process(h endpoint.Helper) error {
 		known = map[string]string{}
 	}
 
-	data, err := sqldb.ConvertToTestFixtures(&testLoaderImpl{known}, input.Names)
+	opts := &LoadDataOpts{
+		CustomActions: map[string]func(string) string{
+			"custom_action": func(value string) string {
+				return "!!!" + value + "!!!"
+			},
+		},
+	}
+
+	data, err := GenerateYamlResult(&testLoaderImpl{known}, input.Names, opts)
 	if err != nil {
 		return wrap(err)
 	}
@@ -62,7 +69,7 @@ func init() {
 
 func Test_generateTestFixtures(t *testing.T) {
 	opts := &runner.RunWithTestingOpts{
-		TestsDir:     "testdata/fixtures_tests",
+		TestsDir:     "testdata/tests",
 		OnFailPolicy: runner.PolicyContinue,
 		HelperEndpoints: endpoint.EndpointMap{
 			"process": process,

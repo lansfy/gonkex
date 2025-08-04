@@ -4,6 +4,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"testing/fstest"
+
+	"github.com/lansfy/gonkex/storage/addons/fixtures"
+	"github.com/lansfy/gonkex/storage/addons/sqldb/testfixtures"
 )
 
 type SQLType string
@@ -45,7 +49,40 @@ func (l *Storage) GetType() string {
 }
 
 func (l *Storage) LoadFixtures(location string, names []string) error {
-	return LoadFixtures(l.dbType, l.db, location, names)
+	const virtualFileName = "fake.yml"
+
+	opts := &fixtures.LoadDataOpts{
+		CustomActions: map[string]func(string) string{
+			"eval": func(value string) string {
+				return "RAW=" + value
+			},
+		},
+	}
+
+	data, err := fixtures.GenerateYamlResult(fixtures.CreateFileLoader(location), names, opts)
+	if err != nil {
+		return fmt.Errorf("generate global fixtures: %w", err)
+	}
+
+	vfs := fstest.MapFS{
+		virtualFileName: &fstest.MapFile{
+			Data: data,
+		},
+	}
+
+	loader, err := testfixtures.New(
+		testfixtures.Database(l.db),
+		testfixtures.Dialect(string(l.dbType)),
+		testfixtures.FS(vfs),
+		testfixtures.FilesMultiTables(virtualFileName),
+		testfixtures.DangerousSkipTestDatabaseCheck(),
+		testfixtures.SkipTableChecksumComputation(),
+		testfixtures.ResetSequencesTo(1),
+	)
+	if err != nil {
+		return err
+	}
+	return loader.Load()
 }
 
 func (l *Storage) ExecuteQuery(query string) ([]json.RawMessage, error) {
