@@ -5,7 +5,7 @@
      names: ["file1"]
      fs:
         file1: |
-           tables:
+           collections:
              table1:
                - $name: ref1
                  f1: value1

@@ -1,0 +1,19 @@
+- name: loader MUST successfully load files with multiple collection types
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1"]
+     types: ["sets", "hashes"]
+     fs:
+        file1: |
+           sets:
+              table1:
+                - field1: "value1"
+                  field2: 1
+           wrongType:
+              table1:
+                - field1: "value2"
+                  field2: 2
+  response: 
+    200: |-
+       error: parse file for fixture "file1": unknown item type 'wrongType' found

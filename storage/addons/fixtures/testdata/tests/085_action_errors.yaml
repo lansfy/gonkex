@@ -5,7 +5,7 @@
      names: ["file1"]
      fs:
         file1: |
-           tables:
+           collections:
               table1:
                 - field1: $dummy(value1)
                   field2: 1
@@ -13,7 +13,7 @@
                   field2: 2
   response: 
     200: |-
-       error: processing table 'table1': unknown action 'dummy' in '$dummy(value1)'
+       error: processing collection 'table1': unknown action 'dummy' in '$dummy(value1)'
 
 - name: WHEN action value not closed with round bracket loader MUST fail with error
   method: GET
@@ -22,7 +22,7 @@
      names: ["file1"]
      fs:
         file1: |
-           tables:
+           collections:
               table1:
                 - field1: $custom_action(value1
                   field2: 1
@@ -30,4 +30,4 @@
                   field2: 2
   response: 
     200: |-
-       error: processing table 'table1': incorrect action usage '$someaction(...)' for '$custom_action(value1'
+       error: processing collection 'table1': incorrect action usage '$someaction(...)' for '$custom_action(value1'

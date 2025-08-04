@@ -8,14 +8,14 @@
            templates:
              baseTpl:
                f1: tplVal1
-           tables:
+           collections:
              table1:
                - f3: value3
         file2: |
            templates:
              baseTpl:
                f2: tplVal2
-           tables:
+           collections:
              table1:
                - f3: value3
   response: 
@@ -31,7 +31,7 @@
         file1: |
            inherits:
              - file2
-           tables:
+           collections:
              table1:
                - $extend: baseTpl
                  f3: value3

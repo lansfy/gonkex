@@ -5,7 +5,7 @@
      names: ["file1"]
      fs:
         file1: |
-           tables:
+           collections:
               table1:
                 - field1: "value1"
                   field2: 1
@@ -49,7 +49,7 @@
      names: ["file1", "file2"]
      fs:
         file1: |
-           tables:
+           collections:
               table1:
                 - field1: "value1"
                   field2: 1
@@ -60,7 +60,7 @@
               table3:
                 - field1: $custom_action(value1)
         file2: |
-           tables:
+           collections:
               table1:
                 - field1: "value2"
                   field2: 2

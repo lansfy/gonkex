@@ -13,7 +13,7 @@
     names: ["file1", "file2"]
     fs:
        file1: |
-          tables:
+          collections:
              table1:
                - field1: "value1"
                  field2: 1

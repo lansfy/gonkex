@@ -34,6 +34,7 @@ func process(h endpoint.Helper) error {
 	}
 
 	var input struct {
+		Types []string          `yaml:"types"`
 		Names []string          `yaml:"names"`
 		FS    map[string]string `yaml:"fs"`
 	}
@@ -47,7 +48,12 @@ func process(h endpoint.Helper) error {
 		known = map[string]string{}
 	}
 
+	if input.Types == nil {
+		input.Types = []string{"collections"}
+	}
+
 	opts := &LoadDataOpts{
+		AllowedTypes: input.Types,
 		CustomActions: map[string]func(string) string{
 			"custom_action": func(value string) string {
 				return "!!!" + value + "!!!"
@@ -55,7 +61,12 @@ func process(h endpoint.Helper) error {
 		},
 	}
 
-	data, err := GenerateYamlResult(&testLoaderImpl{known}, input.Names, opts)
+	coll, err := LoadData(&testLoaderImpl{known}, input.Names, opts)
+	if err != nil {
+		return wrap(err)
+	}
+
+	data, err := DumpCollection(coll, len(input.Types) != 1)
 	if err != nil {
 		return wrap(err)
 	}

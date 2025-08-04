@@ -8,10 +8,15 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	actionExtend = "$extend"
+	actionName   = "$name"
+)
+
 type fixture struct {
-	Inherits  []string
-	Tables    yaml.MapSlice
-	Templates yaml.MapSlice
+	Inherits    []string                 `yaml:"inherits"`
+	Templates   yaml.MapSlice            `yaml:"templates"`
+	Collections map[string]yaml.MapSlice `yaml:",inline"`
 }
 
 type loadContext struct {
@@ -19,7 +24,8 @@ type loadContext struct {
 	tables         []*Collection
 	refsDefinition map[string]Item
 	refsInserted   map[string]Item
-	customActions  map[string]func(string) string
+	opts           LoadDataOpts
+	allowedTypes   map[string]bool
 }
 
 func (ctx *loadContext) loadFile(name string) error {
@@ -62,7 +68,7 @@ func (ctx *loadContext) loadYml(data []byte) error {
 
 		if base, ok := row[actionExtend]; ok {
 			base := base.(string)
-			baseRow, err := resolveReference(ctx.refsDefinition, base)
+			baseRow, err := resolveItemReference(ctx.refsDefinition, base)
 			if err != nil {
 				return err
 			}
@@ -75,25 +81,32 @@ func (ctx *loadContext) loadYml(data []byte) error {
 		ctx.refsDefinition[name] = row
 	}
 
-	for _, sourceTable := range loadedFixture.Tables {
-		sourceRows, ok := sourceTable.Value.([]interface{})
-		if !ok {
-			return errors.New("expected array at root level")
+	for collType, collections := range loadedFixture.Collections {
+		if !ctx.allowedTypes[collType] {
+			return fmt.Errorf("unknown item type '%s' found", collType)
 		}
-		rows := make([]Item, len(sourceRows))
-		for i := range sourceRows {
-			sourceFields := sourceRows[i].(yaml.MapSlice)
-			fields := make(Item, len(sourceFields))
-			for j := range sourceFields {
-				fields[sourceFields[j].Key.(string)] = sourceFields[j].Value
+
+		for _, sourceTable := range collections {
+			sourceRows, ok := sourceTable.Value.([]interface{})
+			if !ok {
+				return errors.New("expected array at root level")
 			}
-			rows[i] = fields
+			rows := make([]Item, len(sourceRows))
+			for i := range sourceRows {
+				sourceFields := sourceRows[i].(yaml.MapSlice)
+				fields := make(Item, len(sourceFields))
+				for j := range sourceFields {
+					fields[sourceFields[j].Key.(string)] = sourceFields[j].Value
+				}
+				rows[i] = fields
+			}
+			lt := &Collection{
+				Name:  sourceTable.Key.(string),
+				Type:  collType,
+				Items: rows,
+			}
+			ctx.tables = append(ctx.tables, lt)
 		}
-		lt := &Collection{
-			Name:  sourceTable.Key.(string),
-			Items: rows,
-		}
-		ctx.tables = append(ctx.tables, lt)
 	}
 
 	return nil
@@ -104,12 +117,12 @@ func (ctx *loadContext) generateSummary() ([]*Collection, error) {
 	for _, lt := range ctx.tables {
 		items, err := ctx.processTableContent(lt.Items)
 		if err != nil {
-			return nil, fmt.Errorf("processing table '%s': %w", lt.Name, err)
+			return nil, fmt.Errorf("processing %s '%s': %w", strings.TrimSuffix(lt.Type, "s"), lt.Name, err)
 		}
 		// append rows to global tables
 		found := false
 		for idx := range tables {
-			if tables[idx].Name == lt.Name {
+			if tables[idx].Name == lt.Name && tables[idx].Type == lt.Type {
 				tables[idx].Items = append(tables[idx].Items, items...)
 				found = true
 				break
@@ -119,6 +132,7 @@ func (ctx *loadContext) generateSummary() ([]*Collection, error) {
 		if !found {
 			tables = append(tables, &Collection{
 				Name:  lt.Name,
+				Type:  lt.Type,
 				Items: items,
 			})
 		}
@@ -133,7 +147,7 @@ func (ctx *loadContext) processTableContent(rows []Item) ([]Item, error) {
 			continue
 		}
 		base := row[actionExtend].(string)
-		baseRow, err := resolveReference(ctx.refsDefinition, base)
+		baseRow, err := resolveItemReference(ctx.refsDefinition, base)
 		if err != nil {
 			return nil, err
 		}
@@ -155,15 +169,11 @@ func (ctx *loadContext) processTableContent(rows []Item) ([]Item, error) {
 }
 
 func (ctx *loadContext) loadRow(row Item) (Item, error) {
-	fields := make([]string, 0, len(row))
-	for name := range row {
-		if !strings.HasPrefix(name, "$") {
-			fields = append(fields, name)
-		}
-	}
-
 	rowValues := Item{}
-	for _, name := range fields {
+	for name := range row {
+		if strings.HasPrefix(name, "$") {
+			continue
+		}
 		val, err := ctx.resolveExpression(row[name])
 		if err != nil {
 			return rowValues, err
@@ -171,7 +181,7 @@ func (ctx *loadContext) loadRow(row Item) (Item, error) {
 		rowValues[name] = val
 	}
 
-	if name, ok := row["$name"]; ok {
+	if name, ok := row[actionName]; ok {
 		name := name.(string)
 		if _, ok := ctx.refsDefinition[name]; ok {
 			return nil, fmt.Errorf("duplicating ref name %s", name)
@@ -201,7 +211,7 @@ func (ctx *loadContext) resolveExpression(value interface{}) (interface{}, error
 		}
 		action := expr[1:idxStart]
 		actionValue := expr[idxStart+1 : len(expr)-1]
-		f, ok := ctx.customActions[action]
+		f, ok := ctx.opts.CustomActions[action]
 		if !ok {
 			return "", fmt.Errorf("unknown action '%s' in '%s'", action, expr)
 		}
@@ -216,8 +226,8 @@ func (ctx *loadContext) resolveExpression(value interface{}) (interface{}, error
 	return value, nil
 }
 
-// resolveReference finds previously stored reference by its name
-func resolveReference(refs map[string]Item, refName string) (Item, error) {
+// resolveItemReference finds previously stored reference by its name
+func resolveItemReference(refs map[string]Item, refName string) (Item, error) {
 	target, ok := refs[refName]
 	if !ok {
 		return nil, fmt.Errorf("undefined reference '%s'", refName)
@@ -234,8 +244,7 @@ func resolveReference(refs map[string]Item, refName string) (Item, error) {
 	return targetCopy, nil
 }
 
-// resolveFieldReference finds previously stored reference by name
-// and return value of its field
+// resolveFieldReference finds previously stored reference by name and return value of its field
 func resolveFieldReference(refs map[string]Item, ref string) (interface{}, error) {
 	parts := strings.SplitN(ref, ".", 2)
 	if len(parts) < 2 || len(parts[0]) < 2 || len(parts[1]) < 1 {

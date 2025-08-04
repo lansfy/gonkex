@@ -59,7 +59,12 @@ func (l *Storage) LoadFixtures(location string, names []string) error {
 		},
 	}
 
-	data, err := fixtures.GenerateYamlResult(fixtures.CreateFileLoader(location), names, opts)
+	coll, err := fixtures.LoadData(fixtures.CreateFileLoader(location), names, opts)
+	if err != nil {
+		return fmt.Errorf("load fixtures: %w", err)
+	}
+
+	data, err := fixtures.DumpCollection(coll, false)
 	if err != nil {
 		return fmt.Errorf("generate global fixtures: %w", err)
 	}
