@@ -52,6 +52,7 @@ func (l *Storage) LoadFixtures(location string, names []string) error {
 	const virtualFileName = "fake.yml"
 
 	opts := &fixtures.LoadDataOpts{
+		AllowedTypes: []string{"tables"},
 		CustomActions: map[string]func(string) string{
 			"eval": func(value string) string {
 				return "RAW=" + value
