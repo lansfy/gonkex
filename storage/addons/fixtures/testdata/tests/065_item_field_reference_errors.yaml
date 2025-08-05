@@ -5,7 +5,7 @@
      names: ["file1"]
      fs:
         file1: |
-           tables:
+           collections:
              table1:
                - $name: ref1
                  f1: value1
@@ -14,7 +14,7 @@
                - f2: $wrongref.f1
   response: 
     200: |-
-       error: processing table 'table3': undefined reference 'wrongref' in '$wrongref.f1'
+       error: processing collection 'table3': undefined reference 'wrongref' in '$wrongref.f1'
 
 - name: WHEN loader cannot find reference field loader MUST fail with error
   method: GET
@@ -23,7 +23,7 @@
      names: ["file1"]
      fs:
         file1: |
-           tables:
+           collections:
              table1:
                - $name: ref1
                  f1: value1
@@ -32,7 +32,7 @@
                - f2: $ref1.wrongfield
   response: 
     200: |-
-       error: processing table 'table3': undefined reference field 'wrongfield'
+       error: processing collection 'table3': undefined reference field 'wrongfield'
 
 - name: WHEN several items has same $ref name loader MUST fail with error
   method: GET
@@ -41,7 +41,7 @@
      names: ["file1"]
      fs:
         file1: |
-           tables:
+           collections:
              table1:
                - $name: ref1
                  f1: value1
@@ -51,7 +51,7 @@
                  f2: value2
   response: 
     200: |-
-       error: processing table 'table1': duplicating ref name ref1
+       error: processing collection 'table1': duplicating ref name ref1
 
 - name: WHEN reference path does not have entry name loader MUST fail with error
   method: GET
@@ -60,7 +60,7 @@
      names: ["file1"]
      fs:
         file1: |
-           tables:
+           collections:
              table1:
                - $name: ref1
                  f1: value1
@@ -69,7 +69,7 @@
                - f2: $.f1
   response: 
     200: |-
-       error: processing table 'table3': invalid reference '$.f1', correct form is '$refName.field'
+       error: processing collection 'table3': invalid reference '$.f1', correct form is '$refName.field'
 
 - name: WHEN reference path has only one segment loader MUST fail with error
   method: GET
@@ -78,7 +78,7 @@
      names: ["file1"]
      fs:
         file1: |
-           tables:
+           collections:
              table1:
                - $name: ref1
                  f1: value1
@@ -87,4 +87,4 @@
                - f2: $ref1
   response: 
     200: |-
-       error: processing table 'table3': invalid reference '$ref1', correct form is '$refName.field'
+       error: processing collection 'table3': invalid reference '$ref1', correct form is '$refName.field'

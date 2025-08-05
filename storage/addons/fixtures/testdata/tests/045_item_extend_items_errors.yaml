@@ -5,7 +5,7 @@
      names: ["file1"]
      fs:
         file1: |
-           tables:
+           collections:
              table1:
                - $name: ref1
                  f1: value1
@@ -17,4 +17,4 @@
                  f1: value1 overwritten
   response: 
     200: |-
-       error: processing table 'table2': undefined reference 'wrongref'
+       error: processing collection 'table2': undefined reference 'wrongref'

@@ -11,7 +11,7 @@
              ref3:
                $extend: baseTpl
                f2: tplVal2
-           tables:
+           collections:
              table1:
                - $extend: baseTpl
                  f3: value3
@@ -35,7 +35,7 @@
         file1: |
            inherits:
              - file2
-           tables:
+           collections:
              table1:
                - $extend: baseTpl
                  f3: value3

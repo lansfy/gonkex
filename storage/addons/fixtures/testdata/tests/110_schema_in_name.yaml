@@ -1,0 +1,26 @@
+- name: loader MUST successfully process simple fixtures file
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1"]
+     fs:
+        file1: |
+           collections:
+              namespace1.table1:
+                - field1: "value1"
+                  field2: 1
+                - field1: "value2"
+                  field2: 2
+              namespace2.table2:
+                - field4: false
+                  field5: null
+  response: 
+    200: |
+       namespace1.table1:
+       - field1: value1
+         field2: 1
+       - field1: value2
+         field2: 2
+       namespace2.table2:
+       - field4: false
+         field5: null

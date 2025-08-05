@@ -5,7 +5,7 @@
      names: ["file1"]
      fs:
         file1: |
-           tables: aaa
+           collections: aaa
   response: 
     200: |-
        error: parse file for fixture "file1": yaml: unmarshal errors:
@@ -18,8 +18,28 @@
      names: ["file1"]
      fs:
         file1: |
-           tables:
+           collections:
              table1: aaaa
   response: 
     200: |-
        error: parse file for fixture "file1": expected array at root level
+
+- name: WHEN file consists unknown collection types parser MUST fail with error
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1"]
+     types: ["sets"]
+     fs:
+        file1: |
+           sets:
+              table1:
+                - field1: "value1"
+                  field2: 1
+           wrongType:
+              table1:
+                - field1: "value2"
+                  field2: 2
+  response: 
+    200: |-
+       error: parse file for fixture "file1": unknown item type 'wrongType' found

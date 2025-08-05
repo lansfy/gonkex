@@ -4,34 +4,43 @@ import (
 	"fmt"
 )
 
-const (
-	actionExtend = "$extend"
-)
+type ContentLoader interface {
+	Load(name string) (string, []byte, error)
+}
 
 type Item map[string]interface{}
 
 type Collection struct {
 	Name  string
+	Type  string
 	Items []Item
 }
 
 type LoadDataOpts struct {
+	AllowedTypes  []string
 	CustomActions map[string]func(string) string
 }
 
 func LoadData(loader ContentLoader, names []string, opts *LoadDataOpts) ([]*Collection, error) {
+	var config LoadDataOpts
+	if opts != nil {
+		config = *opts
+	}
+
+	if config.CustomActions == nil {
+		config.CustomActions = map[string]func(string) string{}
+	}
+
 	ctx := &loadContext{
 		loader:         loader,
 		refsDefinition: map[string]Item{},
 		refsInserted:   map[string]Item{},
+		opts:           config,
+		allowedTypes:   map[string]bool{},
 	}
 
-	if opts != nil {
-		ctx.customActions = opts.CustomActions
-	}
-
-	if ctx.customActions == nil {
-		ctx.customActions = map[string]func(string) string{}
+	for _, name := range config.AllowedTypes {
+		ctx.allowedTypes[name] = true
 	}
 
 	// gather data from files
@@ -43,8 +52,4 @@ func LoadData(loader ContentLoader, names []string, opts *LoadDataOpts) ([]*Coll
 	}
 
 	return ctx.generateSummary()
-}
-
-type ContentLoader interface {
-	Load(name string) (string, []byte, error)
 }
