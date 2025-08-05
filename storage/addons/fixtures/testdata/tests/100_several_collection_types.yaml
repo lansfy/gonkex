@@ -27,16 +27,16 @@
   response: 
     200: |
        table1:
-       - field1: value1
-         field2: 1
-         _type: sets
-       - field1: value4
-         field2: 4
-         _type: sets
-       table1:
        - field1: value2
          field2: 2
          _type: hashes
        - field1: value3
          field2: 3
          _type: hashes
+       table1:
+       - field1: value1
+         field2: 1
+         _type: sets
+       - field1: value4
+         field2: 4
+         _type: sets

@@ -3,6 +3,7 @@ package fixtures
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/lansfy/gonkex/endpoint"
@@ -65,6 +66,14 @@ func process(h endpoint.Helper) error {
 	if err != nil {
 		return wrap(err)
 	}
+
+	// sort result to preserve element order
+	sort.Slice(coll, func(i, j int) bool {
+		if coll[i].Type == coll[j].Type {
+			return coll[i].Name < coll[j].Name
+		}
+		return coll[i].Type < coll[j].Type
+	})
 
 	data, err := DumpCollection(coll, len(input.Types) != 1)
 	if err != nil {
