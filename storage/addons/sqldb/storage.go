@@ -48,9 +48,9 @@ func (l *Storage) GetType() string {
 	return string(l.dbType)
 }
 
-func (l *Storage) LoadFixtures(location string, names []string) error {
-	const virtualFileName = "fake.yml"
+const virtualFileName = "fake.yml"
 
+func (l *Storage) LoadFixtures(location string, names []string) error {
 	opts := &fixtures.LoadDataOpts{
 		AllowedTypes: []string{"tables"},
 		CustomActions: map[string]func(string) string{
@@ -76,15 +76,7 @@ func (l *Storage) LoadFixtures(location string, names []string) error {
 		},
 	}
 
-	loader, err := testfixtures.New(
-		testfixtures.Database(l.db),
-		testfixtures.Dialect(string(l.dbType)),
-		testfixtures.FS(vfs),
-		testfixtures.FilesMultiTables(virtualFileName),
-		testfixtures.DangerousSkipTestDatabaseCheck(),
-		testfixtures.SkipTableChecksumComputation(),
-		testfixtures.ResetSequencesTo(1),
-	)
+	loader, err := testfixtures.New(createFixtureParams(l.dbType, l.db, vfs)...)
 	if err != nil {
 		return err
 	}
@@ -93,4 +85,17 @@ func (l *Storage) LoadFixtures(location string, names []string) error {
 
 func (l *Storage) ExecuteQuery(query string) ([]json.RawMessage, error) {
 	return ExecuteQuery(l.dbType, l.db, query)
+}
+
+// createFixtureParams allows to redefine parameters for test purpose
+var createFixtureParams = func(dbType SQLType, db *sql.DB, fs fstest.MapFS) []func(*testfixtures.Loader) error {
+	return []func(*testfixtures.Loader) error{
+		testfixtures.Database(db),
+		testfixtures.Dialect(string(dbType)),
+		testfixtures.FS(fs),
+		testfixtures.FilesMultiTables(virtualFileName),
+		testfixtures.DangerousSkipTestDatabaseCheck(),
+		testfixtures.SkipTableChecksumComputation(),
+		testfixtures.ResetSequencesTo(1),
+	}
 }

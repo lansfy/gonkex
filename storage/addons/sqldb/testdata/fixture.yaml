@@ -1,0 +1,7 @@
+tables:
+   table1:
+     - field1: "value1"
+       field2: 1
+     - field1: "value2"
+       field2: 2
+     - field1: $eval(NOW())
