@@ -62,17 +62,30 @@ func addMainError(source []error) []error {
 
 func compareBody(t models.TestInterface, expectedBody string, result *models.Result, typeName string,
 	decode func(body string) (interface{}, error)) ([]error, error) {
-	// decode expected body
-	expected, err := decode(expectedBody)
-	if err != nil {
-		return nil, fmt.Errorf("load definition in 'response' (status code '%d') as %s: %w", result.ResponseStatusCode, typeName, err)
+	// decode expected body and service response
+	expected, expectedErr := decode(expectedBody)
+	actual, responseErr := decode(result.ResponseBody)
+
+	if expectedErr != nil && responseErr != nil {
+		// both entities can't be parsed as provided type, so compare bodies as strings
+		return addMainError(compare.Compare(expectedBody, result.ResponseBody, compare.Params{})), nil
+	}
+
+	if expectedErr != nil {
+		errs := []error{
+			fmt.Errorf("failed to load 'response' definition (for status code '%d') as %s, so compare bodies as plain text",
+				result.ResponseStatusCode,
+				typeName,
+			),
+		}
+		errs = append(errs, addMainError(compare.Compare(expectedBody, result.ResponseBody, compare.Params{}))...)
+		return errs, nil
 	}
 
 	// decode actual body
-	actual, err := decode(result.ResponseBody)
-	if err != nil {
+	if responseErr != nil {
 		return []error{
-			colorize.NewEntityError("parse service %s as "+typeName, "response body").SetSubError(err),
+			colorize.NewEntityError("parse service %s as "+typeName, "response body").SetSubError(responseErr),
 		}, nil
 	}
 

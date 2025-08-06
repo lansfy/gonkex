@@ -106,7 +106,12 @@
       statusCode: 200
   meta:
     expected: |
-       load definition in 'response' (status code '200') as JSON: json: unexpected end of JSON input
+       1) failed to load 'response' definition (for status code '200') as JSON, so compare bodies as plain text
+       2) service 'response body' comparison: path '$': values do not match:
+            diff (--- expected vs +++ actual):
+       -{
+       +{}
+       +
 
 - name: WHEN required body consists matcher check and body does not match check MUST fail
   method: GET
