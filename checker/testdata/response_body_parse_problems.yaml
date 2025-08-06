@@ -1,0 +1,97 @@
+- name: WHEN required body is valid json and response is json check MUST compare response body as json
+  method: GET
+  path: /test/case
+  response:
+    200: >
+        {
+          "name": "value"
+        }
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/json"
+      body: >
+        {
+          "name": "value",
+          "extra": "extravalue"
+        }
+      statusCode: 200
+
+- name: WHEN required body is valid json and response is NOT valid json check MUST fail with parse response error
+  method: GET
+  path: /test/case
+  response:
+    200: >
+        {
+          "name": "value"
+        }
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/json"
+      body: "not a valid json"
+      statusCode: 200
+  meta:
+    expected: |
+       1) parse service 'response body' as JSON: json: invalid character 'o' in literal null (expecting 'u')
+
+- name: WHEN required body is NOT valid json and response is NOT valid json check MUST check content as plain text (1)
+  method: GET
+  path: /test/case
+  response:
+    200: "not a valid json"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/json"
+      body: "not a valid json"
+      statusCode: 200
+
+- name: WHEN required body is NOT valid json and response is NOT valid json check MUST check content as plain text (2)
+  method: GET
+  path: /test/case
+  response:
+    200: "not a valid json 1"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/json"
+      body: "not a valid json 2"
+      statusCode: 200
+  meta:
+    expected: |
+      1) service 'response body' comparison: path '$': values do not match:
+           expected: not a valid json 1
+             actual: not a valid json 2
+
+- name: WHEN required body is NOT valid json and response is valid json check MUST fail required body parse error
+  method: GET
+  path: /test/case
+  response:
+    200: "not a valid json"
+  mocks:
+    someservice:
+      strategy: constant
+      headers:
+         Content-Type: "application/json"
+      body: >
+        {
+          "name": "value",
+          "extra": "extravalue"
+        }
+      statusCode: 200
+  meta:
+    expected: |
+       1) failed to load 'response' definition (for status code '200') as JSON, so compare bodies as plain text
+       2) service 'response body' comparison: path '$': values do not match:
+            diff (--- expected vs +++ actual):
+       -not a valid json
+       +{
+       +  "name": "value",
+       +  "extra": "extravalue"
+       +}
+       +
