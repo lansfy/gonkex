@@ -31,17 +31,12 @@ type Storage struct {
 type StorageOpts struct {
 }
 
-func NewStorage(dbType SQLType, db *sql.DB, opts *StorageOpts) (*Storage, error) {
-	switch dbType {
-	case PostgreSQL, MySQL, Sqlite, TimescaleDB, MariaDB, SQLServer, ClickHouse:
-	default:
-		return nil, fmt.Errorf("unknown db type %q", dbType)
-	}
+func NewStorage(dbType SQLType, db *sql.DB, opts *StorageOpts) *Storage {
 	return &Storage{
 		dbType: dbType,
 		db:     db,
 		opts:   opts,
-	}, nil
+	}
 }
 
 func (l *Storage) GetType() string {
@@ -51,6 +46,10 @@ func (l *Storage) GetType() string {
 const virtualFileName = "fake.yml"
 
 func (l *Storage) LoadFixtures(location string, names []string) error {
+	if err := l.checkDbType(); err != nil {
+		return err
+	}
+
 	opts := &fixtures.LoadDataOpts{
 		AllowedTypes: []string{"tables"},
 		CustomActions: map[string]func(string) string{
@@ -84,7 +83,19 @@ func (l *Storage) LoadFixtures(location string, names []string) error {
 }
 
 func (l *Storage) ExecuteQuery(query string) ([]json.RawMessage, error) {
+	if err := l.checkDbType(); err != nil {
+		return nil, err
+	}
 	return ExecuteQuery(l.dbType, l.db, query)
+}
+
+func (l *Storage) checkDbType() error {
+	switch l.dbType {
+	case PostgreSQL, MySQL, Sqlite, TimescaleDB, MariaDB, SQLServer, ClickHouse:
+		return nil
+	default:
+		return fmt.Errorf("unknown db type %q", l.dbType)
+	}
 }
 
 // createFixtureParams allows to redefine parameters for test purpose
