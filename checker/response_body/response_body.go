@@ -72,11 +72,9 @@ func compareBody(t models.TestInterface, expectedBody string, result *models.Res
 	}
 
 	if expectedErr != nil {
+		err := fmt.Errorf("failed to load value as %s, compare response body as plain text", typeName)
 		errs := []error{
-			fmt.Errorf("failed to load 'response' definition (for status code '%d') as %s, so compare bodies as plain text",
-				result.ResponseStatusCode,
-				typeName,
-			),
+			colorize.NewEntityError("body definition at path %s", fmt.Sprintf("$.response.%d", result.ResponseStatusCode)).SetSubError(err),
 		}
 		errs = append(errs, addMainError(compare.Compare(expectedBody, result.ResponseBody, compare.Params{}))...)
 		return errs, nil

@@ -86,7 +86,7 @@
       statusCode: 200
   meta:
     expected: |
-       1) failed to load 'response' definition (for status code '200') as JSON, so compare bodies as plain text
+       1) body definition at path '$.response.200': failed to load value as JSON, compare response body as plain text
        2) service 'response body' comparison: path '$': values do not match:
             diff (--- expected vs +++ actual):
        -not a valid json
