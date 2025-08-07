@@ -2,6 +2,7 @@ package cmd_runner
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -26,7 +27,7 @@ func CmdRun(scriptPath string, timeout time.Duration) (string, error) {
 		scriptPath = strings.ReplaceAll(scriptPath, "\\", "\\\\")
 	}
 	if scriptPath == "" {
-		return "", fmt.Errorf("empty command provided")
+		return "", errors.New("empty command provided")
 	}
 
 	args, err := shlex.Split(scriptPath)

@@ -3,6 +3,7 @@ package runner
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -39,12 +40,12 @@ func (e *failEndpoint) Run(h endpoint.Helper) error {
 	}
 	e.index++
 	if e.index >= len(e.pattern) {
-		return fmt.Errorf("end of iteration")
+		return errors.New("end of iteration")
 	}
 	if e.pattern[e.index] == '1' {
 		return nil
 	}
-	return fmt.Errorf("fake error")
+	return errors.New("fake error")
 }
 
 func (e *failEndpoint) BeforeTest(t models.TestInterface) error {
