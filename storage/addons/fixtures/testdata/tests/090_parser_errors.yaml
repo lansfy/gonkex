@@ -5,11 +5,10 @@
      names: ["file1"]
      fs:
         file1: |
-           collections: aaa
+           collections: aaa: bbb
   response: 
     200: |-
-       error: parse file for fixture "file1": yaml: unmarshal errors:
-         line 1: cannot unmarshal !!str `aaa` into yaml.MapSlice
+       error: parse file for fixture "file1": yaml: mapping values are not allowed in this context
 
 - name: WHEN loader find collection with wrong item inside (not an array) parser MUST fail with error
   method: GET

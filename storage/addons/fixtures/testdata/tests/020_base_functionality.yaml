@@ -26,21 +26,21 @@
   response: 
     200: |
        table1:
-       - field1: value1
-         field2: 1
-       - field1: value2
-         field2: 2
-         field3: 2.5699477736545666
+           - field1: value1
+             field2: 1
+           - field1: value2
+             field2: 2
+             field3: 2.5699477736545666
        table2:
-       - field1: '"'
-         field4: false
-         field5: null
-       - field1: ''''
-         field5:
-         - 1
-         - "2"
+           - field1: '"'
+             field4: false
+             field5: null
+           - field1: ''''
+             field5:
+               - 1
+               - "2"
        table3:
-       - field1: '!!!NOW()!!!'
+           - field1: '!!!NOW()!!!'
 
 - name: loader MUST join data for same collections from different files
   method: GET
@@ -75,18 +75,18 @@
   response: 
     200: |
        table1:
-       - field1: value1
-         field2: 1
-       - field1: value2
-         field2: 2
+           - field1: value1
+             field2: 1
+           - field1: value2
+             field2: 2
        table2:
-       - field1: '"'
-         field4: false
-         field5: null
-       - field1: ''''
-         field5:
-         - 1
-         - "2"
+           - field1: '"'
+             field4: false
+             field5: null
+           - field1: ''''
+             field5:
+               - 1
+               - "2"
        table3:
-       - field1: '!!!value1!!!'
-       - field1: '!!!value2!!!'
+           - field1: '!!!value1!!!'
+           - field1: '!!!value2!!!'

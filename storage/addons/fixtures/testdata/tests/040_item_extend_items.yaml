@@ -23,13 +23,13 @@
   response: 
     200: |
        table1:
-       - f1: value1
-         f2: value2
+           - f1: value1
+             f2: value2
        table2:
-       - f1: value1 overwritten
-         f2: value2
-         f3: '!!!"1" || "2" || 3 + 5!!!'
+           - f1: value1 overwritten
+             f2: value2
+             f3: '!!!"1" || "2" || 3 + 5!!!'
        table3:
-       - f1: value1 overwritten
-         f2: value2
-         f3: eval overwritten
+           - f1: value1 overwritten
+             f2: value2
+             f3: eval overwritten

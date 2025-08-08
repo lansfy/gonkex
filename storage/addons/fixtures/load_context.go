@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -14,9 +14,9 @@ const (
 )
 
 type fixture struct {
-	Inherits    []string                 `yaml:"inherits"`
-	Templates   yaml.MapSlice            `yaml:"templates"`
-	Collections map[string]yaml.MapSlice `yaml:",inline"`
+	Inherits    []string            `yaml:"inherits"`
+	Templates   MapSlice            `yaml:"templates"`
+	Collections map[string]MapSlice `yaml:",inline"`
 }
 
 type loadContext struct {
@@ -54,17 +54,12 @@ func (ctx *loadContext) loadYml(data []byte) error {
 	}
 
 	for _, template := range loadedFixture.Templates {
-		name := template.Key.(string)
+		name := template.Key
 		if _, ok := ctx.refsDefinition[name]; ok {
 			return fmt.Errorf("unable to load template %s: duplicating ref name", name)
 		}
 
-		fields := template.Value.(yaml.MapSlice)
-		row := make(Item, len(fields))
-		for _, field := range fields {
-			key := field.Key.(string)
-			row[key] = field.Value
-		}
+		row := template.Value.(map[string]interface{})
 
 		if base, ok := row[actionExtend]; ok {
 			base := base.(string)
@@ -93,15 +88,11 @@ func (ctx *loadContext) loadYml(data []byte) error {
 			}
 			rows := make([]Item, len(sourceRows))
 			for i := range sourceRows {
-				sourceFields := sourceRows[i].(yaml.MapSlice)
-				fields := make(Item, len(sourceFields))
-				for j := range sourceFields {
-					fields[sourceFields[j].Key.(string)] = sourceFields[j].Value
-				}
-				rows[i] = fields
+				sourceFields := sourceRows[i].(map[string]interface{})
+				rows[i] = sourceFields
 			}
 			lt := &Collection{
-				Name:  sourceTable.Key.(string),
+				Name:  sourceTable.Key,
 				Type:  collType,
 				Items: rows,
 			}
