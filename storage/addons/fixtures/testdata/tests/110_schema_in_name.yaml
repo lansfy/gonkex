@@ -17,10 +17,10 @@
   response: 
     200: |
        namespace1.table1:
-       - field1: value1
-         field2: 1
-       - field1: value2
-         field2: 2
+           - field1: value1
+             field2: 1
+           - field1: value2
+             field2: 2
        namespace2.table2:
-       - field4: false
-         field5: null
+           - field4: false
+             field5: null

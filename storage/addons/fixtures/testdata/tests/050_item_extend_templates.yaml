@@ -20,11 +20,11 @@
   response: 
     200: |
        table1:
-       - f1: tplVal1
-         f3: value3
-       - f1: tplVal1
-         f2: tplVal2
-         f3: value33
+           - f1: tplVal1
+             f3: value3
+           - f1: tplVal1
+             f2: tplVal2
+             f3: value33
 
 - name: loader MUST support load of template from other file
   method: GET
@@ -52,8 +52,8 @@
   response: 
     200: |
        table1:
-       - f1: tplVal1
-         f3: value3
-       - f1: tplVal1
-         f2: tplVal2
-         f3: value33
+           - f1: tplVal1
+             f3: value3
+           - f1: tplVal1
+             f2: tplVal2
+             f3: value33

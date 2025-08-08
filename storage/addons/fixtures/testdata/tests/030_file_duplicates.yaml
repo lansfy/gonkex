@@ -13,5 +13,5 @@
   response: 
     200: |
        table1:
-       - field1: value1
-         field2: 1
+           - field1: value1
+             field2: 1
