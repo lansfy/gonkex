@@ -55,17 +55,28 @@ func (ctx *loadContext) loadYml(data []byte) error {
 
 	for _, template := range loadedFixture.Templates {
 		name := template.Key
-		if _, ok := ctx.refsDefinition[name]; ok {
-			return fmt.Errorf("unable to load template %s: duplicating ref name", name)
+		wrap := func(err error) error {
+			return fmt.Errorf("parsing template '%s': %w", name, err)
 		}
 
-		row := template.Value.(map[string]interface{})
+		if _, ok := ctx.refsDefinition[name]; ok {
+			return wrap(errors.New("duplicate template name"))
+		}
 
-		if base, ok := row[actionExtend]; ok {
-			base := base.(string)
+		row, ok := template.Value.(map[string]interface{})
+		if !ok {
+			return wrap(fmt.Errorf("map expected, found value with type '%T'", template.Value))
+		}
+
+		if actionValue, ok := row[actionExtend]; ok {
+			base, ok := actionValue.(string)
+			if !ok {
+				return wrap(fmt.Errorf("key '%s' has non-string value '%v'", actionExtend, actionValue))
+			}
+
 			baseRow, err := resolveItemReference(ctx.refsDefinition, base)
 			if err != nil {
-				return err
+				return wrap(err)
 			}
 			for k, v := range row {
 				baseRow[k] = v
@@ -82,13 +93,20 @@ func (ctx *loadContext) loadYml(data []byte) error {
 		}
 
 		for _, sourceTable := range collections {
+			wrap := func(err error) error {
+				return fmt.Errorf("parsing %s '%s': %w", singularNumber(collType), sourceTable.Key, err)
+			}
+
 			sourceRows, ok := sourceTable.Value.([]interface{})
 			if !ok {
-				return errors.New("expected array at root level")
+				return wrap(errors.New("expected array at root level"))
 			}
 			rows := make([]Item, len(sourceRows))
 			for i := range sourceRows {
-				sourceFields := sourceRows[i].(map[string]interface{})
+				sourceFields, ok := sourceRows[i].(map[string]interface{})
+				if !ok {
+					return wrap(fmt.Errorf("array of map expected, found value with type '%T'", sourceRows[i]))
+				}
 				rows[i] = sourceFields
 			}
 			lt := &Collection{
@@ -108,7 +126,7 @@ func (ctx *loadContext) generateSummary() ([]*Collection, error) {
 	for _, lt := range ctx.tables {
 		items, err := ctx.processTableContent(lt.Items)
 		if err != nil {
-			return nil, fmt.Errorf("processing %s '%s': %w", strings.TrimSuffix(lt.Type, "s"), lt.Name, err)
+			return nil, fmt.Errorf("processing %s '%s': %w", singularNumber(lt.Type), lt.Name, err)
 		}
 		// append rows to global tables
 		found := false
@@ -137,7 +155,11 @@ func (ctx *loadContext) processTableContent(rows []Item) ([]Item, error) {
 		if _, ok := row[actionExtend]; !ok {
 			continue
 		}
-		base := row[actionExtend].(string)
+		base, ok := row[actionExtend].(string)
+		if !ok {
+			return nil, fmt.Errorf("key '%s' has non-string value of type '%v'", actionExtend, row[actionExtend])
+		}
+
 		baseRow, err := resolveItemReference(ctx.refsDefinition, base)
 		if err != nil {
 			return nil, err
@@ -172,10 +194,14 @@ func (ctx *loadContext) loadRow(row Item) (Item, error) {
 		rowValues[name] = val
 	}
 
-	if name, ok := row[actionName]; ok {
-		name := name.(string)
+	if actionValue, ok := row[actionName]; ok {
+		name, ok := actionValue.(string)
+		if !ok {
+			return nil, fmt.Errorf("key '%s' has non-string value of type '%v'", actionName, actionValue)
+		}
+
 		if _, ok := ctx.refsDefinition[name]; ok {
-			return nil, fmt.Errorf("duplicating ref name %s", name)
+			return nil, fmt.Errorf("duplicating ref name '%s'", name)
 		}
 		// add to references
 		ctx.refsDefinition[name] = row
@@ -255,4 +281,8 @@ func resolveFieldReference(refs map[string]Item, ref string) (interface{}, error
 	}
 
 	return value, nil
+}
+
+func singularNumber(name string) string {
+	return strings.TrimSuffix(name, "s")
 }

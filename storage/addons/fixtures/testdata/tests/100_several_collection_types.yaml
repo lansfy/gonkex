@@ -23,8 +23,7 @@
               table1:
                 - field1: "value4"
                   field2: 4
-
-  response: 
+  response:
     200: |
        table1:
            - field1: value2

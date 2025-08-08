@@ -14,7 +14,7 @@
               namespace2.table2:
                 - field4: false
                   field5: null
-  response: 
+  response:
     200: |
        namespace1.table1:
            - field1: value1

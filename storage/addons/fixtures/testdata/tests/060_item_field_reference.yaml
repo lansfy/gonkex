@@ -19,7 +19,7 @@
              table3:
                - f1: $ref1.f1
                  f2: $ref2.f1
-  response: 
+  response:
     200: |
        table1:
            - f1: value1

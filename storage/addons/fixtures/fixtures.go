@@ -47,7 +47,7 @@ func LoadData(loader ContentLoader, names []string, opts *LoadDataOpts) ([]*Coll
 	for _, name := range names {
 		err := ctx.loadFile(name)
 		if err != nil {
-			return nil, fmt.Errorf("parse file for fixture %q: %w", name, err)
+			return nil, fmt.Errorf("parsing file for fixture '%s': %w", name, err)
 		}
 	}
 

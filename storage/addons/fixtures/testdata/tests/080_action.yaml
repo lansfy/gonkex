@@ -11,7 +11,7 @@
                   field2: 1
                 - field1: $custom_action(value2)
                   field2: 2
-  response: 
+  response:
     200: |
        table1:
            - field1: '!!!value1!!!'
