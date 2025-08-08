@@ -9,7 +9,9 @@ endif::[]
 
 = Gonkex: testing automation tool
 
-link:https://pkg.go.dev/github.com/lansfy/gonkex[image:https://pkg.go.dev/badge/github.com/lansfy/gonkex.svg[Go Reference]] link:https://github.com/lansfy/gonkex/blob/master/.testcoverage.yml[image:https://raw.githubusercontent.com/lansfy/gonkex/refs/heads/badges/.badges/master/coverage.svg[coverage]]
+link:https://pkg.go.dev/github.com/lansfy/gonkex[image:https://pkg.go.dev/badge/github.com/lansfy/gonkex.svg[Go Reference]]
+link:https://github.com/lansfy/gonkex/blob/master/.testcoverage.yml[image:https://raw.githubusercontent.com/lansfy/gonkex/refs/heads/badges/.badges/master/coverage.svg[coverage]]
+link:https://goreportcard.com/report/github.com/lansfy/gonkex[image:https://goreportcard.com/badge/github.com/lansfy/gonkex[Go Report Card]]
 
 [NOTE]
 ====
