@@ -2,6 +2,7 @@ package yaml_file
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -121,7 +122,7 @@ func hasObsoleteDbCheck(def *TestDefinition) bool {
 func validateDbChecks(test *testImpl) error {
 	for _, item := range test.GetDatabaseChecks() {
 		if item.DbQueryString() == "" && len(item.DbResponseJson()) != 0 {
-			return fmt.Errorf("'dbResponse' found without corresponding 'dbQuery'")
+			return errors.New("'dbResponse' found without corresponding 'dbQuery'")
 		}
 	}
 	return nil
@@ -134,7 +135,7 @@ func makeTestFromDefinition(filePath string, def *TestDefinition) ([]*testImpl, 
 	}
 
 	if hasObsoleteDbCheck(def) && len(def.DbChecks) != 0 {
-		return nil, wrap(fmt.Errorf("mixing old dbQuery/dbResponse with dbChecks in a single test is forbidden"))
+		return nil, wrap(errors.New("mixing old dbQuery/dbResponse with dbChecks in a single test is forbidden"))
 	}
 
 	// test definition has no cases, so using request/response as is

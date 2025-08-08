@@ -2,6 +2,7 @@ package yaml_file
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/lansfy/gonkex/models"
@@ -28,7 +29,7 @@ func (s *StatusEnum) UnmarshalJSON(data []byte) error {
 func (s *StatusEnum) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	if err := unmarshal(&str); err != nil {
-		return fmt.Errorf("wrong type for status value")
+		return errors.New("wrong type for status value")
 	}
 
 	if _, exists := validStatuses[models.Status(str)]; !exists {

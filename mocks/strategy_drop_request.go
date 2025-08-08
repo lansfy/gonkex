@@ -15,7 +15,9 @@ func NewDropRequestReply() ReplyStrategy {
 type dropRequestReply struct{}
 
 func (s *dropRequestReply) HandleRequest(w http.ResponseWriter, r *http.Request) []error {
-	wrap := w.(*wrapResponseWriter)
-	wrap.drop = true
+	wrap, ok := w.(*wrapResponseWriter)
+	if ok {
+		wrap.drop = true
+	}
 	return nil
 }

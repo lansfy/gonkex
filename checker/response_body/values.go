@@ -1,6 +1,7 @@
 package response_body
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"sort"
@@ -21,17 +22,17 @@ func ExtractValues(varsToSet map[string]string, result *models.Result) (map[stri
 
 	// process variables
 	vars := map[string]string{}
-	var errors []error
+	var errs []error
 	for _, name := range keys {
 		path := varsToSet[name]
 		value, err := processPath(path, result)
 		if err != nil {
-			errors = append(errors, colorize.NewEntityError("variable %s", name).SetSubError(err))
+			errs = append(errs, colorize.NewEntityError("variable %s", name).SetSubError(err))
 		} else {
 			vars[name] = value
 		}
 	}
-	return vars, errors
+	return vars, errs
 }
 
 func processPath(path string, result *models.Result) (string, error) {
@@ -48,14 +49,14 @@ func processPath(path string, result *models.Result) (string, error) {
 			return result.ResponseBody, nil
 		}
 		if result.ResponseBody == "" {
-			return "", fmt.Errorf("paths not supported for empty body")
+			return "", errors.New("paths not supported for empty body")
 		}
 		for _, b := range types.GetRegisteredBodyTypes() {
 			if b.IsSupportedContentType(result.ResponseContentType) {
 				return b.ExtractResponseValue(result.ResponseBody, path)
 			}
 		}
-		return "", fmt.Errorf("paths not supported for plain text body")
+		return "", errors.New("paths not supported for plain text body")
 	case "header":
 		result.ShowHeaders = true // output should show request headers
 		if valArr := result.ResponseHeaders[path]; len(valArr) != 0 {

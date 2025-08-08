@@ -22,6 +22,7 @@ type trafficLights struct {
 // structure for storing traffic light status
 type serverState struct {
 	trafficLights
+
 	mutex sync.RWMutex
 }
 

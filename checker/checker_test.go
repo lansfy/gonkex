@@ -2,6 +2,7 @@ package checker_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -34,7 +35,7 @@ func (s *docStorage) LoadFixtures(location string, names []string) error {
 
 func (s *docStorage) ExecuteQuery(query string) ([]json.RawMessage, error) {
 	if s.response == nil {
-		return nil, fmt.Errorf("fake error")
+		return nil, errors.New("fake error")
 	}
 	resp := s.response
 	s.response = nil

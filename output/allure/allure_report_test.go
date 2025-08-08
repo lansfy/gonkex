@@ -1,6 +1,7 @@
 package allure
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -71,7 +72,7 @@ func TestParse_TestWithCases(t *testing.T) {
 		ResponseBody: "somebody1",
 
 		Errors: []error{
-			fmt.Errorf("some error1"),
+			errors.New("some error1"),
 		},
 		Test: tests[0],
 	}

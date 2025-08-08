@@ -27,6 +27,7 @@ func (m *mockHijackError) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 // mockHijackSuccess returns a dummy Conn and closes it
 type mockConn struct {
 	net.Conn
+
 	closed bool
 }
 
@@ -37,6 +38,7 @@ func (m *mockConn) Close() error {
 
 type mockHijackSuccess struct {
 	http.ResponseWriter
+
 	conn *mockConn
 }
 

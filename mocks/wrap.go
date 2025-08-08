@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -67,7 +68,7 @@ func (w *wrapResponseWriter) CreateHttpResponse() *http.Response {
 func dropConnection(w http.ResponseWriter) error {
 	hj, ok := w.(http.Hijacker)
 	if !ok {
-		return fmt.Errorf("gonkex internal error: drop request: webserver does not support hijacking")
+		return errors.New("gonkex internal error: drop request: webserver does not support hijacking")
 	}
 	conn, _, err := hj.Hijack()
 	if err != nil {
