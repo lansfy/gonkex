@@ -10,7 +10,7 @@
                 - field1: "value1"
                   field2: 1
 
-  response: 
+  response:
     200: |
        table1:
            - field1: value1

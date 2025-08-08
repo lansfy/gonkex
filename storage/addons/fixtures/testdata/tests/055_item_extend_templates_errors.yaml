@@ -18,9 +18,9 @@
            collections:
              table1:
                - f3: value3
-  response: 
+  response:
     200: |-
-       error: parse file for fixture "file2": unable to load template baseTpl: duplicating ref name
+       error: parsing file for fixture 'file2': parsing template 'baseTpl': duplicate template name
 
 - name: WHEN file from 'inherits' not exists loader MUST fail with error
   method: GET
@@ -38,9 +38,9 @@
                - $extend: ref3
                  f3: value33
 
-  response: 
+  response:
     200: |-
-       error: parse file for fixture "file1": file not exists
+       error: parsing file for fixture 'file1': file not exists
 
 - name: WHEN template extend unknown template loader MUST fail with error
   method: GET
@@ -55,6 +55,38 @@
              ref3:
                $extend: wrongTpl
                f2: tplVal2
-  response: 
+  response:
     200: |-
-       error: parse file for fixture "file1": undefined reference 'wrongTpl'
+       error: parsing file for fixture 'file1': parsing template 'ref3': undefined reference 'wrongTpl'
+
+- name: WHEN template has $extend with non-string value loader MUST fail with error
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1"]
+     fs:
+        file1: |
+           templates:
+             baseTpl:
+               f1: tplVal1
+             ref3:
+               $extend: {}
+               f2: tplVal2
+  response:
+    200: |-
+       error: parsing file for fixture 'file1': parsing template 'ref3': key '$extend' has non-string value 'map[]'
+
+- name: WHEN template consists wrong type parser MUST fail with error
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1"]
+     fs:
+        file1: |
+           templates:
+             baseTpl:
+               f1: tplVal1
+             otherTpl: []
+  response:
+    200: |-
+       error: parsing file for fixture 'file1': parsing template 'otherTpl': map expected, found value with type '[]interface {}'

@@ -12,7 +12,7 @@
                  f2: value2
              table3:
                - f2: $wrongref.f1
-  response: 
+  response:
     200: |-
        error: processing collection 'table3': undefined reference 'wrongref' in '$wrongref.f1'
 
@@ -30,7 +30,7 @@
                  f2: value2
              table3:
                - f2: $ref1.wrongfield
-  response: 
+  response:
     200: |-
        error: processing collection 'table3': undefined reference field 'wrongfield'
 
@@ -49,9 +49,9 @@
                - $name: ref1
                  f1: value2
                  f2: value2
-  response: 
+  response:
     200: |-
-       error: processing collection 'table1': duplicating ref name ref1
+       error: processing collection 'table1': duplicating ref name 'ref1'
 
 - name: WHEN reference path does not have entry name loader MUST fail with error
   method: GET
@@ -67,7 +67,7 @@
                  f2: value2
              table3:
                - f2: $.f1
-  response: 
+  response:
     200: |-
        error: processing collection 'table3': invalid reference '$.f1', correct form is '$refName.field'
 
@@ -85,6 +85,6 @@
                  f2: value2
              table3:
                - f2: $ref1
-  response: 
+  response:
     200: |-
        error: processing collection 'table3': invalid reference '$ref1', correct form is '$refName.field'

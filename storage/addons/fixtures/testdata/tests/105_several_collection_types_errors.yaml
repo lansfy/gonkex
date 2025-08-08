@@ -14,6 +14,6 @@
               table1:
                 - field1: "value2"
                   field2: 2
-  response: 
+  response:
     200: |-
-       error: parse file for fixture "file1": unknown item type 'wrongType' found
+       error: parsing file for fixture 'file1': unknown item type 'wrongType' found

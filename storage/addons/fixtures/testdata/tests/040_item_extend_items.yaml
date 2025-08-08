@@ -20,7 +20,7 @@
              table3:
                - $extend: ref2
                  f3: eval overwritten
-  response: 
+  response:
     200: |
        table1:
            - f1: value1

@@ -15,6 +15,47 @@
                - $name: ref2
                  $extend: wrongref
                  f1: value1 overwritten
-  response: 
+  response:
     200: |-
        error: processing collection 'table2': undefined reference 'wrongref'
+
+- name: WHEN $name consists non-string value loader MUST fail with error
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1"]
+     fs:
+        file1: |
+           collections:
+             table1:
+               - $name: ref1
+                 f1: value1
+                 f2: value2
+
+             table2:
+               - $name: {}
+                 f1: value1 overwritten
+  response:
+    200: |-
+       error: processing collection 'table2': key '$name' has non-string value of type 'map[]'
+
+- name: WHEN $extend consists non-string value loader MUST fail with error
+  method: GET
+  path: /gonkex/process
+  request: |
+     names: ["file1"]
+     fs:
+        file1: |
+           collections:
+             table1:
+               - $name: ref1
+                 f1: value1
+                 f2: value2
+
+             table2:
+               - $name: ref2
+                 $extend: {}
+                 f1: value1 overwritten
+  response:
+    200: |-
+       error: processing collection 'table2': key '$extend' has non-string value of type 'map[]'
