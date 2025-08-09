@@ -157,7 +157,7 @@ func (ctx *loadContext) processTableContent(rows []Item) ([]Item, error) {
 		}
 		base, ok := row[actionExtend].(string)
 		if !ok {
-			return nil, fmt.Errorf("key '%s' has non-string value of type '%v'", actionExtend, row[actionExtend])
+			return nil, fmt.Errorf("key '%s' has non-string value '%v'", actionExtend, row[actionExtend])
 		}
 
 		baseRow, err := resolveItemReference(ctx.refsDefinition, base)
@@ -197,11 +197,11 @@ func (ctx *loadContext) loadRow(row Item) (Item, error) {
 	if actionValue, ok := row[actionName]; ok {
 		name, ok := actionValue.(string)
 		if !ok {
-			return nil, fmt.Errorf("key '%s' has non-string value of type '%v'", actionName, actionValue)
+			return nil, fmt.Errorf("key '%s' has non-string value '%v'", actionName, actionValue)
 		}
 
 		if _, ok := ctx.refsDefinition[name]; ok {
-			return nil, fmt.Errorf("duplicating ref name '%s'", name)
+			return nil, fmt.Errorf("duplicate $name '%s'", name)
 		}
 		// add to references
 		ctx.refsDefinition[name] = row

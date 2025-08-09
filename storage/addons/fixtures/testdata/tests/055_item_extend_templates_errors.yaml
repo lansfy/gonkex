@@ -40,7 +40,7 @@
 
   response:
     200: |-
-       error: parsing file for fixture 'file1': file not exists
+       error: parsing file for fixture 'file1': file not found
 
 - name: WHEN template extend unknown template loader MUST fail with error
   method: GET

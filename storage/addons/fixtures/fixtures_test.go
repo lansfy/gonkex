@@ -17,7 +17,7 @@ type testLoaderImpl struct {
 func (l *testLoaderImpl) Load(name string) (string, []byte, error) {
 	content, ok := l.known[name]
 	if !ok {
-		return "", nil, errors.New("file not exists")
+		return "", nil, errors.New("file not found")
 	}
 
 	l.known[name] = ""

@@ -51,7 +51,7 @@
                  f2: value2
   response:
     200: |-
-       error: processing collection 'table1': duplicating ref name 'ref1'
+       error: processing collection 'table1': duplicate $name 'ref1'
 
 - name: WHEN reference path does not have entry name loader MUST fail with error
   method: GET
