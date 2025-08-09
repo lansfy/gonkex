@@ -1430,7 +1430,8 @@ Parameters:
 
 * `+body+` (mandatory) - sets the response body;
 * `+statusCode+` - HTTP-code of the response, the default value is `+200+`;
-* `+headers+` - response headers.
+* `+headers+` - response headers;
+* `+pause+` - mock waits specified duration before returns response, the default value is `+0s+` (no pause).
 
 Example:
 
@@ -1458,7 +1459,8 @@ Parameters:
 
 * `+filename+` (mandatory) - name of the file that contains the response body;
 * `+statusCode+` - HTTP-code of the response, the default value is `+200+`;
-* `+headers+` - response headers.
+* `+headers+` - response headers;
+* `+pause+` - mock waits specified duration before returns response, the default value is `+0s+` (no pause).
 
 Example:
 
@@ -1484,7 +1486,8 @@ Parameters:
 
 * `+body+` (mandatory) - sets the response body, must be valid `+text/template+` string;
 * `+statusCode+` - HTTP-code of the response, the default value is `+200+`;
-* `+headers+` - response headers.
+* `+headers+` - response headers;
+* `+pause+` - mock waits specified duration before returns response, the default value is `+0s+` (no pause).
 
 Example:
 

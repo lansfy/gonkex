@@ -20,6 +20,22 @@
     someservice:
       strategy: template
       body: ""
+      pause: invalid
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'template': value for key 'pause' cannot be converted to duration
+
+- name: WHEN 'pause' key has invalid value in 'template' strategy load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: template
+      body: ""
+      pause: 1s
       statusCode: invalid
   meta:
     expected: |
@@ -74,4 +90,4 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': strategy 'template': unexpected key 'invalid' (allowed only [requestConstraints strategy calls order body statusCode headers])
+       load definition for 'someservice': strategy 'template': unexpected key 'invalid' (allowed only [requestConstraints strategy calls order body statusCode headers pause])

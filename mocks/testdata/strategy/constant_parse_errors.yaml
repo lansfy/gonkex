@@ -25,6 +25,21 @@
     expected: |
        load definition for 'someservice': strategy 'constant': value for key 'statusCode' cannot be converted to integer
 
+- name: WHEN 'pause' key has invalid value in 'constant' strategy load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: constant
+      body: ""
+      pause: 1
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'constant': value for key 'pause' cannot be converted to duration
+
 - name: WHEN 'headers' key has invalid value in 'constant' strategy load definition MUST fail with error
   method: GET
   path: /test/path
@@ -53,4 +68,4 @@
       invalid: invalid
   meta:
     expected: |
-       load definition for 'someservice': strategy 'constant': unexpected key 'invalid' (allowed only [requestConstraints strategy calls order body statusCode headers])
+       load definition for 'someservice': strategy 'constant': unexpected key 'invalid' (allowed only [requestConstraints strategy calls order body statusCode headers pause])

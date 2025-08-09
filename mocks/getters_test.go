@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"testing"
+	"time"
 
 	"github.com/lansfy/gonkex/compare"
 
@@ -186,6 +187,63 @@ func Test_getOptionalIntKey(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
 			got, err := getOptionalIntKey(inputMap, tt.key, tt.defaultValue)
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				require.Equal(t, tt.wantErr, err.Error())
+				require.Zero(t, got)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func Test_getOptionalDurationKey(t *testing.T) {
+	inputMap := map[string]interface{}{
+		"stringKey":    "10s",
+		"nonStringKey": 42,
+		"wrongString":  "blabla",
+		"negative":     "-10s",
+	}
+
+	tests := []struct {
+		description string
+		key         string
+		want        time.Duration
+		wantErr     string
+	}{
+		{
+			description: "key exists and value is string with valid duration",
+			key:         "stringKey",
+			want:        10 * time.Second,
+		},
+		{
+			description: "key exists and value has unsupported type",
+			key:         "nonStringKey",
+			wantErr:     "value for key 'nonStringKey' cannot be converted to duration",
+		},
+		{
+			description: "key does not exist, default value returned",
+			key:         "absentKey",
+			want:        0,
+		},
+		{
+			description: "key exists but value can't be converted to duration",
+			key:         "wrongString",
+			want:        0,
+			wantErr:     "value for key 'wrongString' cannot be converted to duration",
+		},
+		{
+			description: "key exists but value is a negative duration",
+			key:         "negative",
+			wantErr:     "value for the key 'negative' cannot be negative",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.description, func(t *testing.T) {
+			got, err := getOptionalDurationKey(inputMap, tt.key)
 			if tt.wantErr != "" {
 				require.Error(t, err)
 				require.Equal(t, tt.wantErr, err.Error())
