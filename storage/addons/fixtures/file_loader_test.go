@@ -36,7 +36,7 @@ func Test_FileLoader_Load(t *testing.T) {
 		{
 			description: "WHEN file not exists loader MUST return error",
 			name:        "step5",
-			wantErr:     "file not exists",
+			wantErr:     "file not found",
 		},
 	}
 
