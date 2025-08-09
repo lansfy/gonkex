@@ -12,6 +12,21 @@
     expected: |
        load definition for 'someservice': strategy 'file': value for key 'statusCode' cannot be converted to integer
 
+- name: WHEN 'pause' key has invalid value in 'constant' strategy load definition MUST fail with error
+  method: GET
+  path: /test/path
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: file
+      filename: "testdata/body.txt"
+      pause: null
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'file': value for key 'pause' cannot be converted to duration
+
 - name: WHEN 'headers' key has invalid value in 'file' strategy load definition MUST fail with error
   method: GET
   path: /test/path
@@ -67,4 +82,4 @@
       invalid: invalid
   meta:
     expected: |
-       load definition for 'someservice': strategy 'file': unexpected key 'invalid' (allowed only [requestConstraints strategy calls order filename statusCode headers])
+       load definition for 'someservice': strategy 'file': unexpected key 'invalid' (allowed only [requestConstraints strategy calls order filename statusCode headers pause])

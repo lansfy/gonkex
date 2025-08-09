@@ -119,19 +119,19 @@ func (l *loaderImpl) loadStrategy(path, strategyName string, definition map[stri
 	case "nop":
 		return NewNopReply(), nil
 	case "constant":
-		*ak = append(*ak, "body", "statusCode", "headers")
+		*ak = append(*ak, "body", "statusCode", "headers", "pause")
 		return l.loadConstantStrategy(definition)
 	case "sequence":
 		*ak = append(*ak, "sequence")
 		return l.loadSequenceReplyStrategy(path, definition)
 	case "template":
-		*ak = append(*ak, "body", "statusCode", "headers")
+		*ak = append(*ak, "body", "statusCode", "headers", "pause")
 		return l.loadTemplateReplyStrategy(definition)
 	case "basedOnRequest":
 		*ak = append(*ak, "basePath", "uris")
 		return l.loadBasedOnRequestReplyStrategy(path, definition)
 	case "file":
-		*ak = append(*ak, "filename", "statusCode", "headers")
+		*ak = append(*ak, "filename", "statusCode", "headers", "pause")
 		return l.loadFileStrategy(definition)
 	case "uriVary":
 		*ak = append(*ak, "basePath", "uris")

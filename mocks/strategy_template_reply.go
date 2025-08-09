@@ -7,26 +7,19 @@ import (
 	"net/http"
 	"sync"
 	"text/template"
+	"time"
 )
 
 func (l *loaderImpl) loadTemplateReplyStrategy(def map[string]interface{}) (ReplyStrategy, error) {
-	body, err := getRequiredStringKey(def, "body", true)
+	content, statusCode, pause, headers, err := loadCommonParameters(def, false)
 	if err != nil {
 		return nil, err
 	}
-	statusCode, err := getOptionalIntKey(def, "statusCode", http.StatusOK)
-	if err != nil {
-		return nil, err
-	}
-	headers, err := loadHeaders(def)
-	if err != nil {
-		return nil, err
-	}
-	return NewTemplateReply(body, statusCode, headers, l.templateReplyFuncs)
+	return NewTemplateReply(string(content), statusCode, pause, headers, l.templateReplyFuncs)
 }
 
-func NewTemplateReply(content string, statusCode int, headers map[string]string,
-	funcs template.FuncMap) (ReplyStrategy, error) {
+func NewTemplateReply(content string, statusCode int, pause time.Duration,
+	headers map[string]string, funcs template.FuncMap) (ReplyStrategy, error) {
 	tmpl, err := template.New("").Funcs(funcs).Parse(content)
 	if err != nil {
 		return nil, fmt.Errorf("template syntax error: %w", err)
@@ -35,6 +28,7 @@ func NewTemplateReply(content string, statusCode int, headers map[string]string,
 	strategy := &templateReply{
 		replyBodyTemplate: tmpl,
 		statusCode:        statusCode,
+		pause:             pause,
 		headers:           headers,
 	}
 
@@ -44,6 +38,7 @@ func NewTemplateReply(content string, statusCode int, headers map[string]string,
 type templateReply struct {
 	replyBodyTemplate *template.Template
 	statusCode        int
+	pause             time.Duration
 	headers           map[string]string
 }
 
@@ -90,6 +85,10 @@ func (s *templateReply) HandleRequest(w http.ResponseWriter, r *http.Request) []
 	requestBody, err := getRequestBodyCopy(r)
 	if err != nil {
 		return []error{err}
+	}
+
+	if s.pause > 0 {
+		time.Sleep(s.pause)
 	}
 
 	responseBody, err := s.executeResponseTemplate(r)

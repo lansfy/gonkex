@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/lansfy/gonkex/colorize"
 	"github.com/lansfy/gonkex/compare"
@@ -70,6 +71,29 @@ func getOptionalIntKey(def map[string]interface{}, name string, defaultValue int
 	}
 	if err != nil {
 		return 0, fmt.Errorf("value for key '%s' cannot be converted to integer", name)
+	}
+	if parsedValue < 0 {
+		return 0, fmt.Errorf("value for the key '%s' cannot be negative", name)
+	}
+	return parsedValue, nil
+}
+
+func getOptionalDurationKey(def map[string]interface{}, name string) (time.Duration, error) {
+	c, ok := def[name]
+	if !ok {
+		return 0, nil
+	}
+
+	var err error
+	var parsedValue time.Duration
+	switch v := c.(type) {
+	case string:
+		parsedValue, err = time.ParseDuration(v)
+	default:
+		err = errors.New("fake")
+	}
+	if err != nil {
+		return 0, fmt.Errorf("value for key '%s' cannot be converted to duration", name)
 	}
 	if parsedValue < 0 {
 		return 0, fmt.Errorf("value for the key '%s' cannot be negative", name)
