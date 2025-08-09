@@ -48,7 +48,7 @@ func (l *contentLoaderImpl) findFixturePath(location, name string) (string, erro
 		}
 	}
 	if os.IsNotExist(err) {
-		return "", errors.New("file not exists")
+		return "", errors.New("file not found")
 	}
 	return "", err
 }

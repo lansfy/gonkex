@@ -4,7 +4,8 @@
   request: |
     names: ["not_exists"]
   response:
-    200: "error: parsing file for fixture 'not_exists': file not exists"
+    200: |-
+       error: parsing file for fixture 'not_exists': file not found
 
 - name: loader MUST fail if one of fixtures file does not exists (2)
   method: GET
@@ -18,4 +19,5 @@
                - field1: "value1"
                  field2: 1
   response:
-    200: "error: parsing file for fixture 'file2': file not exists"
+    200: |-
+       error: parsing file for fixture 'file2': file not found
