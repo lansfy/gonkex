@@ -47,7 +47,7 @@ func (s *docStorage) setDBResponse(h endpoint.Helper) error {
 	wrap := func(err error) error {
 		if err != nil {
 			err = fmt.Errorf("error: %w", err)
-			_ = h.SetResponseAsBytes([]byte(err.Error()))
+			h.SetResponseAsBytes([]byte(err.Error()))
 		}
 		return nil
 	}

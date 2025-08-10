@@ -39,7 +39,7 @@ func (l *yamlInMemoryLoader) Load() ([]models.TestInterface, error) {
 	sort.Strings(keys)
 
 	for _, relpath := range keys {
-		moreTests, err := parseTestDefinitionContent(l.opts.CustomFileParse,
+		moreTests, err := parseTestDefinitionContent(&l.opts,
 			relpath, []byte(l.files[relpath]))
 		if err != nil {
 			return nil, err

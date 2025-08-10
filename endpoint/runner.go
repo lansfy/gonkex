@@ -35,10 +35,9 @@ func runEndpoint(e Endpoint, path string, req *http.Request, services *mocks.Moc
 func SelectEndpoint(m EndpointMap, prefix, path string, req *http.Request,
 	services *mocks.Mocks, meta MetaProvider) (*http.Response, error) {
 	for name, endpoint := range m {
-		if !match.Match(path, name) {
-			continue
+		if match.Match(path, name) {
+			return runEndpoint(endpoint, path, req, services, meta)
 		}
-		return runEndpoint(endpoint, path, req, services, meta)
 	}
 	available := []string{}
 	for name := range m {

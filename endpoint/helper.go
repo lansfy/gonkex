@@ -117,9 +117,8 @@ func (h *helperImpl) SetResponseAsYaml(response interface{}) (err error) {
 	return err
 }
 
-func (h *helperImpl) SetResponseAsBytes(response []byte) error {
+func (h *helperImpl) SetResponseAsBytes(response []byte) {
 	h.responseBytes = response
-	return nil
 }
 
 func (h *helperImpl) SetContentType(contentType string) {

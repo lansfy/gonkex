@@ -177,8 +177,7 @@ func TestHelper_SetResponseAsBytes(t *testing.T) {
 	h := newTestHelper(nil, nil, nil)
 	bytesIn := []byte("raw-response")
 
-	err := h.SetResponseAsBytes(bytesIn)
-	require.NoError(t, err)
+	h.SetResponseAsBytes(bytesIn)
 	require.Equal(t, bytesIn, h.responseBytes)
 }
 
@@ -202,7 +201,7 @@ func TestHelper_createHTTPResponse_Default(t *testing.T) {
 
 func TestHelper_createHTTPResponse_OverridesStatusCode(t *testing.T) {
 	h := newTestHelper(nil, nil, nil)
-	_ = h.SetResponseAsBytes([]byte("non-empty"))
+	h.SetResponseAsBytes([]byte("non-empty"))
 	resp := h.createHTTPResponse()
 	defer resp.Body.Close()
 

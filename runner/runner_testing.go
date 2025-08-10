@@ -49,8 +49,8 @@ type RunWithTestingOpts struct {
 	HelperEndpoints endpoint.EndpointMap
 	// EndpointsPrefix consists common prefix for all HelperEndpoints.
 	EndpointsPrefix string
-	// TemplateReplyFuncs contains a set of template functions for processing or customizing replies in tests.
-	TemplateReplyFuncs template.FuncMap
+	// TemplateFuncs contains a set of template functions for processing or customizing replies in tests.
+	TemplateFuncs template.FuncMap
 	// OnFailPolicy defining what happens when a some step of test fails.
 	OnFailPolicy OnFailPolicy
 }
@@ -99,7 +99,7 @@ func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
 			Host:  serverURL,
 			Mocks: opts.Mocks,
 			MocksLoader: mocks.NewYamlLoader(&mocks.YamlLoaderOpts{
-				TemplateReplyFuncs: opts.TemplateReplyFuncs,
+				TemplateReplyFuncs: opts.TemplateFuncs,
 			}),
 			FixturesDir:     opts.FixturesDir,
 			DB:              opts.DB,

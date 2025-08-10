@@ -1,0 +1,19 @@
+- GetName: "loader MUST call registered testFun template function during case values apply #1"
+  GetMethod: POST
+  GetRequest: "testfun(value 1) result - postfix"
+  Path: /some/path
+  GetResponses:
+    200: "result"
+  GetFileName: testdata/parser/read_cases_template_func.yaml
+  OneOfCase: true
+  FirstTestInFile: true
+
+- GetName: "loader MUST call registered testFun template function during case values apply #2"
+  GetMethod: POST
+  Path: /some/path
+  GetRequest: "testfun(value 2) result - postfix"
+  GetResponses:
+    200: "result"
+  GetFileName: testdata/parser/read_cases_template_func.yaml
+  OneOfCase: true
+  LastTestInFile: true

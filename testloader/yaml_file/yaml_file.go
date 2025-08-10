@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/testloader"
@@ -15,6 +16,7 @@ type FileParseFun func(filePath string, content []byte) ([]*TestDefinition, erro
 
 type LoaderOpts struct {
 	CustomFileParse FileParseFun
+	TemplateFuncs   template.FuncMap
 }
 
 type yamlFileLoader struct {
@@ -52,7 +54,7 @@ func (l *yamlFileLoader) Load() ([]models.TestInterface, error) {
 			return err
 		}
 
-		moreTests, err := parseTestDefinitionFile(l.opts.CustomFileParse, relpath)
+		moreTests, err := parseTestDefinitionFile(&l.opts, relpath)
 		if err != nil {
 			return err
 		}

@@ -1,0 +1,11 @@
+- name: loader MUST call registered testFun template function during case values apply
+  method: POST
+  path: /some/path
+  request: "{{ testFun .foo }} - postfix"
+  response:
+    200: "result"
+  cases:
+    - requestArgs:
+        foo: 'value 1'
+    - requestArgs:
+        foo: 'value 2'
