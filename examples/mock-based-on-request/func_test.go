@@ -35,8 +35,8 @@ func TestProxy(t *testing.T) {
 	}
 
 	runner.RunWithTesting(t, srv.URL, &runner.RunWithTestingOpts{
-		TestsDir:           "cases",
-		Mocks:              m,
-		TemplateReplyFuncs: funcMap,
+		TestsDir:      "cases",
+		Mocks:         m,
+		TemplateFuncs: funcMap,
 	})
 }

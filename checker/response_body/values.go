@@ -85,9 +85,6 @@ func processPath(path string, result *models.Result) (string, error) {
 
 func parseSetCookies(header string) *http.Cookie {
 	parts := strings.Split(header, ";")
-	if len(parts) == 0 {
-		return nil
-	}
 
 	// First part is always "key=value"
 	keyValue := strings.SplitN(strings.TrimSpace(parts[0]), "=", 2)

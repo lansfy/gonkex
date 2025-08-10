@@ -11,11 +11,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var defaultOpts = &LoaderOpts{
+	CustomFileParse: DefaultFileParse,
+}
+
 func TestParse_TestWithEniromentVariables(t *testing.T) {
 	err := godotenv.Load("testdata/test.env")
 	require.NoError(t, err)
 
-	tests, err := parseTestDefinitionFile(DefaultFileParse, "testdata/variables-enviroment.yaml")
+	tests, err := parseTestDefinitionFile(defaultOpts, "testdata/variables-enviroment.yaml")
 	require.NoError(t, err)
 
 	testOriginal := tests[0]
@@ -32,7 +36,7 @@ func TestParse_TestWithEniromentVariables(t *testing.T) {
 }
 
 func TestParse_TestsWithVariables(t *testing.T) {
-	tests, err := parseTestDefinitionFile(DefaultFileParse, "testdata/variables.yaml")
+	tests, err := parseTestDefinitionFile(defaultOpts, "testdata/variables.yaml")
 	require.NoError(t, err)
 
 	testOriginal := tests[0]
@@ -51,7 +55,7 @@ func TestParse_TestsWithVariables(t *testing.T) {
 }
 
 func TestParse_TestsWithCombinedVariables(t *testing.T) {
-	tests, err := parseTestDefinitionFile(DefaultFileParse, "testdata/combined-variables.yaml")
+	tests, err := parseTestDefinitionFile(defaultOpts, "testdata/combined-variables.yaml")
 	require.NoError(t, err)
 
 	testOriginal := tests[0]

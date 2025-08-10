@@ -29,7 +29,7 @@ func process(h endpoint.Helper) error {
 	h.SetContentType("application/text")
 	wrap := func(err error) error {
 		if err != nil {
-			_ = h.SetResponseAsBytes([]byte(fmt.Sprintf("error: %v", err)))
+			h.SetResponseAsBytes([]byte(fmt.Sprintf("error: %v", err)))
 		}
 		return nil
 	}
@@ -80,7 +80,8 @@ func process(h endpoint.Helper) error {
 		return wrap(err)
 	}
 
-	return h.SetResponseAsBytes(data)
+	h.SetResponseAsBytes(data)
+	return nil
 }
 
 func init() {

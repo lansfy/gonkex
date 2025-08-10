@@ -33,7 +33,7 @@ type Helper interface {
 	// SetResponseAsYaml marshals the provided object into YAML and stores it as the response.
 	SetResponseAsYaml(response interface{}) error
 	// SetResponseAsBytes sets the raw response bytes.
-	SetResponseAsBytes(response []byte) error
+	SetResponseAsBytes(response []byte)
 
 	// SetStatusCode sets the HTTP response status code.
 	SetStatusCode(code int)

@@ -21,15 +21,15 @@ const (
 
 var gonkexProtectTemplate = regexp.MustCompile(`{{\s*\$`)
 
-func parseTestDefinitionContent(f FileParseFun, absPath string, data []byte) ([]models.TestInterface, error) {
-	testDefinitions, err := f(absPath, data)
+func parseTestDefinitionContent(opts *LoaderOpts, absPath string, data []byte) ([]models.TestInterface, error) {
+	testDefinitions, err := opts.CustomFileParse(absPath, data)
 	if err != nil {
 		return nil, err
 	}
 
 	tests := []*testImpl{}
 	for _, item := range testDefinitions {
-		testCases, err := makeTestFromDefinition(absPath, item)
+		testCases, err := makeTestFromDefinition(opts, absPath, item)
 		if err != nil {
 			return nil, fmt.Errorf("process '%s': %w", absPath, err)
 		}
@@ -69,13 +69,13 @@ func DefaultFileParse(filePath string, content []byte) ([]*TestDefinition, error
 	return testDefinitions, nil
 }
 
-func parseTestDefinitionFile(f FileParseFun, absPath string) ([]models.TestInterface, error) {
+func parseTestDefinitionFile(opts *LoaderOpts, absPath string) ([]models.TestInterface, error) {
 	data, err := os.ReadFile(absPath)
 	if err != nil {
 		return nil, fmt.Errorf("read file %s: %w", absPath, err)
 	}
 
-	moreTests, err := parseTestDefinitionContent(f, absPath, data)
+	moreTests, err := parseTestDefinitionContent(opts, absPath, data)
 	if err != nil {
 		return nil, err
 	}
@@ -83,10 +83,10 @@ func parseTestDefinitionFile(f FileParseFun, absPath string) ([]models.TestInter
 	return moreTests, nil
 }
 
-func substituteArgs(path, tmpl string, args map[string]interface{}) (string, error) {
+func substituteArgs(opts *LoaderOpts, path, tmpl string, args map[string]interface{}) (string, error) {
 	tmpl = gonkexProtectTemplate.ReplaceAllString(tmpl, gonkexProtectSubstitute)
 
-	compiledTmpl, err := template.New("$." + path).Parse(tmpl)
+	compiledTmpl, err := template.New("$." + path).Funcs(opts.TemplateFuncs).Parse(tmpl)
 	if err != nil {
 		return "", err
 	}
@@ -102,11 +102,12 @@ func substituteArgs(path, tmpl string, args map[string]interface{}) (string, err
 	return tmpl, nil
 }
 
-func substituteArgsToMap(path string, tmpl map[string]string, args map[string]interface{}) (map[string]string, error) {
+func substituteArgsToMap(opts *LoaderOpts, path string, tmpl map[string]string,
+	args map[string]interface{}) (map[string]string, error) {
 	res := map[string]string{}
 	for key, value := range tmpl {
 		var err error
-		res[key], err = substituteArgs(path, value, args)
+		res[key], err = substituteArgs(opts, path, value, args)
 		if err != nil {
 			return nil, err
 		}
@@ -129,7 +130,7 @@ func validateDbChecks(test *testImpl) error {
 }
 
 // Make tests from the given test definition.
-func makeTestFromDefinition(filePath string, def *TestDefinition) ([]*testImpl, error) {
+func makeTestFromDefinition(opts *LoaderOpts, filePath string, def *TestDefinition) ([]*testImpl, error) {
 	wrap := func(err error) error {
 		return fmt.Errorf("test '%s': %w", def.Name, err)
 	}
@@ -178,27 +179,27 @@ func makeTestFromDefinition(filePath string, def *TestDefinition) ([]*testImpl, 
 
 		var err error
 		// substitute RequestArgs to different parts of request
-		test.TestDefinition.Path, err = substituteArgs("path", def.Path, testCase.RequestArgs)
+		test.TestDefinition.Path, err = substituteArgs(opts, "path", def.Path, testCase.RequestArgs)
 		if err != nil {
 			return nil, wrap(err)
 		}
 
-		test.Request, err = substituteArgs("request", def.Request, testCase.RequestArgs)
+		test.Request, err = substituteArgs(opts, "request", def.Request, testCase.RequestArgs)
 		if err != nil {
 			return nil, wrap(err)
 		}
 
-		test.Query, err = substituteArgs("query", def.Query, testCase.RequestArgs)
+		test.Query, err = substituteArgs(opts, "query", def.Query, testCase.RequestArgs)
 		if err != nil {
 			return nil, wrap(err)
 		}
 
-		test.TestDefinition.Headers, err = substituteArgsToMap("headers", def.Headers, testCase.RequestArgs)
+		test.TestDefinition.Headers, err = substituteArgsToMap(opts, "headers", def.Headers, testCase.RequestArgs)
 		if err != nil {
 			return nil, wrap(err)
 		}
 
-		test.TestDefinition.Cookies, err = substituteArgsToMap("cookies", def.Cookies, testCase.RequestArgs)
+		test.TestDefinition.Cookies, err = substituteArgsToMap(opts, "cookies", def.Cookies, testCase.RequestArgs)
 		if err != nil {
 			return nil, wrap(err)
 		}
@@ -214,7 +215,7 @@ func makeTestFromDefinition(filePath string, def *TestDefinition) ([]*testImpl, 
 			}
 
 			// found args for response status
-			responses[status], err = substituteArgs(fmt.Sprintf("response.%d", status), tpl, args)
+			responses[status], err = substituteArgs(opts, fmt.Sprintf("response.%d", status), tpl, args)
 			if err != nil {
 				return nil, wrap(err)
 			}
@@ -231,19 +232,20 @@ func makeTestFromDefinition(filePath string, def *TestDefinition) ([]*testImpl, 
 			}
 
 			// found args for response status
-			test.ResponseHeaders[status], err = substituteArgsToMap(fmt.Sprintf("responseHeaders.%d", status), respHeaders, args)
+			test.ResponseHeaders[status], err = substituteArgsToMap(opts,
+				fmt.Sprintf("responseHeaders.%d", status), respHeaders, args)
 			if err != nil {
 				return nil, wrap(err)
 			}
 		}
 
-		test.TestDefinition.BeforeScript.Path, err = substituteArgs("beforeScript.path",
+		test.TestDefinition.BeforeScript.Path, err = substituteArgs(opts, "beforeScript.path",
 			def.BeforeScript.Path, testCase.BeforeScriptArgs)
 		if err != nil {
 			return nil, wrap(err)
 		}
 
-		test.TestDefinition.AfterRequestScript.Path, err = substituteArgs("afterRequestScript.path",
+		test.TestDefinition.AfterRequestScript.Path, err = substituteArgs(opts, "afterRequestScript.path",
 			def.AfterRequestScript.Path, testCase.AfterRequestScriptArgs)
 		if err != nil {
 			return nil, wrap(err)
@@ -255,9 +257,9 @@ func makeTestFromDefinition(filePath string, def *TestDefinition) ([]*testImpl, 
 		test.CombinedVariables = cloneVariables(combinedVariables)
 
 		if hasObsoleteDbCheck(def) {
-			test.DbChecks, err = readObsoleteDatabaseCheck(def, &testCase)
+			test.DbChecks, err = readObsoleteDatabaseCheck(opts, def, &testCase)
 		} else {
-			test.DbChecks, err = readDatabaseCheck(def, &testCase)
+			test.DbChecks, err = readDatabaseCheck(opts, def, &testCase)
 		}
 		if err != nil {
 			return nil, wrap(err)
@@ -301,8 +303,8 @@ func makeOneTest(filePath string, def *TestDefinition) *testImpl {
 	return test
 }
 
-func readObsoleteDatabaseCheck(def *TestDefinition, testCase *CaseData) ([]models.DatabaseCheck, error) {
-	tmpDbQuery, err := substituteArgs("dbQuery", def.DbQuery, testCase.DbQueryArgs)
+func readObsoleteDatabaseCheck(opts *LoaderOpts, def *TestDefinition, testCase *CaseData) ([]models.DatabaseCheck, error) {
+	tmpDbQuery, err := substituteArgs(opts, "dbQuery", def.DbQuery, testCase.DbQueryArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +320,7 @@ func readObsoleteDatabaseCheck(def *TestDefinition, testCase *CaseData) ([]model
 	}
 
 	for _, tpl := range def.DbResponse {
-		responseString, err := substituteArgs("dbResponse", tpl, testCase.DbResponseArgs)
+		responseString, err := substituteArgs(opts, "dbResponse", tpl, testCase.DbResponseArgs)
 		if err != nil {
 			return nil, err
 		}
@@ -327,10 +329,11 @@ func readObsoleteDatabaseCheck(def *TestDefinition, testCase *CaseData) ([]model
 	return []models.DatabaseCheck{c}, nil
 }
 
-func readDatabaseCheck(def *TestDefinition, testCase *CaseData) ([]models.DatabaseCheck, error) {
+func readDatabaseCheck(opts *LoaderOpts, def *TestDefinition, testCase *CaseData) ([]models.DatabaseCheck, error) {
 	dbChecks := []models.DatabaseCheck{}
 	for idx, check := range def.DbChecks {
-		query, err := substituteArgs(fmt.Sprintf("dbChecks[%d].dbQuery", idx), check.DbQuery, testCase.DbQueryArgs)
+		query, err := substituteArgs(opts, fmt.Sprintf("dbChecks[%d].dbQuery", idx),
+			check.DbQuery, testCase.DbQueryArgs)
 		if err != nil {
 			return nil, err
 		}
@@ -340,7 +343,8 @@ func readDatabaseCheck(def *TestDefinition, testCase *CaseData) ([]models.Databa
 			params: check.ComparisonParams,
 		}
 		for i, tpl := range check.DbResponse {
-			responseString, err := substituteArgs(fmt.Sprintf("dbChecks[%d].dbResponse[%d]", idx, i), tpl, testCase.DbResponseArgs)
+			responseString, err := substituteArgs(opts,
+				fmt.Sprintf("dbChecks[%d].dbResponse[%d]", idx, i), tpl, testCase.DbResponseArgs)
 			if err != nil {
 				return nil, err
 			}

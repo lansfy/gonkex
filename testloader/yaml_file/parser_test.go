@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"text/template"
 	"time"
 
 	"github.com/lansfy/gonkex/models"
@@ -47,7 +48,13 @@ func TestParser(t *testing.T) {
 			}
 
 			// read actual result
-			loader := NewLoader(testfolder + input_file)
+			loader := NewFileLoader(testfolder+input_file, &LoaderOpts{
+				TemplateFuncs: template.FuncMap{
+					"testFun": func(s string) string {
+						return "testfun(" + s + ") result"
+					},
+				},
+			})
 			loader.SetFilter(testFilter)
 			actualTests, err := loader.Load()
 
