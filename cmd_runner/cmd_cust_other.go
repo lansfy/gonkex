@@ -1,4 +1,4 @@
-//go:build linux || darwin
+//go:build !windows
 
 package cmd_runner
 
