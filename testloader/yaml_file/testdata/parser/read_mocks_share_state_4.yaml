@@ -1,0 +1,14 @@
+- name: share state MUST do nothing for this testcase ...
+  method: GET
+  path: /some/path1
+  request: "requestbody"
+  mocksParams:
+    shareState: true
+  mocks:
+    someservice:
+      strategy: nop
+
+- name: ... because this testcase does not have shareState
+  method: GET
+  path: /some/path2
+  request: "requestbody"

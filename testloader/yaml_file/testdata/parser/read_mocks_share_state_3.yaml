@@ -1,0 +1,19 @@
+- name: share state for two testscase with mocks declaration MUST do nothing
+  method: GET
+  path: /some/path1
+  request: "requestbody"
+  mocksParams:
+    shareState: true
+  mocks:
+    someservice:
+      strategy: nop
+
+- name: share state for two testscase with mocks declaration MUST do nothing
+  method: GET
+  path: /some/path2
+  request: "requestbody"
+  mocksParams:
+    shareState: true
+  mocks:
+    someservice:
+      strategy: nop

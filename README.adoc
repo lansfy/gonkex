@@ -1698,6 +1698,52 @@ Example:
     ...
 ----
 
+=== Mock state sharing
+
+The `+mocksParams+` section allows you to configure mock behavior across multiple test cases.
+By default, mocks are reset between each test to ensure isolation, but shared state can be useful for testing asynchronous operations.
+
+Use `+shareState: true+` to maintain mock state continuity between test cases. Example:
+
+[source,yaml]
+----
+- name: initialize sequence mock
+  method: GET
+  path: /api/step1
+  mocksParams:
+    shareState: true
+  mocks:
+    service:
+      calls: 3
+      strategy: sequence
+      sequence:
+        - strategy: constant
+          body: "step1 response"
+        - strategy: constant
+          body: "step2 response"
+        - strategy: constant
+          body: "step3 response"
+
+- name: continue with same mock state
+  method: GET
+  path: /api/step2
+  mocksParams:
+    shareState: true
+  response:
+    200: "step2 response"  # Gets second item from sequence
+
+- name: final step in sequence
+  method: GET
+  path: /api/step3
+  mocksParams:
+    shareState: true
+  response:
+    200: "step3 response"  # Gets third item from sequence
+----
+
+The first test with `+shareState: true+` that defines mocks starts a new shared state chain. Subsequent tests with `+shareState+` and no mock definitions continue the chain.
+A new mock definition in a `+shareState+` test terminates the previous chain and starts a new one. Tests without `+shareState+` are isolated and terminates the previous chain.
+
 == Shell scripts usage
 
 When the test is ran, operations are performed in the following order:

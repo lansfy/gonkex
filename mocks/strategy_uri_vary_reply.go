@@ -63,10 +63,10 @@ func (s *uriVaryReply) ResetRunningContext() {
 	}
 }
 
-func (s *uriVaryReply) EndRunningContext() []error {
+func (s *uriVaryReply) EndRunningContext(intermediate bool) []error {
 	var errs []error
 	for _, def := range s.variants {
-		errs = append(errs, def.EndRunningContext()...)
+		errs = append(errs, def.EndRunningContext(intermediate)...)
 	}
 	return errs
 }

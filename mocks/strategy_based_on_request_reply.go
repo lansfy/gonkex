@@ -67,10 +67,10 @@ func (s *basedOnRequestReply) ResetRunningContext() {
 	}
 }
 
-func (s *basedOnRequestReply) EndRunningContext() []error {
+func (s *basedOnRequestReply) EndRunningContext(intermediate bool) []error {
 	var errs []error
 	for _, def := range s.variants {
-		errs = append(errs, def.EndRunningContext()...)
+		errs = append(errs, def.EndRunningContext(intermediate)...)
 	}
 	return errs
 }

@@ -25,6 +25,7 @@ type TestDefinition struct {
 	ComparisonParams   compare.Params            `json:"comparisonParams" yaml:"comparisonParams"`
 	Fixtures           []string                  `json:"fixtures" yaml:"fixtures"`
 	Mocks              map[string]interface{}    `json:"mocks" yaml:"mocks"`
+	MocksParams        MocksParams               `json:"mocksParams" yaml:"mocksParams"`
 	Pause              Duration                  `json:"pause" yaml:"pause"`
 	AfterRequestPause  Duration                  `json:"afterRequestPause" yaml:"afterRequestPause"`
 	DbQuery            string                    `json:"dbQuery" yaml:"dbQuery"`
@@ -67,4 +68,8 @@ type RetryPolicy struct {
 type ScriptParams struct {
 	Path    string   `json:"path" yaml:"path"`
 	Timeout Duration `json:"timeout" yaml:"timeout"`
+}
+
+type MocksParams struct {
+	ShareState bool `json:"shareState" yaml:"shareState"`
 }

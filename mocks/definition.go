@@ -58,24 +58,32 @@ func (d *Definition) ResetRunningContext() {
 	if s, ok := d.replyStrategy.(contextAwareStrategy); ok {
 		s.ResetRunningContext()
 	}
+
+	d.mutex.Lock()
+	d.calls = 0
 	if d.order != nil {
 		d.order.Reset()
 	}
-	d.mutex.Lock()
-	d.calls = 0
 	d.mutex.Unlock()
 }
 
-func (d *Definition) EndRunningContext() []error {
+func (d *Definition) EndRunningContext(intermediate bool) []error {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
+
+	var errs []error
+	if s, ok := d.replyStrategy.(contextAwareStrategy); ok {
+		errs = s.EndRunningContext(intermediate)
+	}
+
+	if intermediate {
+		return errs
+	}
+
 	if d.order != nil {
 		d.order.Reset()
 	}
-	var errs []error
-	if s, ok := d.replyStrategy.(contextAwareStrategy); ok {
-		errs = s.EndRunningContext()
-	}
+
 	if d.callsConstraint != CallsNoConstraint && d.calls != d.callsConstraint {
 		errs = append(errs, colorize.NewEntityError("path %s", d.path).SetSubError(
 			colorize.NewNotEqualError("number of %s does not match:", "calls", d.callsConstraint, d.calls),

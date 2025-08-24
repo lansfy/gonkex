@@ -1,0 +1,45 @@
+- name: initialize mock only once and do not reset it between tests
+  method: GET
+  path: /test/path1
+  response:
+    200: "result1"
+  mocksParams:
+    shareState: true
+  mocks:
+    someservice:
+      strategy: sequence
+      sequence:
+        - strategy: constant
+          requestConstraints:
+            - kind: pathMatches
+              path: /test/path1
+          body: "result1"
+          statusCode: 200
+        - strategy: constant
+          requestConstraints:
+            - kind: pathMatches
+              path: /test/path2
+          body: "result2"
+          statusCode: 200
+        - strategy: constant
+          requestConstraints:
+            - kind: pathMatches
+              path: /test/path3
+          body: "result3"
+          statusCode: 200
+
+- name: test MUST receive second response from sequence strategy
+  method: GET
+  path: /test/path2
+  response:
+    200: "result2"
+  mocksParams:
+    shareState: true
+
+- name: test MUST receive third response from sequence strategy
+  method: GET
+  path: /test/path3
+  response:
+    200: "result3"
+  mocksParams:
+    shareState: true

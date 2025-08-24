@@ -1,0 +1,1 @@
+- Error: "process 'testdata/parser/read_mocks_share_state_5.yaml': test 'WHEN options shareState starts without mocks definition parser MUST fail': shareState require non empty $.mocks declaration"

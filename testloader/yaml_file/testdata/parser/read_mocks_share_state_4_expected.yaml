@@ -1,0 +1,16 @@
+- GetName: share state MUST do nothing for this testcase ...
+  GetMethod: GET
+  Path: /some/path1
+  GetRequest: requestbody
+  GetFileName: testdata/parser/read_mocks_share_state_4.yaml
+  FirstTestInFile: true
+  ServiceMocks:
+    someservice:
+      strategy: nop
+
+- GetName: ... because this testcase does not have shareState
+  GetMethod: GET
+  Path: /some/path2
+  GetRequest: requestbody
+  GetFileName: testdata/parser/read_mocks_share_state_4.yaml
+  LastTestInFile: true

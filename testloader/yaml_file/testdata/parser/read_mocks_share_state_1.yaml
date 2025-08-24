@@ -1,0 +1,9 @@
+- name: share state for one testscase MUST change nothing
+  method: GET
+  path: /some/path
+  request: "requestbody"
+  mocksParams:
+    shareState: true
+  mocks:
+    someservice:
+      strategy: nop

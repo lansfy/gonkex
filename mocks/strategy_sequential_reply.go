@@ -49,10 +49,10 @@ func (s *sequentialReply) ResetRunningContext() {
 	}
 }
 
-func (s *sequentialReply) EndRunningContext() []error {
+func (s *sequentialReply) EndRunningContext(intermediate bool) []error {
 	var errs []error
 	for _, def := range s.sequence {
-		errs = append(errs, def.EndRunningContext()...)
+		errs = append(errs, def.EndRunningContext(intermediate)...)
 	}
 	return errs
 }

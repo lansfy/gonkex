@@ -27,11 +27,15 @@ func parseTestDefinitionContent(opts *LoaderOpts, absPath string, data []byte) (
 		return nil, err
 	}
 
+	wrap := func(err error) error {
+		return fmt.Errorf("process '%s': %w", absPath, err)
+	}
+
 	tests := []*testImpl{}
 	for _, item := range testDefinitions {
 		testCases, err := makeTestFromDefinition(opts, absPath, item)
 		if err != nil {
-			return nil, fmt.Errorf("process '%s': %w", absPath, err)
+			return nil, wrap(err)
 		}
 
 		tests = append(tests, testCases...)
@@ -42,12 +46,59 @@ func parseTestDefinitionContent(opts *LoaderOpts, absPath string, data []byte) (
 		tests[len(tests)-1].LastTest = true
 	}
 
+	// process persistent mocks
+	err = updateShareState(tests)
+	if err != nil {
+		return nil, wrap(err)
+	}
+
 	result := make([]models.TestInterface, len(tests))
 	for i := range tests {
 		result[i] = tests[i]
 	}
 
 	return result, nil
+}
+
+func updateShareState(tests []*testImpl) error {
+	var prevItem, curItem *testImpl
+	var prevShareState, curShareState bool
+	for _, t := range tests {
+		prevItem = curItem
+		prevShareState = curShareState
+
+		curItem = t
+		curShareState = curItem.MocksParams.ShareState
+		if !curShareState {
+			if prevShareState {
+				prevItem.doNotResetMocksAfterTest = false
+			}
+			continue
+		}
+
+		// curShareState == true
+		curItem.doNotResetMocksAfterTest = true
+		if !prevShareState {
+			if len(curItem.Mocks) == 0 {
+				return fmt.Errorf("test '%s': shareState require non empty $.mocks declaration", curItem.Name)
+			}
+			continue
+		}
+
+		// curShareState == true && prevShareState == true
+		if len(curItem.Mocks) != 0 {
+			prevItem.doNotResetMocksAfterTest = false
+			continue
+		}
+
+		curItem.doNotResetMocksBeforeTest = true
+	}
+
+	if curShareState {
+		curItem.doNotResetMocksAfterTest = false
+	}
+
+	return nil
 }
 
 // DefaultFileParse reads and unmarshals the YAML content of a test definition file (default implementation).

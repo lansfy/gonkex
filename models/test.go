@@ -48,6 +48,11 @@ type Script interface {
 	Timeout() time.Duration // Timeout for execution (3 seconds by default)
 }
 
+type MocksParams interface {
+	SkipMocksResetBeforeTest() bool
+	SkipMocksResetAfterTest() bool
+}
+
 // TestInterface defines the interface for Gonkex test cases
 // Contains all methods necessary to execute a test
 type TestInterface interface {
@@ -77,6 +82,7 @@ type TestInterface interface {
 	GetRetryPolicy() RetryPolicy           // Retry policy for failed tests
 
 	ServiceMocks() map[string]interface{} // Mocks for external services
+	ServiceMocksParams() MocksParams
 
 	Pause() time.Duration             // Pause duration before test execution
 	AfterRequestPause() time.Duration // Pause duration after request execution
