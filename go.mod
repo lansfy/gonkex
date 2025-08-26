@@ -5,12 +5,12 @@ go 1.18
 require (
 	github.com/fatih/color v1.18.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.3.0
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mattn/go-colorable v0.1.13
 	github.com/ncruces/go-strftime v0.1.9
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.11.0
 	github.com/tidwall/gjson v1.17.0
 	github.com/tidwall/match v1.1.1
 	github.com/xhit/go-str2duration/v2 v2.1.0
