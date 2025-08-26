@@ -305,16 +305,18 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 
 	// reset mocks
 	if r.config.Mocks != nil {
-		// prevent deriving the definition from previous test
-		r.config.Mocks.ResetRunningContext()
-		r.config.Mocks.ResetDefinitions()
-	}
+		if !v.ServiceMocksParams().SkipMocksResetBeforeTest() {
+			// prevent deriving the definition from previous test
+			r.config.Mocks.ResetRunningContext()
+			r.config.Mocks.ResetDefinitions()
+		}
 
-	// load mocks
-	if v.ServiceMocks() != nil {
-		err = r.config.Mocks.LoadDefinitions(r.config.MocksLoader, v.ServiceMocks())
-		if err != nil {
-			return nil, err
+		// load mocks
+		if v.ServiceMocks() != nil {
+			err = r.config.Mocks.LoadDefinitions(r.config.MocksLoader, v.ServiceMocks())
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -387,7 +389,7 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 	}
 
 	if r.config.Mocks != nil {
-		errs := r.config.Mocks.EndRunningContext()
+		errs := r.config.Mocks.EndRunningContext(v.ServiceMocksParams().SkipMocksResetAfterTest())
 		result.Errors = append(result.Errors, errs...)
 	}
 

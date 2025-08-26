@@ -1,0 +1,20 @@
+- GetName: share state for two testscase MUST skip mocks resets after this test
+  GetMethod: GET
+  Path: /some/path1
+  GetRequest: requestbody
+  GetFileName: testdata/parser/read_mocks_share_state_2.yaml
+  FirstTestInFile: true
+  ServiceMocksParams:
+    SkipMocksResetAfterTest: true
+  ServiceMocks:
+    someservice:
+      strategy: nop
+
+- GetName: share state for two testscase MUST skip mocks resets before this test
+  GetMethod: GET
+  Path: /some/path2
+  GetRequest: requestbody
+  GetFileName: testdata/parser/read_mocks_share_state_2.yaml
+  ServiceMocksParams:
+    SkipMocksResetBeforeTest: true
+  LastTestInFile: true

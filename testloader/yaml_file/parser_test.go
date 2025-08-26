@@ -153,6 +153,11 @@ type scriptResult struct {
 	Timeout time.Duration `yaml:"Timeout"`
 }
 
+type mocksResult struct {
+	SkipMocksResetBeforeTest bool `yaml:"SkipMocksResetBeforeTest"`
+	SkipMocksResetAfterTest  bool `yaml:"SkipMocksResetAfterTest"`
+}
+
 type TestInterfaceResult struct {
 	Error               string                    `yaml:"Error"`
 	GetName             string                    `yaml:"GetName"`
@@ -174,6 +179,7 @@ type TestInterfaceResult struct {
 	GetComparisonParams comparisonParamsResult    `yaml:"GetComparisonParams"`
 	GetRetryPolicy      retryPolicyResult         `yaml:"GetRetryPolicy"`
 	ServiceMocks        map[string]interface{}    `yaml:"ServiceMocks"`
+	ServiceMocksParams  mocksResult               `yaml:"ServiceMocksParams"`
 	Pause               time.Duration             `yaml:"Pause"`
 	AfterRequestPause   time.Duration             `yaml:"AfterRequestPause"`
 	BeforeScript        scriptResult              `yaml:"BeforeScript"`
@@ -260,6 +266,8 @@ func compareTestInterface(t *testing.T, expected *TestInterfaceResult, actual mo
 	compareRetryPolicy(t, expected.GetRetryPolicy, actual.GetRetryPolicy())
 
 	assert.Equal(t, expected.ServiceMocks, actual.ServiceMocks(), "ServiceMocks returns wrong value")
+	compareServiceMocksParams(t, expected.ServiceMocksParams, actual.ServiceMocksParams())
+
 	assert.Equal(t, expected.Pause, actual.Pause(), "Pause returns wrong value")
 	assert.Equal(t, expected.AfterRequestPause, actual.AfterRequestPause(), "AfterRequestPause returns wrong value")
 
@@ -320,6 +328,11 @@ func compareComparisonParams(t *testing.T, expected comparisonParamsResult, actu
 func compareScript(t *testing.T, expected scriptResult, actual models.Script) {
 	assert.Equal(t, expected.CmdLine, actual.CmdLine(), "CmdLine returns wrong value")
 	assert.Equal(t, expected.Timeout, actual.Timeout(), "Timeout returns wrong value")
+}
+
+func compareServiceMocksParams(t *testing.T, expected mocksResult, actual models.MocksParams) {
+	assert.Equal(t, expected.SkipMocksResetBeforeTest, actual.SkipMocksResetBeforeTest(), "SkipMocksResetBeforeTest returns wrong value")
+	assert.Equal(t, expected.SkipMocksResetAfterTest, actual.SkipMocksResetAfterTest(), "SkipMocksResetAfterTest returns wrong value")
 }
 
 func compareRetryPolicy(t *testing.T, expected retryPolicyResult, actual models.RetryPolicy) {

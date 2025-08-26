@@ -1,0 +1,42 @@
+- name: order MUST be checked right after fail
+  method: GET
+  path: /test/path1
+  response:
+    200: "result1"
+  mocksParams:
+    shareState: true
+  mocks:
+    someservice:
+      strategy: sequence
+      sequence:
+        - strategy: constant
+          order: 2
+          body: "result1"
+          statusCode: 200
+        - strategy: constant
+          order: 1
+          body: "result2"
+          statusCode: 200
+        - strategy: constant
+          order: 3
+          body: "result3"
+          statusCode: 200
+
+- name: test MUST receive second response from sequence strategy
+  method: GET
+  path: /test/path2
+  response:
+    200: "result2"
+  mocksParams:
+    shareState: true
+  meta:
+    expected: |
+       1) mock 'someservice': the 'order' of the current request (1) is less than that of the previous request (2)
+
+- name: test MUST receive third response from sequence strategy
+  method: GET
+  path: /test/path3
+  response:
+    200: "result3"
+  mocksParams:
+    shareState: true

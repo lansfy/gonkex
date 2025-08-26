@@ -1,0 +1,33 @@
+- name: first shared mocks
+  method: GET
+  path: /some/path1
+  request: "requestbody"
+  mocksParams:
+    shareState: true
+  mocks:
+    someservice:
+      strategy: nop
+
+- name: first shared mocks
+  method: GET
+  path: /some/path2
+  request: "requestbody"
+  mocksParams:
+    shareState: true
+
+- name: second shared mocks
+  method: GET
+  path: /some/path3
+  request: "requestbody"
+  mocksParams:
+    shareState: true
+  mocks:
+    someservice:
+      strategy: nop
+
+- name: second shared mocks
+  method: GET
+  path: /some/path4
+  request: "requestbody"
+  mocksParams:
+    shareState: true

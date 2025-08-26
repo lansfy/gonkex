@@ -104,10 +104,10 @@ func (m *Mocks) ResetRunningContext() {
 
 // EndRunningContext finalizes the running context for all mock services and returns all accumulated errors.
 // This is typically called after completing a test case to verify that all expectations were met.
-func (m *Mocks) EndRunningContext() []error {
+func (m *Mocks) EndRunningContext(intermediate bool) []error {
 	var errors []error
 	for _, v := range m.mocks {
-		errors = append(errors, v.EndRunningContext()...)
+		errors = append(errors, v.EndRunningContext(intermediate)...)
 	}
 	return errors
 }

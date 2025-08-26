@@ -1,0 +1,16 @@
+- name: share state for two testscase MUST skip mocks resets after this test
+  method: GET
+  path: /some/path1
+  request: "requestbody"
+  mocksParams:
+    shareState: true
+  mocks:
+    someservice:
+      strategy: nop
+
+- name: share state for two testscase MUST skip mocks resets before this test
+  method: GET
+  path: /some/path2
+  request: "requestbody"
+  mocksParams:
+    shareState: true

@@ -10,5 +10,5 @@ type ReplyStrategy interface {
 
 type contextAwareStrategy interface {
 	ResetRunningContext()
-	EndRunningContext() []error
+	EndRunningContext(intermediate bool) []error
 }

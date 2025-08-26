@@ -82,6 +82,19 @@ func (s *script) Timeout() time.Duration {
 	return s.params.Timeout.Duration
 }
 
+type mocksParams struct {
+	resetBeforeTest bool
+	resetAfterTest  bool
+}
+
+func (m *mocksParams) SkipMocksResetBeforeTest() bool {
+	return !m.resetBeforeTest
+}
+
+func (m *mocksParams) SkipMocksResetAfterTest() bool {
+	return !m.resetAfterTest
+}
+
 type testImpl struct {
 	TestDefinition
 
@@ -92,6 +105,9 @@ type testImpl struct {
 	FirstTest   bool
 	LastTest    bool
 	IsOneOfCase bool
+
+	doNotResetMocksBeforeTest bool
+	doNotResetMocksAfterTest  bool
 }
 
 func (t *testImpl) ToQuery() string {
@@ -152,6 +168,13 @@ func (t *testImpl) GetMeta(key string) interface{} {
 
 func (t *testImpl) ServiceMocks() map[string]interface{} {
 	return t.Mocks
+}
+
+func (t *testImpl) ServiceMocksParams() models.MocksParams {
+	return &mocksParams{
+		resetBeforeTest: !t.doNotResetMocksBeforeTest,
+		resetAfterTest:  !t.doNotResetMocksAfterTest,
+	}
 }
 
 func (t *testImpl) Pause() time.Duration {

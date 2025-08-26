@@ -1,0 +1,6 @@
+- name: WHEN options shareState starts without mocks definition parser MUST fail
+  method: GET
+  path: /some/path1
+  request: "requestbody"
+  mocksParams:
+    shareState: true

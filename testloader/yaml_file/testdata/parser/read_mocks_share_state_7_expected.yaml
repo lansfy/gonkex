@@ -1,0 +1,29 @@
+- GetName: first shared mocks
+  GetMethod: GET
+  Path: /some/path1
+  GetRequest: requestbody
+  GetFileName: testdata/parser/read_mocks_share_state_7.yaml
+  FirstTestInFile: true
+  ServiceMocksParams:
+    SkipMocksResetAfterTest: true
+  ServiceMocks:
+    someservice:
+      strategy: nop
+
+- GetName: first shared mocks
+  GetMethod: GET
+  Path: /some/path2
+  GetRequest: requestbody
+  GetFileName: testdata/parser/read_mocks_share_state_7.yaml
+  ServiceMocksParams:
+    SkipMocksResetBeforeTest: true
+    SkipMocksResetAfterTest: true
+
+- GetName: first shared mocks
+  GetMethod: GET
+  Path: /some/path3
+  GetRequest: requestbody
+  GetFileName: testdata/parser/read_mocks_share_state_7.yaml
+  LastTestInFile: true
+  ServiceMocksParams:
+    SkipMocksResetBeforeTest: true

@@ -179,14 +179,17 @@ func (m *ServiceMock) ResetRunningContext() {
 }
 
 // EndRunningContext finalizes the running context and returns all accumulated errors.
-func (m *ServiceMock) EndRunningContext() []error {
+func (m *ServiceMock) EndRunningContext(intermediate bool) []error {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
 	errs := m.errors
-	errs = append(errs, m.mock.EndRunningContext()...)
+	errs = append(errs, m.mock.EndRunningContext(intermediate)...)
 	for i := range errs {
 		errs[i] = colorize.NewEntityError("mock %s", m.ServiceName).SetSubError(errs[i])
+	}
+	if intermediate {
+		m.errors = nil
 	}
 	return errs
 }

@@ -1,0 +1,44 @@
+- name: request constraints MUST be checked right after fail
+  method: GET
+  path: /test/path1
+  response:
+    200: "result1"
+  mocksParams:
+    shareState: true
+  mocks:
+    someservice:
+      strategy: sequence
+      sequence:
+        - strategy: constant
+          body: "result1"
+          statusCode: 200
+        - strategy: constant
+          requestConstraints:
+            - kind: pathMatches
+              path: /test/path2
+          body: "result2"
+          statusCode: 200
+        - strategy: constant
+          body: "result3"
+          statusCode: 200
+
+- name: test MUST fail with requestConstraints error
+  method: GET
+  path: /test/wrong
+  response:
+    200: "result2"
+  mocksParams:
+    shareState: true
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'pathMatches': url 'path': values do not match:
+            expected: /test/path2
+              actual: /test/wrong
+
+- name: test MUST receive third response from sequence strategy
+  method: GET
+  path: /test/path3
+  response:
+    200: "result3"
+  mocksParams:
+    shareState: true
