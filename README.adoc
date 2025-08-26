@@ -1698,6 +1698,44 @@ Example:
     ...
 ----
 
+=== Calls order
+
+In some cases you need to check if mock services receive requests in a specific order.
+
+You can specify an `+order+` parameter for any mock endpoint to indicate its expected position in the request sequence.
+Gonkex will validate that requests arrive at the mocks in the correct order based on these values.
+
+Example:
+
+```yaml
+mocks:
+  someservice1:
+    strategy: uriVary
+    uris:
+      /step/create:
+        order: 1           # This should be called first
+        strategy: constant
+        body: "create result"
+        statusCode: 200
+      /step/update:
+        order: 3           # This should be called third
+        strategy: constant
+        body: "update result"
+        statusCode: 200
+  someservice2:
+    order: 2               # This should be called second
+    strategy: constant
+    body: "other service result"
+    statusCode: 200
+```
+
+Validation rules:
+
+* Requests must arrive in ascending order based on their `+order+` values
+* Multiple endpoints can have the same `+order+` value - they can be called in any sequence relative to each other
+* Order values don't need to be consecutive (e.g., 1, 5, 10 is valid)
+* If a request arrives out of order, the test will fail
+
 === Mock state sharing
 
 The `+mocksParams+` section allows you to configure mock behavior across multiple test cases.
