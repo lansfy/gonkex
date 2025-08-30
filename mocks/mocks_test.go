@@ -1,6 +1,7 @@
 package mocks_test
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net"
@@ -24,8 +25,13 @@ func init() {
 	runner.RegisterFlags()
 }
 
-// This regex matches :[port]/ after 127.0.0.1
-var portRegexp = regexp.MustCompile(`127\.0\.0\.1:\d+`)
+var (
+	// This regex matches :[port]/ after 127.0.0.1
+	portRegexp = regexp.MustCompile(`127\.0\.0\.1:\d+`)
+
+	// This regex matches :[port]/ after 127.0.0.1
+	httpBoundaryRegexp = regexp.MustCompile(`[0-9a-f]{60}`)
+)
 
 type errorChecker struct {
 	t         *testing.T
@@ -141,6 +147,35 @@ func multiRequest(h endpoint.Helper) error {
 	return nil
 }
 
+type customClient struct{}
+
+func (c *customClient) Do(req *http.Request) (*http.Response, error) {
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	if req.Body == nil {
+		return client.Do(req)
+	}
+
+	// Read the original body
+	bodyBytes, err := io.ReadAll(req.Body)
+	if err != nil {
+		return nil, fmt.Errorf("internal error: read body: %w", err)
+	}
+	_ = req.Body.Close()
+
+	modified := httpBoundaryRegexp.ReplaceAllString(string(bodyBytes), "<http-boundary-header>")
+	modified = strings.ReplaceAll(modified, "\r\n", "\n")
+
+	req.Body = io.NopCloser(bytes.NewBufferString(modified))
+	req.ContentLength = int64(len(modified))
+
+	return client.Do(req)
+}
+
 func Test_Declarative(t *testing.T) {
 	m := mocks.NewNop("someservice")
 	err := m.Start()
@@ -160,6 +195,7 @@ func Test_Declarative(t *testing.T) {
 		HelperEndpoints: endpoint.EndpointMap{
 			"multi_request": multiRequest,
 		},
+		CustomClient: &customClient{},
 	}
 
 	r := runner.New(yaml_file.NewLoader("testdata"), opts)

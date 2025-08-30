@@ -1,0 +1,90 @@
+- name: form data MUST successfully make file upload request
+  method: POST
+  path: /test/case
+  headers:
+    Content-Type: multipart/form-data
+    X-Custom-Header: some_custom_value
+  cookies:
+    testcookies: cookie_value
+  form:
+    files:
+      file1: "testdata/request/files/file1.txt"
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: Content-Type
+          value: $matchRegexp(^multipart/form-data; boundary=[0-9a-f]{60}$)
+        - kind: headerIs
+          header: X-Custom-Header
+          value: some_custom_value
+        - kind: headerIs
+          header: Cookie
+          value: testcookies=cookie_value
+        - kind: bodyMatchesText
+          body: |
+             --<http-boundary-header>
+             Content-Disposition: form-data; name="file1"; filename="file1.txt"
+             Content-Type: application/octet-stream
+
+             file1content
+             --<http-boundary-header>--
+      strategy: constant
+      body: result
+      statusCode: 200
+
+- name: Content-Type in form data MUST be optional
+  method: POST
+  path: /test/case
+  form:
+    files:
+      file1: "testdata/request/files/file1.txt"
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: Content-Type
+          value: $matchRegexp(^multipart/form-data; boundary=[0-9a-f]{60}$)
+        - kind: bodyMatchesText
+          body: |
+             --<http-boundary-header>
+             Content-Disposition: form-data; name="file1"; filename="file1.txt"
+             Content-Type: application/octet-stream
+
+             file1content
+             --<http-boundary-header>--
+      strategy: constant
+      body: result
+      statusCode: 200
+
+- name: WHEN Content-Type consist boundary form data MUST use this value in request
+  method: POST
+  path: /test/case
+  headers:
+    Content-Type: multipart/form-data; boundary=CustomValue
+  form:
+    files:
+      file1: "testdata/request/files/file1.txt"
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: Content-Type
+          value: multipart/form-data; boundary=CustomValue
+        - kind: bodyMatchesText
+          body: |
+             --CustomValue
+             Content-Disposition: form-data; name="file1"; filename="file1.txt"
+             Content-Type: application/octet-stream
+
+             file1content
+             --CustomValue--
+      strategy: constant
+      body: result
+      statusCode: 200

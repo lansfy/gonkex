@@ -1,0 +1,28 @@
+- name: common request MUST preserve headers and cookies
+  method: POST
+  path: /test/case
+  headers:
+    Content-Type: application/text
+    X-Custom-Header: some_custom_value
+  cookies:
+    testcookies: cookie_value
+  request: somebody
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: Content-Type
+          value: application/text
+        - kind: headerIs
+          header: X-Custom-Header
+          value: some_custom_value
+        - kind: headerIs
+          header: Cookie
+          value: testcookies=cookie_value
+        - kind: bodyMatchesText
+          body: somebody
+      strategy: constant
+      body: result
+      statusCode: 200

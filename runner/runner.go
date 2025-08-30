@@ -250,6 +250,9 @@ func makeServiceRequest(config *RunnerOpts, v models.TestInterface) (*models.Res
 		result.ResponseHeaders[name] = value
 	}
 
+	// Support for Host header
+	result.ResponseHeaders["Host"] = []string{req.Host}
+
 	return result, nil
 }
 

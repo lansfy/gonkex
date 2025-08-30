@@ -17,6 +17,13 @@ import (
 	"github.com/lansfy/gonkex/models"
 )
 
+const (
+	headerContentType       = "Content-Type"
+	headerHost              = "Host"
+	headerMultipartFormData = "multipart/form-data"
+	headerApplicationJSON   = "application/json"
+)
+
 func newClient(proxyURL *url.URL) *http.Client {
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // Client is only used for testing.
@@ -31,58 +38,25 @@ func newClient(proxyURL *url.URL) *http.Client {
 	}
 }
 
-func NewRequest(host string, test models.TestInterface) (req *http.Request, err error) {
+func NewRequest(host string, test models.TestInterface) (*http.Request, error) {
 	if test.GetForm() != nil {
-		req, err = newMultipartRequest(host, test)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		req, err = newCommonRequest(host, test)
-		if err != nil {
-			return nil, err
-		}
+		return newMultipartRequest(host, test)
 	}
-
-	for k, v := range test.Cookies() {
-		req.AddCookie(&http.Cookie{Name: k, Value: v})
-	}
-
-	return req, nil
+	return newCommonRequest(host, test)
 }
 
 func newMultipartRequest(host string, test models.TestInterface) (*http.Request, error) {
-	var boundary string
+	buff := &bytes.Buffer{}
+	w := multipart.NewWriter(buff)
 
-	if test.ContentType() != "" {
-		contentType, params, err := mime.ParseMediaType(test.ContentType())
-		if err != nil {
-			return nil, err
-		}
-		if contentType != "multipart/form-data" {
-			return nil, fmt.Errorf(
-				"test has unexpected Content-Type: %s, expected: multipart/form-data",
-				test.ContentType(),
-			)
-		}
-
-		if b, ok := params["boundary"]; ok {
-			boundary = b
-		}
-	}
-
-	var b bytes.Buffer
-	w := multipart.NewWriter(&b)
-
-	if boundary != "" {
-		if err := w.SetBoundary(boundary); err != nil {
-			return nil, fmt.Errorf("SetBoundary : %w", err)
-		}
+	err := addBoundary(test.ContentType(), w)
+	if err != nil {
+		return nil, err
 	}
 
 	form := test.GetForm()
 
-	err := addFormFields(form.GetFields(), w)
+	err = addFormFields(form.GetFields(), w)
 	if err != nil {
 		return nil, err
 	}
@@ -94,15 +68,42 @@ func newMultipartRequest(host string, test models.TestInterface) (*http.Request,
 
 	_ = w.Close()
 
-	req, err := request(test, &b, host)
+	req, err := makeRequest(test, buff, host)
 	if err != nil {
 		return nil, err
 	}
 
 	// this is necessary, it will contain boundary
-	req.Header.Set("Content-Type", w.FormDataContentType())
+	req.Header.Set(headerContentType, w.FormDataContentType())
 
 	return req, nil
+}
+
+func addBoundary(contentTypeValue string, w *multipart.Writer) error {
+	if contentTypeValue == "" {
+		return nil
+	}
+
+	contentType, params, err := mime.ParseMediaType(contentTypeValue)
+	if err != nil {
+		return fmt.Errorf("parse %s '%s': %w", headerContentType, contentTypeValue, err)
+	}
+	if contentType != headerMultipartFormData {
+		return fmt.Errorf(
+			"form support only %s '%s' ('%s' provided)",
+			headerContentType, headerMultipartFormData, contentType,
+		)
+	}
+
+	boundary := params["boundary"]
+	if boundary == "" {
+		return nil
+	}
+	err = w.SetBoundary(boundary)
+	if err != nil {
+		return fmt.Errorf("set custom boundary '%s': %w", boundary, err)
+	}
+	return nil
 }
 
 func addFiles(files map[string]string, w *multipart.Writer) error {
@@ -116,36 +117,31 @@ func addFiles(files map[string]string, w *multipart.Writer) error {
 	return nil
 }
 
-func addFile(path string, w *multipart.Writer, name string) error {
-	f, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = f.Close() }()
-
-	fw, err := w.CreateFormFile(name, filepath.Base(f.Name()))
+func addFile(filename string, w *multipart.Writer, fieldname string) error {
+	content, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
 
-	if _, err = io.Copy(fw, f); err != nil {
+	fw, err := w.CreateFormFile(fieldname, filepath.Base(filename))
+	if err != nil {
 		return err
 	}
 
-	return nil
+	_, err = fw.Write(content)
+	return err
 }
 
 func addFormFields(fields map[string]string, w *multipart.Writer) error {
-	fieldNames := make([]string, 0, len(fields))
+	fieldNames := []string{}
 	for n := range fields {
 		fieldNames = append(fieldNames, n)
 	}
 	sort.Strings(fieldNames)
 
 	for _, name := range fieldNames {
-		n := name
-		v := fields[n]
-		if err := w.WriteField(n, v); err != nil {
+		err := w.WriteField(name, fields[name])
+		if err != nil {
 			return err
 		}
 	}
@@ -155,34 +151,41 @@ func addFormFields(fields map[string]string, w *multipart.Writer) error {
 
 func newCommonRequest(host string, test models.TestInterface) (*http.Request, error) {
 	body := test.GetRequest()
-	req, err := request(test, bytes.NewBuffer([]byte(body)), host)
+	req, err := makeRequest(test, bytes.NewBuffer([]byte(body)), host)
 	if err != nil {
 		return nil, err
 	}
 
-	if req.Header.Get("Content-Type") == "" {
-		req.Header.Set("Content-Type", "application/json")
+	if req.Header.Get(headerContentType) == "" {
+		req.Header.Set(headerContentType, headerApplicationJSON)
 	}
 
 	return req, nil
 }
 
-func request(test models.TestInterface, b *bytes.Buffer, host string) (*http.Request, error) {
+func makeRequest(test models.TestInterface, body *bytes.Buffer, host string) (*http.Request, error) {
 	req, err := http.NewRequest(
 		strings.ToUpper(test.GetMethod()),
 		host+test.Path()+test.ToQuery(),
-		b,
+		body,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	for k, v := range test.Headers() {
-		if strings.EqualFold(k, "host") {
+		if strings.EqualFold(k, headerHost) {
 			req.Host = v
 		} else {
 			req.Header.Add(k, v)
 		}
+	}
+
+	for k, v := range test.Cookies() {
+		req.AddCookie(&http.Cookie{
+			Name:  k,
+			Value: v,
+		})
 	}
 
 	return req, nil

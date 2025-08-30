@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/lansfy/gonkex/master/gonkex.json",
+  "$id": "https://raw.githubusercontent.com/lansfy/gonkex/refs/heads/master/schema/gonkex.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Gonkex test automation tool",
   "description": "Gonkex described here https://github.com/lansfy/gonkex",

@@ -1,0 +1,9 @@
+- name: WHEN make request to not exists endpoint library MUST fail with error
+  method: POST
+  path: /gonkex/invalid
+  request: somebody
+  response:
+    200: result
+  meta:
+    expected: |
+       helper endpoint "/gonkex/invalid" not found (available: /gonkex/multi_request)

@@ -32,6 +32,23 @@
       body: "result"
       statusCode: 200
 
+- name: WHEN request has special header Host with expected value headerIs MUST be successful
+  method: GET
+  path: /test/case
+  headers:
+    Host: test.example.com
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          header: Host
+          value: test.example.com
+      strategy: constant
+      body: "result"
+      statusCode: 200
+
 - name: WHEN request has required header with value matched provided regexp as value headerIs MUST be successful
   method: GET
   path: /test/case

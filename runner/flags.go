@@ -12,7 +12,7 @@ var allureDirFlag string
 
 // RegisterFlags registers command-line flags for the Gonkex testing framework:
 // * "gonkex-filter" flag that allows users to filter which test files are executed during a test run.
-// * "gonkex-allure-dir" flag which enable allure report and set folder for execurion's result.
+// * "gonkex-allure-dir" flag which enable allure report and set folder for execution's result.
 //
 // Usage: in test file add next code
 //

@@ -1707,7 +1707,8 @@ Gonkex will validate that requests arrive at the mocks in the correct order base
 
 Example:
 
-```yaml
+[source,yaml]
+----
 mocks:
   someservice1:
     strategy: uriVary
@@ -1727,7 +1728,7 @@ mocks:
     strategy: constant
     body: "other service result"
     statusCode: 200
-```
+----
 
 Validation rules:
 
