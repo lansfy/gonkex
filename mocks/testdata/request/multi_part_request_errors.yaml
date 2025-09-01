@@ -1,0 +1,46 @@
+- name: WHEN use wrong content-type with form upload test MUST fail with error
+  method: POST
+  path: /test/case
+  headers:
+    Content-Type: application/json
+  form:
+    files:
+      file1: "ignored.txt"
+  meta:
+    expected: |
+       form support only Content-Type 'multipart/form-data' ('application/json' provided)
+
+- name: WHEN use invalid content-type with form upload test MUST fail with error
+  method: POST
+  path: /test/case
+  headers:
+    Content-Type: application/w r o n g
+  form:
+    files:
+      file1: "ignored.txt"
+  meta:
+    expected: |
+       parse Content-Type 'application/w r o n g': mime: unexpected content after media subtype
+
+- name: WHEN use invalid boundary in content-type with form upload test MUST fail with error
+  method: POST
+  path: /test/case
+  headers:
+    Content-Type: multipart/form-data; boundary=12345567890123455678901234556789012345567890123455678901234556789012345567890
+  form:
+    files:
+      file1: "ignored.txt"
+  meta:
+    expected: |
+       set custom boundary '12345567890123455678901234556789012345567890123455678901234556789012345567890': mime: invalid boundary length
+
+- name: WHEN use not exists file test MUST fail with error
+  method: POST
+  path: /test/case
+  form:
+    files:
+      file1: "testdata/request/files/file1.txt"
+      file2: "invalid_file.txt"
+  meta:
+    expected: |
+       open invalid_file.txt: no such file or directory

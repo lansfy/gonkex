@@ -20,7 +20,12 @@ import (
 )
 
 const showOnScreen = false // get output on screen to debug colors
-var dateRegexp = regexp.MustCompile("(Mon|Tue|Wed|Thu|Fri|Sat|Sun), ([0-3][0-9]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ([0-9]{4}) ([01][0-9]|2[0-3])(:[0-5][0-9]){2} GMT")
+var (
+	// This regex matches :[port]/ after 127.0.0.1
+	portRegexp = regexp.MustCompile(`127\.0\.0\.1:\d+`)
+	// Http date regexp
+	dateRegexp = regexp.MustCompile("(Mon|Tue|Wed|Thu|Fri|Sat|Sun), ([0-3][0-9]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ([0-9]{4}) ([01][0-9]|2[0-3])(:[0-5][0-9]){2} GMT")
+)
 
 type fakeStorage struct{}
 
@@ -53,6 +58,7 @@ func initErrorServer() {
 func normalize(s string) string {
 	s = strings.ReplaceAll(s, "\r\n", "\n")
 	s = dateRegexp.ReplaceAllString(s, "Sat, 1 Dec 2024 00:00:00 GMT")
+	s = portRegexp.ReplaceAllString(s, "127.0.0.1:80")
 	return s
 }
 

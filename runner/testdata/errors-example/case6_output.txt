@@ -15,6 +15,7 @@ Response:
        Content-Length: 17
        Content-Type: application/json
        Date: Sat, 1 Dec 2024 00:00:00 GMT
+       Host: 127.0.0.1:80
      Status: 200 OK
        Body:
 {"somefield":123}
