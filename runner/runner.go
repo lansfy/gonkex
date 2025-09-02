@@ -208,7 +208,7 @@ func (r *Runner) Run() error {
 }
 
 func makeServiceRequest(config *RunnerOpts, v models.TestInterface) (*models.Result, error) {
-	req, err := NewRequest(config.Host, v)
+	req, reqBody, err := endpoint.NewRequest(config.Host, v)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +236,7 @@ func makeServiceRequest(config *RunnerOpts, v models.TestInterface) (*models.Res
 	result := &models.Result{
 		Path:                req.URL.Path,
 		Query:               req.URL.RawQuery,
-		RequestBody:         actualRequestBody(req),
+		RequestBody:         reqBody,
 		ResponseBody:        string(body),
 		ResponseContentType: resp.Header.Get("Content-Type"),
 		ResponseStatusCode:  resp.StatusCode,

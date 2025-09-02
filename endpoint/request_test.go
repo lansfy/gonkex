@@ -1,4 +1,4 @@
-package runner
+package endpoint_test
 
 import (
 	"bytes"
@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/lansfy/gonkex/runner"
 
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +19,7 @@ func TestUploadFiles(t *testing.T) {
 	srv := testServerUpload(t)
 	defer srv.Close()
 
-	RunWithTesting(t, srv.URL, &RunWithTestingOpts{
+	runner.RunWithTesting(t, srv.URL, &runner.RunWithTestingOpts{
 		TestsDir: "testdata/upload-files",
 	})
 }
@@ -26,7 +28,7 @@ func TestMultipartFormData(t *testing.T) {
 	srv := testServerMultipartFormData(t)
 	defer srv.Close()
 
-	RunWithTesting(t, srv.URL, &RunWithTestingOpts{
+	runner.RunWithTesting(t, srv.URL, &runner.RunWithTestingOpts{
 		TestsDir: "testdata/multipart/form-data.yaml",
 	})
 }
