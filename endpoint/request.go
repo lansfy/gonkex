@@ -1,14 +1,11 @@
-package runner
+package endpoint
 
 import (
 	"bytes"
-	"crypto/tls"
 	"fmt"
-	"io"
 	"mime"
 	"mime/multipart"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -24,59 +21,45 @@ const (
 	headerApplicationJSON   = "application/json"
 )
 
-func newClient(proxyURL *url.URL) *http.Client {
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // Client is only used for testing.
-		Proxy:           http.ProxyURL(proxyURL),
-	}
-
-	return &http.Client{
-		Transport: transport,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-}
-
-func NewRequest(host string, test models.TestInterface) (*http.Request, error) {
+func NewRequest(host string, test models.TestInterface) (*http.Request, string, error) {
 	if test.GetForm() != nil {
 		return newMultipartRequest(host, test)
 	}
 	return newCommonRequest(host, test)
 }
 
-func newMultipartRequest(host string, test models.TestInterface) (*http.Request, error) {
+func newMultipartRequest(host string, test models.TestInterface) (*http.Request, string, error) {
 	buff := &bytes.Buffer{}
 	w := multipart.NewWriter(buff)
 
 	err := addBoundary(test.ContentType(), w)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	form := test.GetForm()
 
 	err = addFormFields(form.GetFields(), w)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	err = addFiles(form.GetFiles(), w)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	_ = w.Close()
 
 	req, err := makeRequest(test, buff, host)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	// this is necessary, it will contain boundary
 	req.Header.Set(headerContentType, w.FormDataContentType())
 
-	return req, nil
+	return req, buff.String(), nil
 }
 
 func addBoundary(contentTypeValue string, w *multipart.Writer) error {
@@ -149,18 +132,18 @@ func addFormFields(fields map[string]string, w *multipart.Writer) error {
 	return nil
 }
 
-func newCommonRequest(host string, test models.TestInterface) (*http.Request, error) {
+func newCommonRequest(host string, test models.TestInterface) (*http.Request, string, error) {
 	body := test.GetRequest()
 	req, err := makeRequest(test, bytes.NewBuffer([]byte(body)), host)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	if req.Header.Get(headerContentType) == "" {
 		req.Header.Set(headerContentType, headerApplicationJSON)
 	}
 
-	return req, nil
+	return req, body, nil
 }
 
 func makeRequest(test models.TestInterface, body *bytes.Buffer, host string) (*http.Request, error) {
@@ -189,15 +172,4 @@ func makeRequest(test models.TestInterface, body *bytes.Buffer, host string) (*h
 	}
 
 	return req, nil
-}
-
-func actualRequestBody(req *http.Request) string {
-	if req.Body != nil {
-		reqBodyStream, _ := req.GetBody()
-		reqBody, _ := io.ReadAll(reqBodyStream)
-
-		return string(reqBody)
-	}
-
-	return ""
 }
