@@ -6,4 +6,4 @@
     200: result
   meta:
     expected: |
-       helper endpoint "/gonkex/invalid" not found (available: /gonkex/multi_request)
+       helper endpoint "/gonkex/invalid" not found (available: /gonkex/multi_request,/gonkex/remove_checker)

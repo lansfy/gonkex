@@ -1,0 +1,110 @@
+- name: all three mock test checkers MUST exists
+  method: GET
+  path: /test/checkers
+  response:
+    400: "result"
+  mocks:
+    someservice:
+      strategy: constant
+      body: "result"
+      statusCode: 400
+  meta:
+    expected: |
+       1) mock 'someservice': called mock checker #0
+       2) mock 'someservice': called mock checker #1
+       3) mock 'someservice': called mock checker #2
+
+- name: remove checker #1
+  method: POST
+  path: /gonkex/remove_checker
+  request: >
+    {
+      "id": 1
+    }
+  response:
+    204: ""
+
+- name: only two checkers MUST exists
+  method: GET
+  path: /test/checkers
+  response:
+    400: "result"
+  mocks:
+    someservice:
+      strategy: constant
+      body: "result"
+      statusCode: 400
+  meta:
+    expected: |
+       1) mock 'someservice': called mock checker #0
+       2) mock 'someservice': called mock checker #2
+
+- name: remove same checker MUST have no affect
+  method: POST
+  path: /gonkex/remove_checker
+  request: >
+    {
+      "id": 1
+    }
+  response:
+    204: ""
+
+- name: only two checkers MUST exists
+  method: GET
+  path: /test/checkers
+  response:
+    400: "result"
+  mocks:
+    someservice:
+      strategy: constant
+      body: "result"
+      statusCode: 400
+  meta:
+    expected: |
+       1) mock 'someservice': called mock checker #0
+       2) mock 'someservice': called mock checker #2
+
+- name: remove checker #2
+  method: POST
+  path: /gonkex/remove_checker
+  request: >
+    {
+      "id": 2
+    }
+  response:
+    204: ""
+
+- name: one checkers MUST exists
+  method: GET
+  path: /test/checkers
+  response:
+    400: "result"
+  mocks:
+    someservice:
+      strategy: constant
+      body: "result"
+      statusCode: 400
+  meta:
+    expected: |
+       1) mock 'someservice': called mock checker #0
+
+- name: remove checker #0
+  method: POST
+  path: /gonkex/remove_checker
+  request: >
+    {
+      "id": 0
+    }
+  response:
+    204: ""
+
+- name: one checkers MUST exists
+  method: GET
+  path: /test/checkers
+  response:
+    400: "result"
+  mocks:
+    someservice:
+      strategy: constant
+      body: "result"
+      statusCode: 400

@@ -7,7 +7,7 @@ import (
 // CheckerInterface defines an interface for validating mock HTTP requests and responses.
 // Implementations of this interface perform custom checks on incoming mock requests and their responses,
 // returning any errors encountered during validation.
-// Checkers can be assigned to a mock using the SetCheckers method.
+// Checkers can be assigned to a mock using the RegisterChecker method.
 // Note: Checkers may not restore the response body after performing validation.
 type CheckerInterface interface {
 	// CheckRequest validates a mock HTTP request and its corresponding response.

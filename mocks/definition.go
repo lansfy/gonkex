@@ -93,10 +93,6 @@ func (d *Definition) EndRunningContext(intermediate bool) []error {
 }
 
 func verifyRequestConstraints(requestConstraints []verifier, r *http.Request) []error {
-	if len(requestConstraints) == 0 {
-		return []error{}
-	}
-
 	var dump colorize.Part
 	var errs []error
 	for _, c := range requestConstraints {
@@ -116,10 +112,8 @@ func (d *Definition) ExecuteWithoutVerifying(w http.ResponseWriter, r *http.Requ
 	d.mutex.Lock()
 	d.calls++
 	d.mutex.Unlock()
-	if d.replyStrategy != nil {
-		return d.replyStrategy.HandleRequest(w, r)
+	if d.replyStrategy == nil {
+		return []error{errors.New("reply strategy undefined")}
 	}
-	return []error{
-		errors.New("reply strategy undefined"),
-	}
+	return d.replyStrategy.HandleRequest(w, r)
 }

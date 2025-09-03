@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
+
+	"github.com/tidwall/gjson"
 )
 
 var _ http.ResponseWriter = (*wrapResponseWriter)(nil)
@@ -53,16 +56,42 @@ func (w *wrapResponseWriter) Flush() error {
 	return err
 }
 
+func (w *wrapResponseWriter) fixResponse() {
+	if _, ok := w.headers["Date"]; !ok {
+		w.headers.Add("Date", time.Now().UTC().Format(http.TimeFormat))
+	}
+	if _, ok := w.headers["Content-Length"]; !ok {
+		w.headers.Add("Content-Length", fmt.Sprintf("%d", w.body.Len()))
+	}
+	if _, ok := w.headers["Content-Type"]; !ok {
+		w.headers.Add("Content-Type", detectContentType(w.body.String()))
+	}
+}
+
 func (w *wrapResponseWriter) CreateHttpResponse() *http.Response {
 	if w.drop {
 		return nil
 	}
 	return &http.Response{
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
 		Status:     http.StatusText(w.statusCode),
 		StatusCode: w.statusCode,
 		Header:     w.headers,
 		Body:       io.NopCloser(bytes.NewReader(w.body.Bytes())),
 	}
+}
+
+func detectContentType(body string) string {
+	if body == "" {
+		return "text/plain"
+	}
+	if gjson.Valid(body) {
+		return "application/json"
+	}
+	// TODO: improve type detection (yaml/xml?)
+	return "text/plain"
 }
 
 func dropConnection(w http.ResponseWriter) error {
