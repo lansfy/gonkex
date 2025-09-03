@@ -152,11 +152,25 @@ func (m *Mocks) LoadDefinitions(loader Loader, definitions map[string]interface{
 	return nil
 }
 
-// SetCheckers configures the request checkers for all mock services.
-// These checkers are used to validate incoming HTTP requests against expectations.
-func (m *Mocks) SetCheckers(checkers []CheckerInterface) {
+// RegisterChecker adds a new checker to all mock services.
+func (m *Mocks) RegisterChecker(c CheckerInterface) {
 	for _, v := range m.mocks {
-		v.SetCheckers(checkers)
+		v.RegisterChecker(c)
+	}
+}
+
+// UnregisterChecker removes the given checker from all mock services.
+// If the checker is not registered, it does nothing.
+func (m *Mocks) UnregisterChecker(c CheckerInterface) {
+	for _, v := range m.mocks {
+		v.UnregisterChecker(c)
+	}
+}
+
+// ResetCheckers removes all registered checkers from all mock services.
+func (m *Mocks) ResetCheckers() {
+	for _, v := range m.mocks {
+		v.ResetCheckers()
 	}
 }
 

@@ -106,6 +106,14 @@ func (c *errorChecker) getExpected() string {
 	return normalizeString(expected.(string))
 }
 
+type mockCheckerWrap struct {
+	checker mocks.CheckerInterface
+}
+
+func (m *mockCheckerWrap) CheckRequest(mockName string, req *http.Request, resp *http.Response) []error {
+	return m.checker.CheckRequest(mockName, req, resp)
+}
+
 type item struct {
 	RequestURL string `json:"request_url"`
 	Response   string `json:"response_body"`
@@ -176,6 +184,35 @@ func (c *customClient) Do(req *http.Request) (*http.Response, error) {
 	return client.Do(req)
 }
 
+type errorGenerator struct {
+	id int
+}
+
+func (m *errorGenerator) CheckRequest(mockName string, req *http.Request, resp *http.Response) []error {
+	var errs []error
+	if req.URL.Path == "/test/checkers" {
+		errs = append(errs, fmt.Errorf("called mock checker #%d", m.id))
+	}
+	return errs
+}
+
+type checkerRemover struct {
+	m     *mocks.Mocks
+	known []mocks.CheckerInterface
+}
+
+func (c *checkerRemover) Handler(h endpoint.Helper) error {
+	var req struct {
+		ID int `json:"id"`
+	}
+	err := h.GetRequestAsJson(&req)
+	if err != nil {
+		return err
+	}
+	c.m.UnregisterChecker(c.known[req.ID])
+	return nil
+}
+
 func Test_Declarative(t *testing.T) {
 	m := mocks.NewNop("someservice")
 	err := m.Start()
@@ -185,7 +222,22 @@ func Test_Declarative(t *testing.T) {
 	checker := &errorChecker{
 		t: t,
 	}
-	m.SetCheckers([]mocks.CheckerInterface{checker, checker})
+	m.RegisterChecker(checker)
+	// second item for body preserve test, but it should have other address
+	// because RegisterChecker doesn't allow to add same checker twice
+	m.RegisterChecker(&mockCheckerWrap{checker})
+
+	g0 := &errorGenerator{0}
+	g1 := &errorGenerator{1}
+	g2 := &errorGenerator{2}
+	m.RegisterChecker(g0)
+	m.RegisterChecker(g1)
+	m.RegisterChecker(g2)
+
+	remover := &checkerRemover{
+		m:     m,
+		known: []mocks.CheckerInterface{g0, g1, g2},
+	}
 
 	opts := &runner.RunnerOpts{
 		Host:        "http://" + m.Service("someservice").ServerAddr(),
@@ -193,7 +245,8 @@ func Test_Declarative(t *testing.T) {
 		MocksLoader: mocks.NewYamlLoader(&mocks.YamlLoaderOpts{}),
 		TestHandler: checker.Handle,
 		HelperEndpoints: endpoint.EndpointMap{
-			"multi_request": multiRequest,
+			"multi_request":  multiRequest,
+			"remove_checker": remover.Handler,
 		},
 		CustomClient: &customClient{},
 	}

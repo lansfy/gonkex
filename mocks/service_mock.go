@@ -49,6 +49,7 @@ func NewServiceMock(serviceName string, mock *Definition) *ServiceMock {
 		mock:              mock,
 		defaultDefinition: mock,
 		defaultPort:       port,
+		checkers:          []CheckerInterface{},
 		ServiceName:       serviceName,
 	}
 }
@@ -131,6 +132,8 @@ func (m *ServiceMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	wrap := createResponseWriterProxy(w)
 	m.errors = append(m.errors, m.mock.Execute(wrap, r)...)
 
+	wrap.fixResponse()
+
 	for _, c := range m.checkers {
 		setRequestBody(r, body)
 		errs := c.CheckRequest(m.ServiceName, r, wrap.CreateHttpResponse()) // nolint:bodyclose // we have single copy of data
@@ -194,10 +197,43 @@ func (m *ServiceMock) EndRunningContext(intermediate bool) []error {
 	return errs
 }
 
-// SetCheckers configures the request checkers used to validate incoming HTTP requests.
-func (m *ServiceMock) SetCheckers(checkers []CheckerInterface) {
+// RegisterChecker adds a new checker to the ServiceMock.
+// If the checker is already registered, it does nothing.
+func (m *ServiceMock) RegisterChecker(c CheckerInterface) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	m.checkers = checkers
+	if m.findCheckerIndex(c) == -1 {
+		m.checkers = append(m.checkers, c)
+	}
+}
+
+// UnregisterChecker removes the given checker from the ServiceMock.
+// If the checker is not registered, it does nothing.
+func (m *ServiceMock) UnregisterChecker(c CheckerInterface) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if idx := m.findCheckerIndex(c); idx != -1 {
+		m.checkers = append(m.checkers[:idx], m.checkers[idx+1:]...)
+	}
+}
+
+// ResetCheckers removes all registered checkers from the ServiceMock.
+func (m *ServiceMock) ResetCheckers() {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.checkers = []CheckerInterface{}
+}
+
+// findCheckerIndex returns the index of the given checker in the slice.
+// If the checker is not found, it returns -1.
+func (m *ServiceMock) findCheckerIndex(c CheckerInterface) int {
+	for idx, existing := range m.checkers {
+		if existing == c {
+			return idx
+		}
+	}
+	return -1
 }

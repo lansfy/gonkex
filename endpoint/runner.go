@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/lansfy/gonkex/mocks"
@@ -43,5 +44,6 @@ func SelectEndpoint(m EndpointMap, prefix, path string, req *http.Request,
 	for name := range m {
 		available = append(available, prefix+name)
 	}
+	sort.Strings(available)
 	return nil, fmt.Errorf("helper endpoint %q not found (available: %s)", prefix+path, strings.Join(available, ","))
 }
