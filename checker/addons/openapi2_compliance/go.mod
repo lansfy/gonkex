@@ -8,7 +8,7 @@ require (
 	github.com/go-openapi/spec v0.20.3
 	github.com/go-openapi/strfmt v0.20.0
 	github.com/go-openapi/validate v0.20.2
-	github.com/lansfy/gonkex v1.21.4
+	github.com/lansfy/gonkex v0.6.5
 )
 
 replace github.com/lansfy/gonkex => ../../..
