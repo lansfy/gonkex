@@ -85,10 +85,10 @@ func TestHelper_GetRequestAsBytes(t *testing.T) {
 	require.Equal(t, input, out)
 }
 
-func TestHelper_GetMocksRoundTripper(t *testing.T) {
+func TestHelper_GetMocksTransport(t *testing.T) {
 	m := mocks.New()
 	h := newTestHelper(nil, nil, m)
-	require.Equal(t, m, h.GetMocksRoundTripper())
+	require.Equal(t, m, h.GetMocksTransport())
 }
 
 func TestHelper_GetMockAddr(t *testing.T) {
