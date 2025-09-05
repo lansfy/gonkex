@@ -3,7 +3,7 @@ module github.com/lansfy/gonkex/storage/addons/mongo
 go 1.18
 
 require (
-	github.com/lansfy/gonkex v0.6.1
+	github.com/lansfy/gonkex v0.6.5
 	go.mongodb.org/mongo-driver v1.17.2
 )
 
@@ -11,7 +11,6 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
-	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
