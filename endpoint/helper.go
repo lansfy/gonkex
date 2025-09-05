@@ -76,7 +76,7 @@ func (h *helperImpl) GetRequestAsBytes() ([]byte, error) {
 	return h.requestBytes, nil
 }
 
-func (h *helperImpl) GetMocksRoundTripper() http.RoundTripper {
+func (h *helperImpl) GetMocksTransport() http.RoundTripper {
 	return h.services
 }
 

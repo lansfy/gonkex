@@ -135,7 +135,7 @@ func multiRequest(h endpoint.Helper) error {
 	}
 
 	client := &http.Client{
-		Transport: h.GetMocksRoundTripper(),
+		Transport: h.GetMocksTransport(),
 	}
 
 	for i := range data {

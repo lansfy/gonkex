@@ -20,9 +20,9 @@ type Helper interface {
 	// GetRequestAsBytes returns the raw request bytes.
 	GetRequestAsBytes() ([]byte, error)
 
-	// GetMocksRoundTripper returns http.RoundTripper, which routes the request to the
+	// GetMocksTransport returns http.RoundTripper, which routes the request to the
 	// appropriate mock service based on the hostname in the request URL.
-	GetMocksRoundTripper() http.RoundTripper
+	GetMocksTransport() http.RoundTripper
 	// GetMockAddr returns address of mock with specified name
 	GetMockAddr(name string) string
 	// GetMeta returns meta field value from current test.
