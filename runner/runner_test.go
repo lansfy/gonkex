@@ -74,7 +74,7 @@ func Test_retries(t *testing.T) {
 			runner := New(
 				yamlLoader,
 				&RunnerOpts{
-					EndpointsPrefix: "/test.",
+					HelperPrefix: "/test.",
 					HelperEndpoints: endpoint.EndpointMap{
 						"run/*": e.Run,
 					},

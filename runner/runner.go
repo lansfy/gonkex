@@ -72,11 +72,11 @@ type RunnerOpts struct {
 	// When set, all HTTP traffic will be routed through this proxy.
 	HTTPProxyURL *url.URL
 
-	// HelperEndpoints maps helper endpoint names (without EndpointsPrefix) to their configurations.
-	HelperEndpoints endpoint.EndpointMap
+	// HelperPrefix consists common prefix for all HelperEndpoints.
+	HelperPrefix string
 
-	// EndpointsPrefix consists common prefix for all HelperEndpoints.
-	EndpointsPrefix string
+	// HelperEndpoints maps helper endpoint names (without HelperPrefix) to their configurations.
+	HelperEndpoints endpoint.EndpointMap
 
 	// TestHandler defines the function responsible for executing individual tests.
 	TestHandler func(models.TestInterface, TestExecutor) (bool, error)
@@ -119,8 +119,8 @@ func New(loader testloader.LoaderInterface, opts *RunnerOpts) *Runner {
 	if r.config.Mocks == nil {
 		r.config.Mocks = mocks.New()
 	}
-	if r.config.EndpointsPrefix == "" {
-		r.config.EndpointsPrefix = endpoint.DefaultPrefix
+	if r.config.HelperPrefix == "" {
+		r.config.HelperPrefix = endpoint.DefaultPrefix
 	}
 
 	r.AddCheckers(response_body.NewChecker())
@@ -214,7 +214,7 @@ func makeServiceRequest(config *RunnerOpts, v models.TestInterface) (*models.Res
 	}
 
 	var resp *http.Response
-	prefix := config.EndpointsPrefix
+	prefix := config.HelperPrefix
 	if strings.HasPrefix(req.URL.Path, prefix) {
 		path := req.URL.Path[len(prefix):]
 		resp, err = endpoint.SelectEndpoint(config.HelperEndpoints, prefix, path, req, config.Mocks, v) //nolint:bodyclose // false positive
