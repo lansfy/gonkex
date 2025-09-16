@@ -152,6 +152,9 @@ func (m *ServiceMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // the request is physically routed to the mock server's address.
 func (m *ServiceMock) RoundTrip(req *http.Request) (*http.Response, error) {
 	reqCopy := req.Clone(req.Context())
+	if reqCopy.URL.Scheme == "https" {
+		reqCopy.URL.Scheme = "http"
+	}
 	reqCopy.URL.Host = m.ServerAddr()
 	return http.DefaultTransport.RoundTrip(reqCopy)
 }
