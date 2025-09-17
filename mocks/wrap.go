@@ -76,7 +76,7 @@ func (w *wrapResponseWriter) CreateHttpResponse() *http.Response {
 		Proto:      "HTTP/1.1",
 		ProtoMajor: 1,
 		ProtoMinor: 1,
-		Status:     http.StatusText(w.statusCode),
+		Status:     fmt.Sprintf("%d %s", w.statusCode, http.StatusText(w.statusCode)),
 		StatusCode: w.statusCode,
 		Header:     w.headers,
 		Body:       io.NopCloser(bytes.NewReader(w.body.Bytes())),

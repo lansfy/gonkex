@@ -141,6 +141,7 @@ func (h *helperImpl) createHTTPResponse() *http.Response {
 	// Create an HTTP response
 	response := &http.Response{
 		StatusCode:    h.responseCode,
+		Status:        fmt.Sprintf("%d %s", h.responseCode, http.StatusText(h.responseCode)),
 		Body:          io.NopCloser(bytes.NewReader(h.responseBytes)),
 		Header:        make(http.Header),
 		ContentLength: int64(len(h.responseBytes)),
