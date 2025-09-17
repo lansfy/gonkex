@@ -341,6 +341,33 @@ Example:
 If you want to match the entire string, use `+^+` at the beginning and `+$+` at the end of your pattern.
 ====
 
+=== $matchBase64
+
+The basic syntax for using +$matchBase64+ is:
+
+[source,yaml]
+----
+$matchBase64(string)
+----
+
+Gonkex will automatically encode the provided `+string+` into base64 and compare the actual value against this encoded form.
+This is useful when services return base64-encoded fields (such as tokens or IDs), but you want to validate them against the original string in a human-readable way.
+
+Example:
+
+[source,yaml]
+----
+- name: WHEN token is requested, service MUST return base64 encoded data
+  method: GET
+  path: /api/users/42/token
+  response:
+  200: >
+    {
+      "user_id": 42,
+      "token": "$matchBase64(some-encoded-token)"
+    }
+----
+
 === $matchTime
 
 The `+$matchTime+` function is allows you to validate timestamp strings in response, mock request, database query results according to specific time format patterns.

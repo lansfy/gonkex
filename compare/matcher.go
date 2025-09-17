@@ -16,6 +16,8 @@ func StringAsMatcher(expr string) Matcher {
 		switch matches[1] {
 		case "Regexp":
 			return &regexpMatcher{matches[2]}
+		case "Base64":
+			return &base64Matcher{matches[2]}
 		case "Time":
 			return &timeMatcher{matches[2]}
 		}
