@@ -8,7 +8,7 @@ type Matcher interface {
 	MatchValues(description, entity string, actual interface{}) error
 }
 
-var matcherExprRx = regexp.MustCompile(`^\$match(Regexp|Time)\((.+)\)$`)
+var matcherExprRx = regexp.MustCompile(`^\$match(Regexp|Time|Base64)\((.+)\)$`)
 
 func StringAsMatcher(expr string) Matcher {
 	matches := matcherExprRx.FindStringSubmatch(expr)
