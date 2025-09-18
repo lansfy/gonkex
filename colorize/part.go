@@ -19,7 +19,7 @@ func (p *partImpl) Text() string {
 }
 
 func (p *partImpl) ColorText() string {
-	return p.colorer(p.value)
+	return p.colorer("%s", p.value)
 }
 
 type subErrorImpl struct {
