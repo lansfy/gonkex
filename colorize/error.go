@@ -8,24 +8,31 @@ import (
 )
 
 func Red(v string) Part {
-	return &partImpl{color.HiRedString, v, false}
+	return &partImpl{redColorFun, v, false}
 }
 
 func Cyan(v string) Part {
-	return &partImpl{color.HiCyanString, v, true}
+	return &partImpl{cyanColorFun, v, true}
 }
 
 func Green(v string) Part {
-	return &partImpl{color.HiGreenString, v, false}
+	return &partImpl{greenColorFun, v, false}
 }
 
 func None(v string) Part {
-	return &partImpl{asIsString, v, false}
+	return &partImpl{noColorFun, v, false}
 }
 
 func SubError(err error) Part {
 	return &subErrorImpl{err}
 }
+
+var (
+	redColorFun   = color.HiRedString
+	cyanColorFun  = color.HiCyanString
+	greenColorFun = color.HiGreenString
+	noColorFun    = fmt.Sprintf
+)
 
 type Error struct {
 	parts []Part
@@ -46,10 +53,6 @@ func (e *Error) Error() string {
 		_, _ = buf.WriteString(p.Text())
 	}
 	return buf.String()
-}
-
-func asIsString(format string, a ...interface{}) string {
-	return fmt.Sprintf(format, a...)
 }
 
 func (e *Error) ColorError() string {
@@ -116,8 +119,14 @@ func RemovePathComponent(err error) error {
 		return err
 	}
 	if pErr.parts[0].Text() == "path " && len(pErr.parts) >= 3 {
-		parts := pErr.parts[2:]
-		parts[0] = None(parts[0].Text()[2:])
+		parts := pErr.parts
+		for len(parts) != 0 {
+			if strings.HasPrefix(parts[0].Text(), ": ") {
+				parts[0] = None(parts[0].Text()[2:])
+				break
+			}
+			parts = parts[1:]
+		}
 		pErr.parts = parts
 	}
 	return pErr
