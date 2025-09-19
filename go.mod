@@ -10,7 +10,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13
 	github.com/ncruces/go-strftime v0.1.9
 	github.com/pmezard/go-difflib v1.0.0
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.17.0
 	github.com/tidwall/match v1.1.1
 	github.com/xhit/go-str2duration/v2 v2.1.0
