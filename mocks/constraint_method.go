@@ -29,7 +29,7 @@ func (c *methodConstraint) GetName() string {
 
 func (c *methodConstraint) Verify(r *http.Request) []error {
 	if !strings.EqualFold(r.Method, c.method) {
-		return []error{colorize.NewNotEqualError("%s does not match:", "method", c.method, r.Method)}
+		return []error{colorize.NewEntityNotEqualError("%s does not match:", "method", c.method, r.Method)}
 	}
 	return nil
 }

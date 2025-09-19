@@ -95,7 +95,7 @@ func (c *queryConstraint) Verify(r *http.Request) []error {
 		if len(expected) != len(got) {
 			sort.Strings(expected)
 			sort.Strings(got)
-			errors = append(errors, colorize.NewNotEqualError(
+			errors = append(errors, colorize.NewEntityNotEqualError(
 				"number of values for parameter %s is not equal to expected:",
 				key, got, expected))
 			continue

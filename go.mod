@@ -7,9 +7,9 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.3.0
-	github.com/kylelemons/godebug v1.1.0
 	github.com/mattn/go-colorable v0.1.13
 	github.com/ncruces/go-strftime v0.1.9
+	github.com/pmezard/go-difflib v1.0.0
 	github.com/stretchr/testify v1.11.0
 	github.com/tidwall/gjson v1.17.0
 	github.com/tidwall/match v1.1.1
@@ -22,7 +22,6 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 )

@@ -43,7 +43,7 @@ func (l *loaderImpl) LoadDefinition(rawDef interface{}) (*Definition, error) {
 
 func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definition, error) {
 	wrapPath := func(path string, err error) error {
-		return colorize.NewEntityError("path %s", path).SetSubError(err)
+		return colorize.NewPathError(path, err)
 	}
 
 	def, err := loadStringMap(rawDef, "")
@@ -65,7 +65,7 @@ func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definitio
 		if path == "$" {
 			return err
 		}
-		return colorize.NewEntityError("path %s", path).SetSubError(err)
+		return colorize.NewPathError(path, err)
 	}
 
 	// load request constraints

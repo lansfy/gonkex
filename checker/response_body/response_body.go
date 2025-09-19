@@ -48,7 +48,7 @@ func createWrongStatusError(statusCode int, known map[int]string) error {
 		knownCodes = append(knownCodes, strconv.Itoa(code))
 	}
 	sort.Strings(knownCodes)
-	return colorize.NewNotEqualError("server responded with unexpected %s:",
+	return colorize.NewEntityNotEqualError("server responded with unexpected %s:",
 		"status code", strings.Join(knownCodes, " / "), statusCode)
 }
 

@@ -5,7 +5,7 @@ import (
 )
 
 type Matcher interface {
-	MatchValues(description, entity string, actual interface{}) error
+	MatchValues(actual interface{}) error
 }
 
 var matcherExprRx = regexp.MustCompile(`^\$match(Regexp|Time|Base64)\((.+)\)$`)
