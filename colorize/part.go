@@ -5,8 +5,10 @@ type Part interface {
 	ColorText() string
 }
 
+type colorerFun func(format string, a ...interface{}) string
+
 type partImpl struct {
-	colorer func(format string, a ...interface{}) string
+	colorer colorerFun
 	value   string
 	entity  bool
 }
