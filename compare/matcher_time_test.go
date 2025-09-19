@@ -117,7 +117,7 @@ func Test_TimeMatcher_MatchValues(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
 			require.NotNil(t, tt.matcher)
-			err := tt.matcher.MatchValues("at %s", "error-prefix", tt.actual)
+			err := tt.matcher.MatchValues(tt.actual)
 			require.NoError(t, err)
 		})
 	}
@@ -133,7 +133,7 @@ func Test_TimeMatcher_MatchValues_Errors(t *testing.T) {
 	}()
 
 	makeMatchError := func(text, expected, actual string) string {
-		return fmt.Sprintf("at 'error-prefix'%s:\n     expected: %s\n       actual: %s",
+		return fmt.Sprintf("%s:\n     expected: %s\n       actual: %s",
 			text, expected, actual)
 	}
 
@@ -147,86 +147,86 @@ func Test_TimeMatcher_MatchValues_Errors(t *testing.T) {
 			description: "invalid actual type",
 			matcher:     StringAsMatcher("$matchTime(%Y-%m-%d)"),
 			actual:      nil,
-			wantErr:     makeMatchError(" type mismatch", "string", "<nil>"),
+			wantErr:     makeMatchError("type mismatch", "string", "<nil>"),
 		},
 		{
 			description: "invalid strftime format specified",
 			matcher:     StringAsMatcher("$matchTime(%Y-%m-%!)"),
 			actual:      "12-25-2023",
-			wantErr:     "at 'error-prefix': pattern '%Y-%m-%!': strftime: unsupported directive: %! ",
+			wantErr:     "pattern '%Y-%m-%!': strftime: unsupported directive: %! ",
 		},
 		{
 			description: "time doesn't match to specified strftime format",
 			matcher:     StringAsMatcher("$matchTime(%Y-%m-%d)"),
 			actual:      "12-25-2023",
-			wantErr:     makeMatchError(" time does not match the template", "$matchTime(%Y-%m-%d)", "12-25-2023"),
+			wantErr:     makeMatchError("time does not match the template", "$matchTime(%Y-%m-%d)", "12-25-2023"),
 		},
 		{
 			description: "time doesn't match to specified golang format",
 			matcher:     StringAsMatcher("$matchTime(2006-01-02)"),
 			actual:      "12-25-2023",
-			wantErr:     makeMatchError(" time does not match the template", "$matchTime(2006-01-02)", "12-25-2023"),
+			wantErr:     makeMatchError("time does not match the template", "$matchTime(2006-01-02)", "12-25-2023"),
 		},
 		{
 			description: "invalid duration format in accuracy parameter",
 			matcher:     StringAsMatcher("$matchTime(%Y-%m-%d, accuracy=some-wrong-value)"),
 			actual:      "12-25-2023",
-			wantErr:     "at 'error-prefix': parameter 'accuracy': wrong duration value 'some-wrong-value'",
+			wantErr:     "parameter 'accuracy': wrong duration value 'some-wrong-value'",
 		},
 		{
 			description: "invalid duration format in value parameter",
 			matcher:     StringAsMatcher("$matchTime(%Y-%m-%d, value=now-1dddd)"),
 			actual:      "12-25-2023",
-			wantErr:     "at 'error-prefix': parameter 'value': wrong duration value '-1dddd'",
+			wantErr:     "parameter 'value': wrong duration value '-1dddd'",
 		},
 		{
 			description: "invalid timezone value parameter",
 			matcher:     StringAsMatcher("$matchTime(%Y-%m-%d, value=now, timezone=wrong)"),
 			actual:      "2023-12-25",
-			wantErr:     makeMatchError(": wrong 'timezone' value", "local / utc", "wrong"),
+			wantErr:     makeMatchError("wrong 'timezone' value", "local / utc", "wrong"),
 		},
 		{
 			description: "invalid parameter name",
 			matcher:     StringAsMatcher("$matchTime(%Y-%m-%d,fakeparam=aaaa)"),
 			actual:      "12-25-2023",
-			wantErr:     "at 'error-prefix': parameter 'fakeparam=aaaa': unknown parameter name",
+			wantErr:     "parameter 'fakeparam=aaaa': unknown parameter name",
 		},
 		{
 			description: "WHEN actual time before (expected-accuracy) MUST fail with error",
 			matcher:     StringAsMatcher("$matchTime(%d-%m-%Y %H:%M:%S, value=now())"),
 			actual:      "25-12-2023 10:15:00",
-			wantErr:     makeMatchError(" values do not match", "25-12-2023 10:15:30 ... 25-12-2023 10:25:30", "25-12-2023 10:15:00"),
+			wantErr:     makeMatchError("values do not match", "25-12-2023 10:15:30 ... 25-12-2023 10:25:30", "25-12-2023 10:15:00"),
 		},
 		{
 			description: "WHEN actual time after (expected+accuracy) MUST fail with error",
 			matcher:     StringAsMatcher("$matchTime(%d-%m-%Y %H:%M:%S, value=now())"),
 			actual:      "25-12-2023 10:26:00",
-			wantErr:     makeMatchError(" values do not match", "25-12-2023 10:15:30 ... 25-12-2023 10:25:30", "25-12-2023 10:26:00"),
+			wantErr:     makeMatchError("values do not match", "25-12-2023 10:15:30 ... 25-12-2023 10:25:30", "25-12-2023 10:26:00"),
 		},
 		{
 			description: "WHEN custom accuracy has explicit + actual time before expected MUST fail with error",
 			matcher:     StringAsMatcher("$matchTime(%d-%m-%Y %H:%M:%S, value=now(), accuracy=+10m)"),
 			actual:      "25-12-2023 10:20:00",
-			wantErr:     makeMatchError(" values do not match", "25-12-2023 10:20:30 ... 25-12-2023 10:30:30", "25-12-2023 10:20:00"),
+			wantErr:     makeMatchError("values do not match", "25-12-2023 10:20:30 ... 25-12-2023 10:30:30", "25-12-2023 10:20:00"),
 		},
 		{
 			description: "WHEN custom accuracy has explicit - actual time after expected MUST fail with error",
 			matcher:     StringAsMatcher("$matchTime(%d-%m-%Y %H:%M:%S, value=now(), accuracy=-10m)"),
 			actual:      "25-12-2023 10:21:00",
-			wantErr:     makeMatchError(" values do not match", "25-12-2023 10:10:30 ... 25-12-2023 10:20:30", "25-12-2023 10:21:00"),
+			wantErr:     makeMatchError("values do not match", "25-12-2023 10:10:30 ... 25-12-2023 10:20:30", "25-12-2023 10:21:00"),
 		},
 		{
 			description: "WHEN value parameter doesn't match pattern check MUST fail",
 			matcher:     StringAsMatcher("$matchTime(%d-%m-%Y %H:%M:%S, value=2023-12-25 20:30:00)"),
 			actual:      "25-12-2023 20:30:40",
-			wantErr:     "at 'error-prefix': parameter 'value': time value '2023-12-25 20:30:00' doesn't match pattern '%d-%m-%Y %H:%M:%S'",
+			wantErr:     "parameter 'value': time value '2023-12-25 20:30:00' doesn't match pattern '%d-%m-%Y %H:%M:%S'",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
 			require.NotNil(t, tt.matcher)
-			err := tt.matcher.MatchValues("at %s", "error-prefix", tt.actual)
+			err := tt.matcher.MatchValues(tt.actual)
 			require.Error(t, err)
 			require.Equal(t, tt.wantErr, err.Error())
 		})

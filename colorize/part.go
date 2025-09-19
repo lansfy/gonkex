@@ -5,10 +5,8 @@ type Part interface {
 	ColorText() string
 }
 
-type colorerFun func(format string, a ...interface{}) string
-
 type partImpl struct {
-	colorer colorerFun
+	colorer func(format string, a ...interface{}) string
 	value   string
 	entity  bool
 }
@@ -22,16 +20,4 @@ func (p *partImpl) Text() string {
 
 func (p *partImpl) ColorText() string {
 	return p.colorer("%s", p.value)
-}
-
-type subErrorImpl struct {
-	err error
-}
-
-func (p *subErrorImpl) Text() string {
-	return ": " + p.err.Error()
-}
-
-func (p *subErrorImpl) ColorText() string {
-	return ": " + GetColoredValue(p.err)
 }

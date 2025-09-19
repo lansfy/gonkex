@@ -47,5 +47,5 @@ func checkOneHeader(key, value string, responseHeaders map[string][]string) erro
 		}
 	}
 	sort.Strings(actualValues)
-	return colorize.NewNotEqualError("response header %s value does not match:", key, value, strings.Join(actualValues, " / "))
+	return colorize.NewEntityNotEqualError("response header %s value does not match:", key, value, strings.Join(actualValues, " / "))
 }

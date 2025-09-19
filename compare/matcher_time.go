@@ -16,21 +16,21 @@ type timeMatcher struct {
 	data string
 }
 
-func (m *timeMatcher) MatchValues(description, entity string, actual interface{}) error {
+func (m *timeMatcher) MatchValues(actual interface{}) error {
 	actualStr, ok := actual.(string)
 	if !ok {
-		return colorize.NewNotEqualError(description+" type mismatch:", entity, "string", reflect.TypeOf(actual))
+		return colorize.NewNotEqualError("type mismatch:", "string", reflect.TypeOf(actual))
 	}
 
 	args, err := extractTimeArgs(m.data)
 	if err != nil {
-		return colorize.NewEntityError(description, entity).SetSubError(err)
+		return err
 	}
 
 	parsed, err := time.ParseInLocation(args.layout, actualStr, args.tzLocation)
 	if err != nil {
-		return colorize.NewNotEqualError(description+" time does not match the template:",
-			entity, fmt.Sprintf("$matchTime(%s)", m.data), actualStr)
+		return colorize.NewNotEqualError("time does not match the template:",
+			fmt.Sprintf("$matchTime(%s)", m.data), actualStr)
 	}
 
 	if args.fromTime.Equal(time.Time{}) {
@@ -41,7 +41,7 @@ func (m *timeMatcher) MatchValues(description, entity string, actual interface{}
 	toTime := args.toTime.In(parsed.Location())
 	if parsed.Before(fromTime) || parsed.After(toTime) {
 		expected := fmt.Sprintf("%s ... %s", fromTime.Format(args.layout), toTime.Format(args.layout))
-		return colorize.NewNotEqualError(description+" values do not match:", entity, expected, actualStr)
+		return colorize.NewNotEqualError("values do not match:", expected, actualStr)
 	}
 
 	return nil
@@ -147,7 +147,7 @@ func extractTimeArgs(data string) (*timeParamsData, error) {
 	case "utc":
 		result.tzLocation = time.UTC
 	default:
-		return nil, colorize.NewNotEqualError("wrong %s value:", "timezone", "local / utc", tz)
+		return nil, colorize.NewEntityNotEqualError("wrong %s value:", "timezone", "local / utc", tz)
 	}
 
 	initial, err := parseValue(result, params["value"], result.tzLocation)

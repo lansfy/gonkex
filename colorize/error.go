@@ -23,10 +23,6 @@ func None(v string) Part {
 	return &partImpl{noColorFun, v, false}
 }
 
-func SubError(err error) Part {
-	return &subErrorImpl{err}
-}
-
 var (
 	redColorFun   = color.HiRedString
 	cyanColorFun  = color.HiCyanString
@@ -35,21 +31,39 @@ var (
 )
 
 type Error struct {
-	parts []Part
+	parts    []Part
+	subError error
+	postfix  []Part
 }
 
 func (e *Error) AddParts(values ...Part) *Error {
+	if e.subError != nil {
+		panic("can't add parts after set suberror")
+	}
 	e.parts = append(e.parts, values...)
 	return e
 }
 
+func (e *Error) AddPostfix(values ...Part) *Error {
+	e.postfix = append(e.postfix, values...)
+	return e
+}
+
 func (e *Error) SetSubError(err error) *Error {
-	return e.AddParts(SubError(err))
+	e.subError = err
+	return e
 }
 
 func (e *Error) Error() string {
 	buf := strings.Builder{}
 	for _, p := range e.parts {
+		_, _ = buf.WriteString(p.Text())
+	}
+	if e.subError != nil {
+		_, _ = buf.WriteString(": ")
+		_, _ = buf.WriteString(e.subError.Error())
+	}
+	for _, p := range e.postfix {
 		_, _ = buf.WriteString(p.Text())
 	}
 	return buf.String()
@@ -58,6 +72,13 @@ func (e *Error) Error() string {
 func (e *Error) ColorError() string {
 	buf := strings.Builder{}
 	for _, p := range e.parts {
+		_, _ = buf.WriteString(p.ColorText())
+	}
+	if e.subError != nil {
+		_, _ = buf.WriteString(": ")
+		_, _ = buf.WriteString(GetColoredValue(e.subError))
+	}
+	for _, p := range e.postfix {
 		_, _ = buf.WriteString(p.ColorText())
 	}
 	return buf.String()
@@ -92,42 +113,51 @@ func NewError(format string, values ...Part) *Error {
 	for _, s := range strings.Split(format, "%s") {
 		plain = append(plain, None(s))
 	}
-	return &Error{alternateJoin(plain, values)}
+	return &Error{
+		parts:   alternateJoin(plain, values),
+		postfix: []Part{},
+	}
 }
 
 func NewEntityError(pattern, entity string) *Error {
 	return NewError(pattern, Cyan(entity))
 }
 
-func NewNotEqualError(pattern, entity string, expected, actual interface{}) *Error {
-	pattern += "\n     expected: %s\n       actual: %s"
-	return NewError(pattern, Cyan(entity), Green(fmt.Sprintf("%v", expected)), Red(fmt.Sprintf("%v", actual)))
+func NewPathError(path string, subErr error) *Error {
+	err := &Error{
+		parts: []Part{None("path "), Cyan(path)},
+	}
+	return err.SetSubError(subErr)
 }
 
-// TODO: remove this hack
+func NewEntityNotEqualError(pattern, entity string, expected, actual interface{}) *Error {
+	return NewError(
+		pattern+"\n     expected: %s\n       actual: %s",
+		Cyan(entity),
+		Green(fmt.Sprintf("%v", expected)),
+		Red(fmt.Sprintf("%v", actual)),
+	)
+}
+
+func NewNotEqualError(pattern string, expected, actual interface{}) *Error {
+	return NewError(
+		pattern+"\n     expected: %s\n       actual: %s",
+		Green(fmt.Sprintf("%v", expected)),
+		Red(fmt.Sprintf("%v", actual)),
+	)
+}
+
 func HasPathComponent(err error) bool {
 	pErr, ok := err.(*Error)
 	if !ok {
 		return false
 	}
-	return pErr.parts[0].Text() == "path " && len(pErr.parts) >= 3
+	return len(pErr.parts) == 2 && pErr.parts[0].Text() == "path "
 }
 
 func RemovePathComponent(err error) error {
-	pErr, ok := err.(*Error)
-	if !ok {
-		return err
+	if pErr, ok := err.(*Error); ok && HasPathComponent(err) {
+		return pErr.subError
 	}
-	if pErr.parts[0].Text() == "path " && len(pErr.parts) >= 3 {
-		parts := pErr.parts
-		for len(parts) != 0 {
-			if strings.HasPrefix(parts[0].Text(), ": ") {
-				parts[0] = None(parts[0].Text()[2:])
-				break
-			}
-			parts = parts[1:]
-		}
-		pErr.parts = parts
-	}
-	return pErr
+	return err
 }

@@ -417,7 +417,7 @@ func Test_matchArray(t *testing.T) {
 			name:     "WHEN use $matchArray(pattern) and didn't provide pattern, the check MUST fail",
 			expected: `["$matchArray(pattern)"]`,
 			actual:   `[["12", "a"], ["34", "a"]]`,
-			wantErr:  "path '$': array with $matchArray(pattern) must pattern element",
+			wantErr:  "path '$': array with $matchArray(pattern) must have one pattern element",
 		},
 		{
 			name:     "WHEN use $matchArray(pattern+subset) and didn't provide pattern or subset, the check MUST fail",

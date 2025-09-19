@@ -85,8 +85,8 @@ func (d *Definition) EndRunningContext(intermediate bool) []error {
 	}
 
 	if d.callsConstraint != CallsNoConstraint && d.calls != d.callsConstraint {
-		errs = append(errs, colorize.NewEntityError("path %s", d.path).SetSubError(
-			colorize.NewNotEqualError("number of %s does not match:", "calls", d.callsConstraint, d.calls),
+		errs = append(errs, colorize.NewPathError(d.path,
+			colorize.NewEntityNotEqualError("number of %s does not match:", "calls", d.callsConstraint, d.calls),
 		))
 	}
 	return errs
@@ -100,7 +100,7 @@ func verifyRequestConstraints(requestConstraints []verifier, r *http.Request) []
 			if dump == nil {
 				dump = colorize.None(dumpRequest(r))
 			}
-			errs = append(errs, colorize.NewEntityError("request constraint %s", c.GetName()).SetSubError(e).AddParts(
+			errs = append(errs, colorize.NewEntityError("request constraint %s", c.GetName()).SetSubError(e).AddPostfix(
 				colorize.None(", request was:\n\n"), dump,
 			))
 		}

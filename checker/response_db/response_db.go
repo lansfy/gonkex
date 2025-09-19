@@ -9,9 +9,6 @@ import (
 	"github.com/lansfy/gonkex/compare"
 	"github.com/lansfy/gonkex/models"
 	"github.com/lansfy/gonkex/storage"
-
-	"github.com/kylelemons/godebug/diff"
-	"github.com/kylelemons/godebug/pretty"
 )
 
 func NewChecker(db storage.StorageInterface) checker.CheckerInterface {
@@ -98,7 +95,7 @@ func makeQuery(path string, db storage.StorageInterface, dbQuery string) ([]inte
 	rawMessages, err := db.ExecuteQuery(dbQuery)
 	if err != nil {
 		return nil, colorize.NewEntityError("failed %s", "database check").SetSubError(
-			createPathError(path, fmt.Errorf("execute request '%s': %w", dbQuery, err)),
+			colorize.NewPathError(path, fmt.Errorf("execute request '%s': %w", dbQuery, err)),
 		)
 	}
 
@@ -138,31 +135,20 @@ func sprintWithSingleQuotes(items []interface{}) []string {
 }
 
 func createDifferentLengthError(path string, expected, actual []interface{}) error {
-	diffCfg := *pretty.DefaultConfig
-	diffCfg.Diffable = true
-	chunks := diff.DiffChunks(
-		sprintWithSingleQuotes(expected),
-		sprintWithSingleQuotes(actual),
-	)
-
 	tail := []colorize.Part{
 		colorize.None("\n\n   diff (--- expected vs +++ actual):\n"),
 	}
-	tail = append(tail, colorize.MakeColorDiff(chunks)...)
+	tail = append(tail, colorize.MakeColorDiff(sprintWithSingleQuotes(expected), sprintWithSingleQuotes(actual))...)
 
-	return createPathError(path, colorize.NewNotEqualError(
+	return colorize.NewPathError(path, colorize.NewEntityNotEqualError(
 		"quantity of %s does not match:",
 		"items in database",
 		len(expected),
 		len(actual),
-	).AddParts(tail...))
-}
-
-func createPathError(path string, err error) error {
-	return colorize.NewEntityError("path %s", path).SetSubError(err)
+	).AddPostfix(tail...))
 }
 
 func createDefinitionError(path string, err error) error {
 	return colorize.NewEntityError("load definition for %s", "database check").
-		SetSubError(createPathError(path, err))
+		SetSubError(colorize.NewPathError(path, err))
 }

@@ -1,13 +1,12 @@
 package compare
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
 
 	"github.com/lansfy/gonkex/colorize"
-
-	"github.com/kylelemons/godebug/diff"
 )
 
 type Params struct {
@@ -53,19 +52,19 @@ func compareBranch(path string, expected, actual interface{}, params *Params) []
 	}
 
 	// compare arrays
-	var errors []error
+	var errs []error
 	if actualType == arrayType {
 		expectedArray := convertToArray(expected)
 		actualArray := convertToArray(actual)
 
 		expectedArray, err := processMatchArrayByPattern(path, expectedArray, len(actualArray))
 		if err != nil {
-			return append(errors, err)
+			return append(errs, err)
 		}
 
 		if len(expectedArray) != len(actualArray) {
-			errors = append(errors, makeError(path, "array lengths do not match", len(expectedArray), len(actualArray)))
-			return errors
+			errs = append(errs, makeError(path, "array lengths do not match", len(expectedArray), len(actualArray)))
+			return errs
 		}
 
 		if params.IgnoreArraysOrdering {
@@ -75,9 +74,9 @@ func compareBranch(path string, expected, actual interface{}, params *Params) []
 		// iterate over children
 		for i, item := range expectedArray {
 			subPath := fmt.Sprintf("%s[%d]", path, i)
-			errors = append(errors, compareBranch(subPath, item, actualArray[i], params)...)
-			if params.failFast && len(errors) != 0 {
-				return errors
+			errs = append(errs, compareBranch(subPath, item, actualArray[i], params)...)
+			if params.failFast && len(errs) != 0 {
+				return errs
 			}
 		}
 	}
@@ -88,16 +87,16 @@ func compareBranch(path string, expected, actual interface{}, params *Params) []
 		actualRef := reflect.ValueOf(actual)
 
 		if params.DisallowExtraFields && expectedRef.Len() != actualRef.Len() {
-			errors = append(errors, makeError(path, "map lengths do not match", expectedRef.Len(), actualRef.Len()))
-			return errors
+			errs = append(errs, makeError(path, "map lengths do not match", expectedRef.Len(), actualRef.Len()))
+			return errs
 		}
 
 		for _, key := range expectedRef.MapKeys() {
 			// check keys presence
 			if ok := actualRef.MapIndex(key); !ok.IsValid() {
-				errors = append(errors, makeError(path, "key is missing", key.String(), "<missing>"))
+				errs = append(errs, makeError(path, "key is missing", key.String(), "<missing>"))
 				if params.failFast {
-					return errors
+					return errs
 				}
 				continue
 			}
@@ -110,14 +109,14 @@ func compareBranch(path string, expected, actual interface{}, params *Params) []
 				actualRef.MapIndex(key).Interface(),
 				params,
 			)
-			errors = append(errors, res...)
-			if params.failFast && len(errors) != 0 {
-				return errors
+			errs = append(errs, res...)
+			if params.failFast && len(errs) != 0 {
+				return errs
 			}
 		}
 	}
 
-	return errors
+	return errs
 }
 
 func getType(value interface{}) string {
@@ -164,9 +163,9 @@ func compareRegex(path string, expected, actual interface{}) []error {
 	}
 
 	matcher := StringAsMatcher(expected.(string))
-	err := matcher.MatchValues("path %s:", path, actual)
+	err := matcher.MatchValues(actual)
 	if err != nil {
-		return []error{err}
+		return []error{colorize.NewPathError(path, err)}
 	}
 
 	return nil
@@ -186,8 +185,7 @@ func leafMatchType(expected interface{}) leafsMatchType {
 }
 
 func diffStrings(a, b string) []colorize.Part {
-	chunks := diff.DiffChunks(strings.Split(a, "\n"), strings.Split(b, "\n"))
-	return colorize.MakeColorDiff(chunks)
+	return colorize.MakeColorDiff(strings.Split(a, "\n"), strings.Split(b, "\n"))
 }
 
 func makeValueCompareError(path, msg string, expected, actual interface{}) error {
@@ -198,16 +196,15 @@ func makeValueCompareError(path, msg string, expected, actual interface{}) error
 	}
 
 	// special case for multi-line strings
-	parts := []colorize.Part{
-		colorize.Cyan(path),
-	}
-
-	parts = append(parts, diffStrings(expectedStr, actualStr)...)
-	return colorize.NewError("path %s: "+msg+":\n     diff (--- expected vs +++ actual):\n", parts...)
+	parts := diffStrings(expectedStr, actualStr)
+	return colorize.NewPathError(
+		path,
+		colorize.NewError(msg+":\n     diff (--- expected vs +++ actual):\n", parts...),
+	)
 }
 
 func makeError(path, msg string, expected, actual interface{}) error {
-	return colorize.NewNotEqualError("path %s: "+msg+":", path, expected, actual)
+	return colorize.NewPathError(path, colorize.NewNotEqualError(msg+":", expected, actual))
 }
 
 func convertToArray(array interface{}) []interface{} {
@@ -278,18 +275,18 @@ func processMatchArrayByPattern(path string, expectedArray []interface{}, actual
 	switch params {
 	case "pattern":
 		if expectedLen != 2 {
-			return nil, colorize.NewError("path %s: array with $matchArray(pattern) must pattern element", colorize.Cyan(path))
+			return nil, colorize.NewPathError(path, errors.New("array with $matchArray(pattern) must have one pattern element"))
 		}
 		fillArrayWithPattern(expectedArray[1], res)
 	case "subset+pattern":
 		if expectedLen < 3 {
-			return nil, colorize.NewError("path %s: array with $matchArray(subset+pattern) must have pattern and additional elements", colorize.Cyan(path))
+			return nil, colorize.NewPathError(path, errors.New("array with $matchArray(subset+pattern) must have pattern and additional elements"))
 		}
 		fillArrayWithPattern(expectedArray[len(expectedArray)-1], res)
 		copy(res, expectedArray[1:len(expectedArray)-1])
 	case "pattern+subset":
 		if expectedLen < 3 {
-			return nil, colorize.NewError("path %s: array with $matchArray(pattern+subset) must have pattern and additional elements", colorize.Cyan(path))
+			return nil, colorize.NewPathError(path, errors.New("array with $matchArray(pattern+subset) must have pattern and additional elements"))
 		}
 		fillArrayWithPattern(expectedArray[1], res)
 		subset := expectedArray[2:]
