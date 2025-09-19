@@ -59,23 +59,23 @@ func Test_ResponseDb_Error(t *testing.T) {
        actual: 13
 
    diff (--- expected vs +++ actual):
--1
--2
- 3
++3
 +2
-+1
+ 1
+-2
+-3
 `, cErr.Error())
 	require.Equal(t, `path <cyan>some.test[path]</cyan>: quantity of <cyan>items in database</cyan> does not match:
      expected: <green>12</green>
        actual: <red>13</red>
 
    diff (--- expected vs +++ actual):
-<green>-1
-</green><green>-2
-</green> 3
-<red>+2
-</red><red>+1
-</red>`, cErr.ColorError())
+<red>+3
++2
+</red> 1
+<green>-2
+-3
+</green>`, cErr.ColorError())
 }
 
 func Test_Mocks_Error(t *testing.T) {

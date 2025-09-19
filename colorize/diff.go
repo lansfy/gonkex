@@ -3,8 +3,7 @@ package colorize
 import (
 	"strings"
 
-	"github.com/kylelemons/godebug/diff"
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/pmezard/go-difflib/difflib"
 )
 
 func joinChanges(result *[]Part, data []string, sep byte, colorer func(v string) Part) {
@@ -22,15 +21,28 @@ func joinChanges(result *[]Part, data []string, sep byte, colorer func(v string)
 }
 
 func MakeColorDiff(expected, actual []string) []Part {
-	diffCfg := *pretty.DefaultConfig
-	diffCfg.Diffable = true
-	chunks := diff.DiffChunks(expected, actual)
+	matcher := difflib.NewMatcher(expected, actual)
+	opcodes := matcher.GetOpCodes()
 
 	parts := []Part{}
-	for _, c := range chunks {
-		joinChanges(&parts, c.Added, '+', Red)
-		joinChanges(&parts, c.Deleted, '-', Green)
-		joinChanges(&parts, c.Equal, ' ', None)
+	for _, opcode := range opcodes {
+		switch opcode.Tag {
+		case 'r': // replace
+			// Handle replace as delete + insert
+			deleted := expected[opcode.I1:opcode.I2]
+			added := actual[opcode.J1:opcode.J2]
+			joinChanges(&parts, deleted, '-', Green)
+			joinChanges(&parts, added, '+', Red)
+		case 'd': // delete
+			deleted := expected[opcode.I1:opcode.I2]
+			joinChanges(&parts, deleted, '-', Green)
+		case 'i': // insert
+			added := actual[opcode.J1:opcode.J2]
+			joinChanges(&parts, added, '+', Red)
+		case 'e': // equal
+			equal := expected[opcode.I1:opcode.I2]
+			joinChanges(&parts, equal, ' ', None)
+		}
 	}
 	return parts
 }
