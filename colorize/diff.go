@@ -6,7 +6,7 @@ import (
 	"github.com/pmezard/go-difflib/difflib"
 )
 
-func joinChanges(result *[]Part, data []string, sep byte, colorer func(v string) Part) {
+func joinChanges(result *[]*Part, data []string, sep byte, colorer func(v string) *Part) {
 	if len(data) == 0 {
 		return
 	}
@@ -20,11 +20,11 @@ func joinChanges(result *[]Part, data []string, sep byte, colorer func(v string)
 	*result = append(*result, colorer(builder.String()))
 }
 
-func MakeColorDiff(expected, actual []string) []Part {
+func MakeColorDiff(title string, expected, actual []string) []*Part {
 	matcher := difflib.NewMatcher(expected, actual)
 	opcodes := matcher.GetOpCodes()
 
-	parts := []Part{}
+	parts := []*Part{None(title)}
 	for _, opcode := range opcodes {
 		switch opcode.Tag {
 		case 'r': // replace

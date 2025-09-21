@@ -55,7 +55,7 @@ func createWrongStatusError(statusCode int, known map[int]string) error {
 func addMainError(source []error) []error {
 	var errs []error
 	for _, err := range source {
-		errs = append(errs, colorize.NewEntityError("service %s comparison", "response body").SetSubError(err))
+		errs = append(errs, colorize.NewEntityError("service %s comparison", "response body").WithSubError(err))
 	}
 	return errs
 }
@@ -74,7 +74,7 @@ func compareBody(t models.TestInterface, expectedBody string, result *models.Res
 	if expectedErr != nil {
 		err := fmt.Errorf("failed to load value as %s, compare response body as plain text", typeName)
 		errs := []error{
-			colorize.NewEntityError("body definition at path %s", fmt.Sprintf("$.response.%d", result.ResponseStatusCode)).SetSubError(err),
+			colorize.NewEntityError("body definition at path %s", fmt.Sprintf("$.response.%d", result.ResponseStatusCode)).WithSubError(err),
 		}
 		errs = append(errs, addMainError(compare.Compare(expectedBody, result.ResponseBody, compare.Params{}))...)
 		return errs, nil
@@ -83,7 +83,7 @@ func compareBody(t models.TestInterface, expectedBody string, result *models.Res
 	// decode actual body
 	if responseErr != nil {
 		return []error{
-			colorize.NewEntityError("parse service %s as "+typeName, "response body").SetSubError(responseErr),
+			colorize.NewEntityError("parse service %s as "+typeName, "response body").WithSubError(responseErr),
 		}, nil
 	}
 
