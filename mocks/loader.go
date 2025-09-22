@@ -61,7 +61,7 @@ func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definitio
 		if colorize.HasPathComponent(err) {
 			return err
 		}
-		err = colorize.NewEntityError("strategy %s", strategyName).SetSubError(err)
+		err = colorize.NewEntityError("strategy %s", strategyName).WithSubError(err)
 		if path == "$" {
 			return err
 		}
@@ -148,7 +148,7 @@ func (l *loaderImpl) loadStrategy(path, strategyName string, definition map[stri
 
 func loadConstraint(definition interface{}) (verifier, error) {
 	wrap := func(err error) error {
-		return colorize.NewError("load constraint").SetSubError(err)
+		return colorize.NewError("load constraint").WithSubError(err)
 	}
 
 	def, err := loadStringMap(definition, "")
@@ -163,7 +163,7 @@ func loadConstraint(definition interface{}) (verifier, error) {
 	ak := []string{"kind"}
 
 	wrap = func(err error) error {
-		return colorize.NewEntityError("load constraint %s", kind).SetSubError(err)
+		return colorize.NewEntityError("load constraint %s", kind).WithSubError(err)
 	}
 
 	c, err := loadConstraintOfKind(kind, def, &ak)

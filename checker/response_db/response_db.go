@@ -76,7 +76,7 @@ func (c *responseDbChecker) check(path string, t models.DatabaseCheck, result *m
 	})
 
 	for idx := range errs {
-		errs[idx] = colorize.NewEntityError("database check for %s", path+".dbResponse").SetSubError(errs[idx])
+		errs[idx] = colorize.NewEntityError("database check for %s", path+".dbResponse").WithSubError(errs[idx])
 	}
 
 	return errs, nil
@@ -94,7 +94,7 @@ func toStringArray(src []interface{}) []string {
 func makeQuery(path string, db storage.StorageInterface, dbQuery string) ([]interface{}, error) {
 	rawMessages, err := db.ExecuteQuery(dbQuery)
 	if err != nil {
-		return nil, colorize.NewEntityError("failed %s", "database check").SetSubError(
+		return nil, colorize.NewEntityError("failed %s", "database check").WithSubError(
 			colorize.NewPathError(path, fmt.Errorf("execute request '%s': %w", dbQuery, err)),
 		)
 	}
@@ -135,20 +135,21 @@ func sprintWithSingleQuotes(items []interface{}) []string {
 }
 
 func createDifferentLengthError(path string, expected, actual []interface{}) error {
-	tail := []colorize.Part{
-		colorize.None("\n\n   diff (--- expected vs +++ actual):\n"),
-	}
-	tail = append(tail, colorize.MakeColorDiff(sprintWithSingleQuotes(expected), sprintWithSingleQuotes(actual))...)
+	tail := colorize.MakeColorDiff(
+		"\n\n   diff (--- expected vs +++ actual):\n",
+		sprintWithSingleQuotes(expected),
+		sprintWithSingleQuotes(actual),
+	)
 
 	return colorize.NewPathError(path, colorize.NewEntityNotEqualError(
 		"quantity of %s does not match:",
 		"items in database",
 		len(expected),
 		len(actual),
-	).AddPostfix(tail...))
+	).WithPostfix(tail))
 }
 
 func createDefinitionError(path string, err error) error {
 	return colorize.NewEntityError("load definition for %s", "database check").
-		SetSubError(colorize.NewPathError(path, err))
+		WithSubError(colorize.NewPathError(path, err))
 }

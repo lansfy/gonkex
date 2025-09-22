@@ -1,163 +1,89 @@
 package colorize
 
 import (
-	"fmt"
 	"strings"
-
-	"github.com/fatih/color"
-)
-
-func Red(v string) Part {
-	return &partImpl{redColorFun, v, false}
-}
-
-func Cyan(v string) Part {
-	return &partImpl{cyanColorFun, v, true}
-}
-
-func Green(v string) Part {
-	return &partImpl{greenColorFun, v, false}
-}
-
-func None(v string) Part {
-	return &partImpl{noColorFun, v, false}
-}
-
-var (
-	redColorFun   = color.HiRedString
-	cyanColorFun  = color.HiCyanString
-	greenColorFun = color.HiGreenString
-	noColorFun    = fmt.Sprintf
 )
 
 type Error struct {
-	parts    []Part
+	parts    []*Part
 	subError error
-	postfix  []Part
+	postfix  []*Part
 }
 
-func (e *Error) AddParts(values ...Part) *Error {
-	if e.subError != nil {
-		panic("can't add parts after set suberror")
+func NewError(format string, values ...*Part) *Error {
+	messageParts := strings.Split(format, "%s")
+
+	lenMessage := len(messageParts)
+	lenValues := len(values)
+
+	lenMax := lenMessage
+	if lenMax < lenValues {
+		lenMax = lenValues
 	}
-	e.parts = append(e.parts, values...)
+
+	parts := make([]*Part, 0, lenMessage+lenValues)
+	for i := 0; i < lenMax; i++ {
+		if i < lenMessage {
+			parts = append(parts, None(messageParts[i]))
+		}
+		if i < lenValues {
+			parts = append(parts, values[i])
+		}
+	}
+
+	return &Error{
+		parts: parts,
+	}
+}
+
+func (e *Error) Error() string {
+	return ProcessWithTemplate(e, NoColorMap)
+}
+
+func (e *Error) Unwrap() error {
+	return e.subError
+}
+
+func (e *Error) WithPostfix(values []*Part) *Error {
+	e.postfix = values
 	return e
 }
 
-func (e *Error) AddPostfix(values ...Part) *Error {
-	e.postfix = append(e.postfix, values...)
-	return e
-}
-
-func (e *Error) SetSubError(err error) *Error {
+func (e *Error) WithSubError(err error) *Error {
 	e.subError = err
 	return e
 }
 
-func (e *Error) Error() string {
-	buf := strings.Builder{}
-	for _, p := range e.parts {
-		_, _ = buf.WriteString(p.Text())
-	}
-	if e.subError != nil {
-		_, _ = buf.WriteString(": ")
-		_, _ = buf.WriteString(e.subError.Error())
-	}
-	for _, p := range e.postfix {
-		_, _ = buf.WriteString(p.Text())
-	}
-	return buf.String()
-}
-
-func (e *Error) ColorError() string {
-	buf := strings.Builder{}
-	for _, p := range e.parts {
-		_, _ = buf.WriteString(p.ColorText())
-	}
-	if e.subError != nil {
-		_, _ = buf.WriteString(": ")
-		_, _ = buf.WriteString(GetColoredValue(e.subError))
-	}
-	for _, p := range e.postfix {
-		_, _ = buf.WriteString(p.ColorText())
-	}
-	return buf.String()
-}
-
-func alternateJoin(list1, list2 []Part) []Part {
-	result := []Part{}
-	i, j := 0, 0
-	for len(result) != len(list1)+len(list2) {
-		if i < len(list1) {
-			result = append(result, list1[i])
-			i++
-		}
-		if j < len(list2) {
-			result = append(result, list2[j])
-			j++
-		}
-	}
-
-	return result
-}
-
 func GetColoredValue(err error) string {
-	if pErr, ok := err.(*Error); ok {
-		return pErr.ColorError()
-	}
-	return err.Error()
+	return ProcessWithTemplate(err, ColorizeMap)
 }
 
-func NewError(format string, values ...Part) *Error {
-	plain := []Part{}
-	for _, s := range strings.Split(format, "%s") {
-		plain = append(plain, None(s))
-	}
-	return &Error{
-		parts:   alternateJoin(plain, values),
-		postfix: []Part{},
-	}
-}
-
-func NewEntityError(pattern, entity string) *Error {
-	return NewError(pattern, Cyan(entity))
-}
-
-func NewPathError(path string, subErr error) *Error {
-	err := &Error{
-		parts: []Part{None("path "), Cyan(path)},
-	}
-	return err.SetSubError(subErr)
-}
-
-func NewEntityNotEqualError(pattern, entity string, expected, actual interface{}) *Error {
-	return NewError(
-		pattern+"\n     expected: %s\n       actual: %s",
-		Cyan(entity),
-		Green(fmt.Sprintf("%v", expected)),
-		Red(fmt.Sprintf("%v", actual)),
-	)
-}
-
-func NewNotEqualError(pattern string, expected, actual interface{}) *Error {
-	return NewError(
-		pattern+"\n     expected: %s\n       actual: %s",
-		Green(fmt.Sprintf("%v", expected)),
-		Red(fmt.Sprintf("%v", actual)),
-	)
-}
-
-func HasPathComponent(err error) bool {
+func ProcessWithTemplate(err error, tpl map[Color]func(string) string) string {
 	pErr, ok := err.(*Error)
 	if !ok {
-		return false
+		return err.Error()
 	}
-	return len(pErr.parts) == 2 && pErr.parts[0].Text() == "path "
+
+	buf := &strings.Builder{}
+
+	appendParts(buf, pErr.parts, tpl)
+
+	if pErr.subError != nil {
+		_, _ = buf.WriteString(": ")
+		_, _ = buf.WriteString(ProcessWithTemplate(pErr.subError, tpl))
+	}
+
+	appendParts(buf, pErr.postfix, tpl)
+
+	return buf.String()
 }
 
-func RemovePathComponent(err error) error {
-	if pErr, ok := err.(*Error); ok && HasPathComponent(err) {
-		return pErr.subError
+func appendParts(buf *strings.Builder, parts []*Part, tpl map[Color]func(string) string) {
+	for _, p := range parts {
+		value := p.Value
+		if f, ok := tpl[p.Color]; ok {
+			value = f(value)
+		}
+		_, _ = buf.WriteString(value)
 	}
-	return err
 }

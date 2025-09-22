@@ -145,7 +145,7 @@ func (m *Mocks) LoadDefinitions(loader Loader, definitions map[string]interface{
 
 		def, err := loader.LoadDefinition(definition)
 		if err != nil {
-			return colorize.NewEntityError("load definition for %s", serviceName).SetSubError(err)
+			return colorize.NewEntityError("load definition for %s", serviceName).WithSubError(err)
 		}
 		service.SetDefinition(def)
 	}

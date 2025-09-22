@@ -186,7 +186,7 @@ func (r *Runner) Run() error {
 
 		critical, err := r.config.TestHandler(t, r.executeTest)
 		if err != nil {
-			err = colorize.NewEntityError("test %s error", t.GetName()).SetSubError(err)
+			err = colorize.NewEntityError("test %s error", t.GetName()).WithSubError(err)
 			if hasFocused || critical || r.config.OnFailPolicy == PolicyStop {
 				return err
 			}
@@ -438,7 +438,7 @@ func (r *Runner) setVariablesFromResponse(t models.TestInterface, result *models
 	vars, errs := response_body.ExtractValues(varTemplates, result)
 	if len(errs) != 0 || len(vars) == 0 {
 		for idx := range errs {
-			errs[idx] = colorize.NewEntityError("section %s", "variables_to_set").SetSubError(errs[idx])
+			errs[idx] = colorize.NewEntityError("section %s", "variables_to_set").WithSubError(errs[idx])
 		}
 		return false, errs
 	}

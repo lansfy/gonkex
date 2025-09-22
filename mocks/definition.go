@@ -93,16 +93,15 @@ func (d *Definition) EndRunningContext(intermediate bool) []error {
 }
 
 func verifyRequestConstraints(requestConstraints []verifier, r *http.Request) []error {
-	var dump colorize.Part
+	var dump []*colorize.Part
 	var errs []error
 	for _, c := range requestConstraints {
 		for _, e := range c.Verify(r) {
 			if dump == nil {
-				dump = colorize.None(dumpRequest(r))
+				dump = append(dump, colorize.None(", request was:\n\n"), colorize.None(dumpRequest(r)))
 			}
-			errs = append(errs, colorize.NewEntityError("request constraint %s", c.GetName()).SetSubError(e).AddPostfix(
-				colorize.None(", request was:\n\n"), dump,
-			))
+			errs = append(errs, colorize.NewEntityError("request constraint %s", c.GetName()).
+				WithSubError(e).WithPostfix(dump))
 		}
 	}
 

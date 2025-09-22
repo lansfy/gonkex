@@ -27,7 +27,7 @@ func ExtractValues(varsToSet map[string]string, result *models.Result) (map[stri
 		path := varsToSet[name]
 		value, err := processPath(path, result)
 		if err != nil {
-			errs = append(errs, colorize.NewEntityError("variable %s", name).SetSubError(err))
+			errs = append(errs, colorize.NewEntityError("variable %s", name).WithSubError(err))
 		} else {
 			vars[name] = value
 		}

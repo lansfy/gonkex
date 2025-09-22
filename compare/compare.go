@@ -184,10 +184,6 @@ func leafMatchType(expected interface{}) leafsMatchType {
 	return pure
 }
 
-func diffStrings(a, b string) []colorize.Part {
-	return colorize.MakeColorDiff(strings.Split(a, "\n"), strings.Split(b, "\n"))
-}
-
 func makeValueCompareError(path, msg string, expected, actual interface{}) error {
 	expectedStr, ok1 := expected.(string)
 	actualStr, ok2 := actual.(string)
@@ -196,10 +192,14 @@ func makeValueCompareError(path, msg string, expected, actual interface{}) error
 	}
 
 	// special case for multi-line strings
-	parts := diffStrings(expectedStr, actualStr)
+	diff := colorize.MakeColorDiff(
+		"\n     diff (--- expected vs +++ actual):\n",
+		strings.Split(expectedStr, "\n"),
+		strings.Split(actualStr, "\n"),
+	)
 	return colorize.NewPathError(
 		path,
-		colorize.NewError(msg+":\n     diff (--- expected vs +++ actual):\n", parts...),
+		colorize.NewError(msg+":").WithPostfix(diff),
 	)
 }
 

@@ -65,7 +65,7 @@ func compareValues(pattern, entity string, expected, actual interface{}) []error
 		IgnoreArraysOrdering: true,
 	})
 	for idx := range errs {
-		errs[idx] = colorize.NewEntityError(pattern, entity).SetSubError(
+		errs[idx] = colorize.NewEntityError(pattern, entity).WithSubError(
 			colorize.RemovePathComponent(errs[idx]))
 	}
 	return errs

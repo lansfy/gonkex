@@ -192,7 +192,7 @@ func (m *ServiceMock) EndRunningContext(intermediate bool) []error {
 	errs := m.errors
 	errs = append(errs, m.mock.EndRunningContext(intermediate)...)
 	for i := range errs {
-		errs[i] = colorize.NewEntityError("mock %s", m.ServiceName).SetSubError(errs[i])
+		errs[i] = colorize.NewEntityError("mock %s", m.ServiceName).WithSubError(errs[i])
 	}
 	if intermediate {
 		m.errors = nil

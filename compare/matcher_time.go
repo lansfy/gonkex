@@ -123,7 +123,7 @@ func extractTimeArgs(data string) (*timeParamsData, error) {
 		// strftime time pattern
 		result.layout, err = strftime.Layout(value)
 		if err != nil {
-			return nil, colorize.NewEntityError("pattern %s", value).SetSubError(err)
+			return nil, colorize.NewEntityError("pattern %s", value).WithSubError(err)
 		}
 		result.layout = patternNormalization(result.layout)
 	}
@@ -132,7 +132,7 @@ func extractTimeArgs(data string) (*timeParamsData, error) {
 	accuracy, err := str2duration.ParseDuration(accuracyStr)
 	if err != nil {
 		return nil,
-			colorize.NewEntityError("parameter %s", "accuracy").SetSubError(
+			colorize.NewEntityError("parameter %s", "accuracy").WithSubError(
 				fmt.Errorf("wrong duration value '%s'", accuracyStr))
 	}
 
@@ -152,7 +152,7 @@ func extractTimeArgs(data string) (*timeParamsData, error) {
 
 	initial, err := parseValue(result, params["value"], result.tzLocation)
 	if err != nil {
-		return nil, colorize.NewEntityError("parameter %s", "value").SetSubError(err)
+		return nil, colorize.NewEntityError("parameter %s", "value").WithSubError(err)
 	}
 
 	if !initial.Equal(time.Time{}) {

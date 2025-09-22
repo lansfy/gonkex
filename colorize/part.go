@@ -1,23 +1,31 @@
 package colorize
 
-type Part interface {
-	Text() string
-	ColorText() string
+type Color int
+
+const (
+	ColorNone Color = iota
+	ColorRed
+	ColorCyan
+	ColorGreen
+)
+
+type Part struct {
+	Color Color
+	Value string
 }
 
-type partImpl struct {
-	colorer func(format string, a ...interface{}) string
-	value   string
-	entity  bool
+func Red(v string) *Part {
+	return &Part{ColorRed, v}
 }
 
-func (p *partImpl) Text() string {
-	if p.entity {
-		return "'" + p.value + "'"
-	}
-	return p.value
+func Cyan(v string) *Part {
+	return &Part{ColorCyan, v}
 }
 
-func (p *partImpl) ColorText() string {
-	return p.colorer("%s", p.value)
+func Green(v string) *Part {
+	return &Part{ColorGreen, v}
+}
+
+func None(v string) *Part {
+	return &Part{ColorNone, v}
 }
