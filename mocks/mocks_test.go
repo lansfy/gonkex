@@ -121,15 +121,16 @@ type item struct {
 
 func multiRequest(h endpoint.Helper) error {
 	h.SetStatusCode(200)
+	h.SetResponseFormat(endpoint.FormatText)
 	wrap := func(err error) error {
 		if err != nil {
 			err = fmt.Errorf("error: %w", err)
-			h.SetResponseAsBytes([]byte(err.Error()))
+			h.SetResponseRaw([]byte(err.Error()))
 		}
 		return nil
 	}
 	data := []item{}
-	err := h.GetRequestAsJson(&data)
+	err := h.GetRequest(&data, endpoint.FormatJson)
 	if err != nil {
 		return wrap(err)
 	}
@@ -205,7 +206,7 @@ func (c *checkerRemover) Handler(h endpoint.Helper) error {
 	var req struct {
 		ID int `json:"id"`
 	}
-	err := h.GetRequestAsJson(&req)
+	err := h.GetRequest(&req, endpoint.FormatJson)
 	if err != nil {
 		return err
 	}
