@@ -26,10 +26,10 @@ func (l *testLoaderImpl) Load(name string) (string, []byte, error) {
 
 func process(h endpoint.Helper) error {
 	h.SetStatusCode(200)
-	h.SetContentType("application/text")
+	h.SetResponseFormat(endpoint.FormatText)
 	wrap := func(err error) error {
 		if err != nil {
-			h.SetResponseAsBytes([]byte(fmt.Sprintf("error: %v", err)))
+			h.SetResponseRaw([]byte(fmt.Sprintf("error: %v", err)))
 		}
 		return nil
 	}
@@ -39,7 +39,7 @@ func process(h endpoint.Helper) error {
 		Names []string          `yaml:"names"`
 		FS    map[string]string `yaml:"fs"`
 	}
-	err := h.GetRequestAsYaml(&input)
+	err := h.GetRequest(&input, endpoint.FormatYaml)
 	if err != nil {
 		return wrap(err)
 	}
@@ -80,7 +80,7 @@ func process(h endpoint.Helper) error {
 		return wrap(err)
 	}
 
-	h.SetResponseAsBytes(data)
+	h.SetResponseRaw(data)
 	return nil
 }
 

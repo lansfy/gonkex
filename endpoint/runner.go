@@ -23,12 +23,7 @@ func runEndpoint(e Endpoint, path string, req *http.Request, services *mocks.Moc
 	helper := newHelper(req.Header, path, requestBytes, services, meta)
 	err = e(helper)
 	if err != nil {
-		var data struct {
-			Error string `json:"error"`
-		}
-		data.Error = err.Error()
-		_ = helper.SetResponseAsJson(&data)
-		helper.SetStatusCode(http.StatusBadRequest)
+		helper.setErrorResponse(err)
 	}
 	return helper.createHTTPResponse(), nil
 }

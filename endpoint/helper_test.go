@@ -43,7 +43,7 @@ func TestHelper_GetRequestAsJson(t *testing.T) {
 	h := newTestHelper(reqJSON, nil, nil)
 
 	var out map[string]any
-	err = h.GetRequestAsJson(&out)
+	err = h.GetRequest(&out, FormatJson)
 	require.NoError(t, err)
 	require.Equal(t, input1, out)
 }
@@ -52,7 +52,7 @@ func TestHelper_GetRequestAsJson_Error(t *testing.T) {
 	h := newTestHelper([]byte("{\"corrupted\":\"json"), nil, nil)
 
 	var out map[string]any
-	err := h.GetRequestAsJson(&out)
+	err := h.GetRequest(&out, FormatJson)
 	require.EqualError(t, err, "internal: GetRequestAsJson: unexpected EOF")
 }
 
@@ -63,7 +63,7 @@ func TestHelper_GetRequestAsYaml(t *testing.T) {
 	h := newTestHelper(reqYAML, nil, nil)
 
 	var out map[string]any
-	err = h.GetRequestAsYaml(&out)
+	err = h.GetRequest(&out, FormatYaml)
 	require.NoError(t, err)
 	require.Equal(t, input1, out)
 }
@@ -72,7 +72,7 @@ func TestHelper_GetRequestAsYaml_Error(t *testing.T) {
 	h := newTestHelper([]byte("key1: value1\n  key2: with wrong offset"), nil, nil)
 
 	var out map[string]any
-	err := h.GetRequestAsYaml(&out)
+	err := h.GetRequest(&out, FormatYaml)
 	require.EqualError(t, err, "internal: GetRequestAsYaml: yaml: line 2: mapping values are not allowed in this context")
 }
 
@@ -80,8 +80,7 @@ func TestHelper_GetRequestAsBytes(t *testing.T) {
 	input := []byte("some-bytes")
 	h := newTestHelper(input, nil, nil)
 
-	out, err := h.GetRequestAsBytes()
-	require.NoError(t, err)
+	out := h.GetRequestRaw()
 	require.Equal(t, input, out)
 }
 
@@ -129,7 +128,8 @@ var input2 = map[string]string{
 func TestHelper_SetResponseAsJson(t *testing.T) {
 	h := newTestHelper(nil, nil, nil)
 
-	err := h.SetResponseAsJson(input2)
+	h.SetResponseFormat(FormatJson)
+	err := h.SetResponse(input2)
 	require.NoError(t, err)
 
 	var decoded map[string]string
@@ -145,14 +145,16 @@ func TestHelper_SetResponseAsJson_Error(t *testing.T) {
 	invalidMap := Invalid{Data: make(chan int)}
 
 	h := newTestHelper(nil, nil, nil)
-	err := h.SetResponseAsJson(invalidMap)
+	h.SetResponseFormat(FormatJson)
+	err := h.SetResponse(invalidMap)
 	require.EqualError(t, err, "internal: SetResponseAsJson: json: unsupported type: chan int")
 }
 
 func TestHelper_SetResponseAsYaml(t *testing.T) {
 	h := newTestHelper(nil, nil, nil)
 
-	err := h.SetResponseAsYaml(input2)
+	h.SetResponseFormat(FormatYaml)
+	err := h.SetResponse(input2)
 	require.NoError(t, err)
 
 	var decoded map[string]string
@@ -169,7 +171,8 @@ func TestHelper_SetResponseAsYaml_Error(t *testing.T) {
 	invalidMap := Invalid{Fn: func() {}}
 
 	h := newTestHelper(nil, nil, nil)
-	err := h.SetResponseAsYaml(invalidMap)
+	h.SetResponseFormat(FormatYaml)
+	err := h.SetResponse(invalidMap)
 	require.EqualError(t, err, "internal: SetResponseAsYaml: cannot marshal type: func()")
 }
 
@@ -177,7 +180,7 @@ func TestHelper_SetResponseAsBytes(t *testing.T) {
 	h := newTestHelper(nil, nil, nil)
 	bytesIn := []byte("raw-response")
 
-	h.SetResponseAsBytes(bytesIn)
+	h.SetResponseRaw(bytesIn)
 	require.Equal(t, bytesIn, h.responseBytes)
 }
 
@@ -201,7 +204,7 @@ func TestHelper_createHTTPResponse_Default(t *testing.T) {
 
 func TestHelper_createHTTPResponse_OverridesStatusCode(t *testing.T) {
 	h := newTestHelper(nil, nil, nil)
-	h.SetResponseAsBytes([]byte("non-empty"))
+	h.SetResponseRaw([]byte("non-empty"))
 	resp := h.createHTTPResponse()
 	defer resp.Body.Close()
 

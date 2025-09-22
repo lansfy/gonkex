@@ -25,6 +25,7 @@ type helperImpl struct {
 	contentType   string
 	services      *mocks.Mocks
 	provider      MetaProvider
+	format        Format
 }
 
 func newHelper(headers map[string][]string, path string, requestBytes []byte,
@@ -34,9 +35,9 @@ func newHelper(headers map[string][]string, path string, requestBytes []byte,
 		path:         path,
 		requestBytes: requestBytes,
 		responseCode: http.StatusNoContent,
-		contentType:  "application/json",
 		services:     services,
 		provider:     provider,
+		format:       FormatJson,
 	}
 }
 
@@ -52,7 +53,37 @@ func (h *helperImpl) GetPath() string {
 	return h.path
 }
 
-func (h *helperImpl) GetRequestAsJson(v interface{}) error {
+func (h *helperImpl) GetRequest(v interface{}, format Format) error {
+	switch format {
+	case FormatYaml:
+		return h.getRequestAsYaml(v)
+	default:
+		return h.getRequestAsJson(v)
+	}
+}
+
+func (h *helperImpl) GetRequestRaw() []byte {
+	return h.requestBytes
+}
+
+func (h *helperImpl) SetResponseFormat(format Format) {
+	h.format = format
+}
+
+func (h *helperImpl) SetResponse(v interface{}) error {
+	switch h.format {
+	case FormatYaml:
+		return h.setResponseAsYaml(v)
+	default:
+		return h.setResponseAsJson(v)
+	}
+}
+
+func (h *helperImpl) SetResponseRaw(response []byte) {
+	h.responseBytes = response
+}
+
+func (h *helperImpl) getRequestAsJson(v interface{}) error {
 	decoder := json.NewDecoder(bytes.NewBuffer(h.requestBytes))
 	decoder.DisallowUnknownFields()
 	err := decoder.Decode(v)
@@ -62,7 +93,7 @@ func (h *helperImpl) GetRequestAsJson(v interface{}) error {
 	return nil
 }
 
-func (h *helperImpl) GetRequestAsYaml(v interface{}) error {
+func (h *helperImpl) getRequestAsYaml(v interface{}) error {
 	decoder := yaml.NewDecoder(bytes.NewBuffer(h.requestBytes))
 	decoder.KnownFields(true)
 	err := decoder.Decode(v)
@@ -70,10 +101,6 @@ func (h *helperImpl) GetRequestAsYaml(v interface{}) error {
 		return internalError("GetRequestAsYaml", err)
 	}
 	return nil
-}
-
-func (h *helperImpl) GetRequestAsBytes() ([]byte, error) {
-	return h.requestBytes, nil
 }
 
 func (h *helperImpl) GetMocksTransport() http.RoundTripper {
@@ -91,7 +118,7 @@ func (h *helperImpl) GetMeta(key string) interface{} {
 	return h.provider.GetMeta(key)
 }
 
-func (h *helperImpl) SetResponseAsJson(response interface{}) error {
+func (h *helperImpl) setResponseAsJson(response interface{}) error {
 	b, err := json.Marshal(response)
 	if err != nil {
 		return internalError("SetResponseAsJson", err)
@@ -100,7 +127,7 @@ func (h *helperImpl) SetResponseAsJson(response interface{}) error {
 	return nil
 }
 
-func (h *helperImpl) SetResponseAsYaml(response interface{}) (err error) {
+func (h *helperImpl) setResponseAsYaml(response interface{}) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = internalError("SetResponseAsYaml", fmt.Errorf("%v", r))
@@ -115,10 +142,6 @@ func (h *helperImpl) SetResponseAsYaml(response interface{}) (err error) {
 	h.contentType = "application/yaml"
 	h.responseBytes = out
 	return err
-}
-
-func (h *helperImpl) SetResponseAsBytes(response []byte) {
-	h.responseBytes = response
 }
 
 func (h *helperImpl) SetContentType(contentType string) {
@@ -147,6 +170,38 @@ func (h *helperImpl) createHTTPResponse() *http.Response {
 		ContentLength: int64(len(h.responseBytes)),
 	}
 
-	response.Header.Set("Content-Type", h.contentType)
+	response.Header.Set("Content-Type", h.getContentType(false))
 	return response
+}
+
+func (h *helperImpl) getContentType(override bool) string {
+	if h.contentType != "" && !override {
+		return h.contentType
+	}
+	switch h.format {
+	case FormatText:
+		return "text/plain"
+	case FormatYaml:
+		return "application/yaml"
+	default:
+		return "application/json"
+	}
+}
+
+func (h *helperImpl) setErrorResponse(err error) {
+	h.contentType = h.getContentType(true)
+	h.SetStatusCode(http.StatusBadRequest)
+
+	var data struct {
+		Error string `json:"error" yaml:"error"`
+	}
+	data.Error = err.Error()
+	switch h.format {
+	case FormatText:
+		h.SetResponseRaw([]byte(fmt.Sprintf("error: %s", err)))
+	case FormatYaml:
+		_ = h.setResponseAsYaml(data)
+	default:
+		_ = h.setResponseAsJson(data)
+	}
 }

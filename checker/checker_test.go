@@ -44,15 +44,16 @@ func (s *docStorage) ExecuteQuery(query string) ([]json.RawMessage, error) {
 
 func (s *docStorage) setDBResponse(h endpoint.Helper) error {
 	h.SetStatusCode(200)
+	h.SetResponseFormat(endpoint.FormatText)
 	wrap := func(err error) error {
 		if err != nil {
 			err = fmt.Errorf("error: %w", err)
-			h.SetResponseAsBytes([]byte(err.Error()))
+			h.SetResponseRaw([]byte(err.Error()))
 		}
 		return nil
 	}
 	data := []json.RawMessage{}
-	err := h.GetRequestAsJson(&data)
+	err := h.GetRequest(&data, endpoint.FormatJson)
 	if err != nil {
 		return wrap(err)
 	}
