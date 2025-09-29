@@ -2,6 +2,7 @@ package endpoint
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"testing"
@@ -54,6 +55,25 @@ func TestHelper_GetRequestAsJson_Error(t *testing.T) {
 	var out map[string]any
 	err := h.GetRequest(&out, FormatJson)
 	require.EqualError(t, err, "internal: GetRequestAsJson: unexpected EOF")
+}
+
+var inputText = "some random content"
+
+func TestHelper_GetRequestAsText(t *testing.T) {
+	h := newTestHelper([]byte(inputText), nil, nil)
+
+	var out string
+	err := h.GetRequest(&out, FormatText)
+	require.NoError(t, err)
+	require.Equal(t, inputText, out)
+}
+
+func TestHelper_GetRequestAsText_Error(t *testing.T) {
+	h := newTestHelper([]byte(""), nil, nil)
+
+	var out string
+	err := h.GetRequest(out, FormatText)
+	require.EqualError(t, err, "internal: GetRequestAsText: interface{} is string, not *string")
 }
 
 func TestHelper_GetRequestAsYaml(t *testing.T) {
@@ -118,6 +138,22 @@ func TestHelper_GetMeta(t *testing.T) {
 	require.Equal(t, "value1", h.GetMeta("key1"))
 	require.Equal(t, input1, h.GetMeta("key2"))
 	require.Nil(t, h.GetMeta("key3"))
+}
+
+func TestHelper_SetResponseAsText(t *testing.T) {
+	h := newTestHelper(nil, nil, nil)
+
+	h.SetResponseFormat(FormatText)
+	err := h.SetResponse(inputText)
+	require.NoError(t, err)
+	require.Equal(t, inputText, string(h.responseBytes))
+}
+
+func TestHelper_SetResponseAsText_Error(t *testing.T) {
+	h := newTestHelper(nil, nil, nil)
+	h.SetResponseFormat(FormatText)
+	err := h.SetResponse(42)
+	require.EqualError(t, err, "internal: SetResponseAsText: interface{} is int, not string")
 }
 
 var input2 = map[string]string{
@@ -212,4 +248,52 @@ func TestHelper_createHTTPResponse_OverridesStatusCode(t *testing.T) {
 	body, _ := io.ReadAll(resp.Body)
 	require.Equal(t, "non-empty", string(body))
 	require.Equal(t, "application/json", resp.Header.Get("Content-Type"))
+}
+
+func Test_setErrorResponse(t *testing.T) {
+	tests := []struct {
+		name                string
+		format              Format
+		expectedContentType string
+	}{
+		{
+			name:                "set error in text format",
+			format:              FormatText,
+			expectedContentType: "text/plain",
+		},
+		{
+			name:                "set error in json format",
+			format:              FormatJson,
+			expectedContentType: "application/json",
+		},
+		{
+			name:                "set error in yaml format",
+			format:              FormatYaml,
+			expectedContentType: "application/yaml",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := &helperImpl{
+				format:       tt.format,
+				contentType:  "ignored/content-type",
+				responseCode: http.StatusOK,
+			}
+
+			h.setErrorResponse(errors.New("test error message"))
+
+			require.Equal(t, http.StatusBadRequest, h.responseCode)
+			require.Equal(t, tt.expectedContentType, h.contentType)
+
+			switch tt.format {
+			case FormatJson:
+				require.Equal(t, `{"error":"test error message"}`, string(h.responseBytes))
+			case FormatYaml:
+				require.Equal(t, "error: test error message\n", string(h.responseBytes))
+			case FormatText:
+				require.Equal(t, "error: test error message", string(h.responseBytes))
+			}
+		})
+	}
 }

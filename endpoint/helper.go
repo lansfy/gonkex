@@ -55,6 +55,8 @@ func (h *helperImpl) GetPath() string {
 
 func (h *helperImpl) GetRequest(v interface{}, format Format) error {
 	switch format {
+	case FormatText:
+		return h.getRequestAsText(v)
 	case FormatYaml:
 		return h.getRequestAsYaml(v)
 	default:
@@ -72,6 +74,8 @@ func (h *helperImpl) SetResponseFormat(format Format) {
 
 func (h *helperImpl) SetResponse(v interface{}) error {
 	switch h.format {
+	case FormatText:
+		return h.setResponseAsText(v)
 	case FormatYaml:
 		return h.setResponseAsYaml(v)
 	default:
@@ -81,6 +85,16 @@ func (h *helperImpl) SetResponse(v interface{}) error {
 
 func (h *helperImpl) SetResponseRaw(response []byte) {
 	h.responseBytes = response
+}
+
+func (h *helperImpl) getRequestAsText(v interface{}) error {
+	s, ok := v.(*string)
+	if !ok {
+		return internalError("GetRequestAsText",
+			fmt.Errorf("interface{} is %T, not *string", v))
+	}
+	*s = string(h.requestBytes)
+	return nil
 }
 
 func (h *helperImpl) getRequestAsJson(v interface{}) error {
@@ -108,7 +122,7 @@ func (h *helperImpl) GetMocksTransport() http.RoundTripper {
 }
 
 func (h *helperImpl) GetMockAddr(name string) string {
-	if h.services == nil {
+	if h.services == nil || h.services.Service(name) == nil {
 		panic(fmt.Sprintf("mock with name %q not exists", name))
 	}
 	return "http://" + h.services.Service(name).ServerAddr()
@@ -116,6 +130,16 @@ func (h *helperImpl) GetMockAddr(name string) string {
 
 func (h *helperImpl) GetMeta(key string) interface{} {
 	return h.provider.GetMeta(key)
+}
+
+func (h *helperImpl) setResponseAsText(response interface{}) error {
+	s, ok := response.(string)
+	if !ok {
+		return internalError("SetResponseAsText",
+			fmt.Errorf("interface{} is %T, not string", response))
+	}
+	h.responseBytes = []byte(s)
+	return nil
 }
 
 func (h *helperImpl) setResponseAsJson(response interface{}) error {
@@ -188,20 +212,20 @@ func (h *helperImpl) getContentType(override bool) string {
 	}
 }
 
+type errorResponse struct {
+	Error string `json:"error" yaml:"error"`
+}
+
 func (h *helperImpl) setErrorResponse(err error) {
 	h.contentType = h.getContentType(true)
 	h.SetStatusCode(http.StatusBadRequest)
 
-	var data struct {
-		Error string `json:"error" yaml:"error"`
-	}
-	data.Error = err.Error()
 	switch h.format {
 	case FormatText:
-		h.SetResponseRaw([]byte(fmt.Sprintf("error: %s", err)))
+		_ = h.setResponseAsText("error: " + err.Error())
 	case FormatYaml:
-		_ = h.setResponseAsYaml(data)
+		_ = h.setResponseAsYaml(errorResponse{err.Error()})
 	default:
-		_ = h.setResponseAsJson(data)
+		_ = h.setResponseAsJson(errorResponse{err.Error()})
 	}
 }
