@@ -10,6 +10,7 @@ import (
 )
 
 var _ http.RoundTripper = (*ServiceMock)(nil)
+var _ LoaderMocks = (*ServiceMock)(nil)
 
 // ServiceMock represents a mock HTTP service for testing purposes.
 // ServiceMock helps with integration testing by simulating external HTTP services with configurable behavior.
@@ -165,6 +166,15 @@ func (m *ServiceMock) SetDefinition(newDefinition *Definition) {
 	defer m.mutex.Unlock()
 
 	m.mock = newDefinition
+}
+
+func (m *ServiceMock) SetServiceDefinition(serviceName string, newDefinition *Definition) error {
+	if m.ServiceName != serviceName {
+		return unknownMockError(serviceName)
+	}
+
+	m.SetDefinition(newDefinition)
+	return nil
 }
 
 // ResetDefinition restores the original default definition.

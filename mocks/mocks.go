@@ -6,11 +6,10 @@ import (
 	"net/http"
 	"os"
 	"strings"
-
-	"github.com/lansfy/gonkex/colorize"
 )
 
 var _ http.RoundTripper = (*Mocks)(nil)
+var _ LoaderMocks = (*Mocks)(nil)
 
 // Mocks is a container for managing multiple ServiceMock instances.
 // It provides centralized control over a collection of mock HTTP services,
@@ -94,6 +93,16 @@ func (m *Mocks) Service(serviceName string) *ServiceMock {
 	return mock
 }
 
+func (m *Mocks) SetServiceDefinition(serviceName string, newDefinition *Definition) error {
+	service := m.Service(serviceName)
+	if service == nil {
+		return unknownMockError(serviceName)
+	}
+
+	service.SetDefinition(newDefinition)
+	return nil
+}
+
 // ResetRunningContext clears all accumulated errors and resets the running context for all mock services.
 // This is typically called before starting a new test case.
 func (m *Mocks) ResetRunningContext() {
@@ -128,28 +137,9 @@ func (m *Mocks) RoundTrip(req *http.Request) (*http.Response, error) {
 	host := req.URL.Hostname()
 	service := m.Service(host)
 	if service == nil {
-		return nil, fmt.Errorf("unknown mock name '%s'", host)
+		return nil, unknownMockError(host)
 	}
 	return service.RoundTrip(req)
-}
-
-// LoadDefinitions loads mock definitions for multiple services at once using the provided loader.
-// It updates each service with its corresponding definition from the map.
-// Returns an error if any service is not found or if any definition fails to load.
-func (m *Mocks) LoadDefinitions(loader Loader, definitions map[string]interface{}) error {
-	for serviceName, definition := range definitions {
-		service := m.Service(serviceName)
-		if service == nil {
-			return fmt.Errorf("unknown mock name '%s'", serviceName)
-		}
-
-		def, err := loader.LoadDefinition(definition)
-		if err != nil {
-			return colorize.NewEntityError("load definition for %s", serviceName).WithSubError(err)
-		}
-		service.SetDefinition(def)
-	}
-	return nil
 }
 
 // RegisterChecker adds a new checker to all mock services.
