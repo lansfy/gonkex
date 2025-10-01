@@ -7,10 +7,17 @@ import (
 
 	"github.com/lansfy/gonkex/colorize"
 	"github.com/lansfy/gonkex/types"
+
+	"gopkg.in/yaml.v3"
 )
 
+type LoaderMock interface {
+	SetServiceDefinition(serviceName string, def *Definition) error
+}
+
 type Loader interface {
-	LoadDefinition(rawDef interface{}) (*Definition, error)
+	LoadRawDefinition(m LoaderMock, rawDef map[string]interface{}) error
+	LoadStringDefinition(m LoaderMock, content string) error
 }
 
 type YamlLoaderOpts struct {
@@ -33,12 +40,32 @@ type loaderImpl struct {
 	order              *orderChecker
 }
 
-func (l *loaderImpl) LoadDefinition(rawDef interface{}) (*Definition, error) {
-	def, err := l.loadDefinition("$", rawDef)
-	if err != nil {
-		return nil, err
+func (l *loaderImpl) LoadRawDefinition(m LoaderMock, rawDef map[string]interface{}) error {
+	dummyStrategy := NewDefinition("$", nil, NewFailReply(), CallsNoConstraint, OrderNoValue)
+	for serviceName, definition := range rawDef {
+		err := m.SetServiceDefinition(serviceName, dummyStrategy)
+		if err != nil {
+			return err
+		}
+
+		def, err := l.loadDefinition("$", definition)
+		if err != nil {
+			return colorize.NewEntityError("load definition for %s", serviceName).SetSubError(err)
+		}
+
+		_ = m.SetServiceDefinition(serviceName, def)
 	}
-	return def, nil
+	return nil
+}
+
+func (l *loaderImpl) LoadStringDefinition(m LoaderMock, content string) error {
+	var rawDef map[string]interface{}
+	err := yaml.Unmarshal([]byte(content), &rawDef)
+	if err != nil {
+		return err
+	}
+
+	return l.LoadRawDefinition(m, rawDef)
 }
 
 func (l *loaderImpl) loadDefinition(path string, rawDef interface{}) (*Definition, error) {

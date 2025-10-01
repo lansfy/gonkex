@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"sync"
@@ -165,6 +166,23 @@ func (m *ServiceMock) SetDefinition(newDefinition *Definition) {
 	defer m.mutex.Unlock()
 
 	m.mock = newDefinition
+}
+
+func (m *ServiceMock) SetServiceDefinition(serviceName string, newDefinition *Definition) error {
+	if m.ServiceName != serviceName {
+		return fmt.Errorf("unknown mock name '%s'", serviceName)
+	}
+
+	m.SetDefinition(newDefinition)
+	return nil
+}
+
+// Service retrieves a ServiceMock by its name. Returns nil if the service does not exist.
+func (m *ServiceMock) Service(serviceName string) *ServiceMock {
+	if m.ServiceName != serviceName {
+		return nil
+	}
+	return m
 }
 
 // ResetDefinition restores the original default definition.

@@ -316,7 +316,7 @@ func (r *Runner) executeTest(v models.TestInterface) (*models.Result, error) {
 
 		// load mocks
 		if v.ServiceMocks() != nil {
-			err = r.config.Mocks.LoadDefinitions(r.config.MocksLoader, v.ServiceMocks())
+			err = r.config.MocksLoader.LoadRawDefinition(r.config.Mocks, v.ServiceMocks())
 			if err != nil {
 				return nil, err
 			}
