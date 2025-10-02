@@ -17,3 +17,7 @@ func dumpRequest(r *http.Request) string {
 func unhandledRequestError(r *http.Request) []error {
 	return []error{fmt.Errorf("unhandled request to mock:\n%s", dumpRequest(r))}
 }
+
+func unknownMockError(serviceName string) error {
+	return fmt.Errorf("unknown mock name '%s'", serviceName)
+}
