@@ -1,0 +1,78 @@
+- name: WHEN request body matches specified pattern bodyMatchesYAML MUST be successful
+  method: POST
+  path: /test/case
+  request: |
+      param: value
+      otherparam: value
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesYAML
+          body: |
+              param: value
+      strategy: constant
+      body: result
+      statusCode: 200
+
+- name: bodyMatchesYAML MUST support comparisonParams
+  method: POST
+  path: /test/case
+  request: |
+      param: value1
+      otherparam: value2
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesYAML
+          body: |
+              param: ignored
+              otherparam: ignored
+          comparisonParams:
+            ignoreValues: true
+      strategy: constant
+      body: result
+      statusCode: 200
+
+- name: WHEN request body is empty bodyMatchesYAML MUST fail with error
+  method: POST
+  path: /test/case
+  request: ""
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesYAML
+          body: |
+              param: value
+      strategy: constant
+      body: result
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'bodyMatchesYAML': request is empty
+
+- name: WHEN request body is invalid yaml bodyMatchesYAML MUST fail with error
+  method: POST
+  path: /test/case
+  request: |
+    invalid: 1
+       yaml: 2
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesYAML
+          body: |
+              param: value
+      strategy: constant
+      body: result
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'bodyMatchesYAML': yaml: line 2: mapping values are not allowed in this context

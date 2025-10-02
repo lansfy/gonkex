@@ -7,9 +7,6 @@ import (
 )
 
 func joinChanges(result *[]*Part, data []string, sep byte, colorer func(v string) *Part) {
-	if len(data) == 0 {
-		return
-	}
 	var builder strings.Builder
 	for _, line := range data {
 		_ = builder.WriteByte(sep)
@@ -17,7 +14,9 @@ func joinChanges(result *[]*Part, data []string, sep byte, colorer func(v string
 		_, _ = builder.WriteString("\n")
 	}
 
-	*result = append(*result, colorer(builder.String()))
+	if s := builder.String(); s != "" {
+		*result = append(*result, colorer(builder.String()))
+	}
 }
 
 func MakeColorDiff(title string, expected, actual []string) []*Part {
