@@ -1,0 +1,11 @@
+# Enforce LF for Go source
+*.go text eol=lf
+
+# Enforce LF for other text-based files
+*.mod text eol=lf
+*.sum text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml  text eol=lf
+*.md   text eol=lf
+*.adoc text eol=lf
