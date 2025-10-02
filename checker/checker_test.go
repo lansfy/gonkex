@@ -52,12 +52,16 @@ func (s *docStorage) setDBResponse(h endpoint.Helper) error {
 		}
 		return nil
 	}
-	data := []json.RawMessage{}
-	err := h.GetRequest(&data, endpoint.FormatJson)
+	data := []string{}
+	err := h.GetRequest(&data, endpoint.FormatYaml)
 	if err != nil {
 		return wrap(err)
 	}
-	s.response = data
+	resp := []json.RawMessage{}
+	for _, item := range data {
+		resp = append(resp, json.RawMessage(item))
+	}
+	s.response = resp
 
 	return nil
 }

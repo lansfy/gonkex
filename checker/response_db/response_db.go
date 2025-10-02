@@ -40,10 +40,6 @@ func (c *responseDbChecker) check(path string, t models.DatabaseCheck, result *m
 		return nil, createDefinitionError(path, colorize.NewEntityError("%s key required", "dbQuery"))
 	}
 
-	if t.DbResponseJson() == nil {
-		return nil, createDefinitionError(path, colorize.NewEntityError("%s key required", "dbResponse"))
-	}
-
 	// parse expected DB response
 	expectedItems, err := unmarshalArray(path, t.DbResponseJson())
 	if err != nil {
@@ -92,18 +88,20 @@ func toStringArray(src []interface{}) []string {
 }
 
 func makeQuery(path string, db storage.StorageInterface, dbQuery string) ([]interface{}, error) {
+	wrap := func(err error) error {
+		return colorize.NewEntityError("failed %s", "database check").WithSubError(
+			colorize.NewPathError(path, fmt.Errorf("execute request '%s': %w", dbQuery, err)))
+	}
 	rawMessages, err := db.ExecuteQuery(dbQuery)
 	if err != nil {
-		return nil, colorize.NewEntityError("failed %s", "database check").WithSubError(
-			colorize.NewPathError(path, fmt.Errorf("execute request '%s': %w", dbQuery, err)),
-		)
+		return nil, wrap(err)
 	}
 
 	response := make([]interface{}, len(rawMessages))
 	for idx := range rawMessages {
 		err := json.Unmarshal(rawMessages[idx], &response[idx])
 		if err != nil {
-			return nil, err
+			return nil, wrap(fmt.Errorf("parse service response: %w", err))
 		}
 	}
 
