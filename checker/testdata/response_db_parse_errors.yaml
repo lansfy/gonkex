@@ -1,10 +1,8 @@
 - name: WHEN dbQuery string empty parser MUST fail
   method: POST
   path: /gonkex/set_db_response
-  request: >
-    [
-      {"item": "value"}
-    ]
+  request: |
+    - '{"item": "value"}'
   response:
     200: ""
   dbChecks:
@@ -16,10 +14,8 @@
 - name: WHEN dbResponse has invalid json string parser MUST fail
   method: POST
   path: /gonkex/set_db_response
-  request: >
-    [
-      {"item": "value"}
-    ]
+  request: |
+    - '{"item": "value"}'
   response:
     200: ""
   dbChecks:

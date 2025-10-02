@@ -391,22 +391,22 @@ func Test_ExtractValuesFromHeaders(t *testing.T) {
 }
 
 func Test_ExtractValuesFromCookie(t *testing.T) {
-	headers := map[string][]string{
-		"Set-Cookie": {
-			"session_id=abc123; Path=/; HttpOnly",
-			"user", // ignored, because has wrong format
-			"user=JohnDoe; Path=/; Secure",
-		},
-	}
-
 	tests := []struct {
 		description string
+		headers     map[string][]string
 		varsToSet   map[string]string
 		want        map[string]string
 		wantErr     string
 	}{
 		{
 			description: "variables with valid cookie name",
+			headers: map[string][]string{
+				"Set-Cookie": {
+					"session_id=abc123; Path=/; HttpOnly",
+					"user", // ignored, because has wrong format
+					"user=JohnDoe; Path=/; Secure",
+				},
+			},
 			varsToSet: map[string]string{
 				"var1": "cookie:session_id",
 				"var2": "cookie: user ",
@@ -418,18 +418,31 @@ func Test_ExtractValuesFromCookie(t *testing.T) {
 		},
 		{
 			description: "variables with unknown cookie",
+			headers: map[string][]string{
+				"Set-Cookie": {
+					"session_id=abc123; Path=/; HttpOnly",
+				},
+			},
 			varsToSet: map[string]string{
 				"var1": "cookie:session_id",
 				"var2": "cookie:wrong_name",
 			},
 			wantErr: "variable 'var2': 'Set-Cookie' header does not include expected cookie wrong_name",
 		},
+		{
+			description: "Set-Cookie header not available",
+			headers:     map[string][]string{},
+			varsToSet: map[string]string{
+				"var1": "cookie:session_id",
+			},
+			wantErr: "variable 'var1': response does not include expected header 'Set-Cookie'",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
 			result := &models.Result{
-				ResponseHeaders: headers,
+				ResponseHeaders: tt.headers,
 			}
 			got, err := ExtractValues(tt.varsToSet, result)
 
