@@ -37,9 +37,6 @@ func (vs *VariablesImpl) Len() int {
 func (vs *VariablesImpl) Substitute(s string) string {
 	return variableRx.ReplaceAllStringFunc(s, func(found string) string {
 		name := getVarName(found)
-		if name == "" {
-			return found
-		}
 		if val, ok := vs.get(name); ok {
 			return val
 		}

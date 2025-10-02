@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/lansfy/gonkex/compare"
@@ -24,7 +25,7 @@ func loadBodyMatchesConstraint(def map[string]interface{}, bodyType types.BodyTy
 func newBodyMatchesConstraint(expected string, params compare.Params, bodyType types.BodyType) (verifier, error) {
 	expectedBody, err := bodyType.Decode(expected)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parse 'body': %w", err)
 	}
 	return &bodyMatchesConstraint{
 		bodyType:      bodyType,

@@ -1,0 +1,85 @@
+- name: WHEN field 'body' absent in bodyMatchesYAML parser MUST fail with error
+  method: POST
+  path: /test/case
+  request: |
+      param: value
+      otherparam: value
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesYAML
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'bodyMatchesYAML': 'body' key required
+
+- name: WHEN field 'comparisonParams' has errors in bodyMatchesYAML parser MUST fail with error
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "param": "value",
+      "otherparam": "value"
+    }
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesYAML
+          comparisonParams:
+            invalid: invalid
+          body: |
+              param: value
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'bodyMatchesYAML': section 'comparisonParams': key 'invalid' has non-bool value
+
+- name: WHEN field 'body' consists invalid yaml in bodyMatchesYAML parser MUST fail with error
+  method: POST
+  path: /test/case
+  request: >
+    {
+      "param": "value",
+      "otherparam": "value"
+    }
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesYAML
+          body: |
+              invalid: 1
+                 yaml: 2
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'bodyMatchesYAML': parse 'body': yaml: line 2: mapping values are not allowed in this context
+
+- name: WHEN bodyMatchesYAML constraint has unknown key load definition MUST fail with error
+  method: POST
+  path: /test/case
+  response:
+    200: result
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: bodyMatchesYAML
+          body: "{}"
+          invalid: invalid
+      strategy: constant
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'bodyMatchesYAML': unexpected key 'invalid' (allowed only [kind body comparisonParams])
