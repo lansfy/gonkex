@@ -1,7 +1,7 @@
 
        Name: Test case 4
 Description: Test wrong number of db items error
-       File: testdata/errors-example/case4.yaml
+       File: testdata/errors-example/case4.yaml:1
 
 Request:
      Method: GET

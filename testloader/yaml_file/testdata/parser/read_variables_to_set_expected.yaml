@@ -17,5 +17,6 @@
       var1: "path41"
       var44: "path44"
   GetFileName: testdata/parser/read_variables_to_set.yaml
+  GetLineNumber: 1
   FirstTestInFile: true
   LastTestInFile: true

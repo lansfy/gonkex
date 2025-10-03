@@ -8,6 +8,7 @@
     foo1: bar1
     foo2: bar2
   GetFileName: testdata/parser/read_cases_variable.yaml
+  GetLineNumber: 1
   OneOfCase: true
   FirstTestInFile: true
 
@@ -22,5 +23,6 @@
     foo2: bar2
     foo3: bar22
   GetFileName: testdata/parser/read_cases_variable.yaml
+  GetLineNumber: 1
   OneOfCase: true
   LastTestInFile: true

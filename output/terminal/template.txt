@@ -1,7 +1,7 @@
 
        Name: {{ green .Test.GetName }}
 Description: {{if .Test.GetDescription }}{{ green .Test.GetDescription }}{{ else }}{{ green "No description" }}{{ end }}
-       File: {{ green .Test.GetFileName }}
+       File: {{ green .Test.GetFileName }}{{if ne .Test.GetLineNumber 0}}:{{ green .Test.GetLineNumber }}{{ end }}
 
 Request:
      Method: {{ cyan .Test.GetMethod }}

@@ -96,20 +96,20 @@ func (o *Output) getTemplateFuncMap() template.FuncMap {
 	var funcMap template.FuncMap
 	if o.opts.Policy == PolicyForceColor {
 		funcMap = template.FuncMap{
-			"green":      color.GreenString,
-			"cyan":       color.CyanString,
-			"yellow":     color.YellowString,
-			"danger":     color.New(color.FgHiWhite, color.BgRed).Sprint,
-			"success":    color.New(color.FgHiWhite, color.BgGreen).Sprint,
+			"green":      simplifyFormatter(color.GreenString),
+			"cyan":       simplifyFormatter(color.CyanString),
+			"yellow":     simplifyFormatter(color.YellowString),
+			"danger":     simplifyFormatter(color.New(color.FgHiWhite, color.BgRed).Sprintf),
+			"success":    simplifyFormatter(color.New(color.FgHiWhite, color.BgGreen).Sprintf),
 			"printError": colorize.GetColoredValue,
 		}
 	} else {
 		funcMap = template.FuncMap{
-			"green":      fmt.Sprintf,
-			"cyan":       fmt.Sprintf,
-			"yellow":     fmt.Sprintf,
-			"danger":     fmt.Sprintf,
-			"success":    fmt.Sprintf,
+			"green":      sprint,
+			"cyan":       sprint,
+			"yellow":     sprint,
+			"danger":     sprint,
+			"success":    sprint,
 			"printError": suppressColor,
 		}
 	}
@@ -126,6 +126,16 @@ func (o *Output) getTemplateFuncMap() template.FuncMap {
 	}
 
 	return funcMap
+}
+
+func sprint(v interface{}) string {
+	return fmt.Sprintf("%v", v)
+}
+
+func simplifyFormatter(f func(format string, a ...interface{}) string) func(interface{}) string {
+	return func(v interface{}) string {
+		return f("%v", v)
+	}
 }
 
 func makePretty(body string) string {

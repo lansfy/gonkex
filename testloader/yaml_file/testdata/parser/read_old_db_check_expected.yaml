@@ -9,5 +9,6 @@
         - item1
         - item2
   GetFileName: testdata/parser/read_old_db_check.yaml
+  GetLineNumber: 1
   FirstTestInFile: true
   LastTestInFile: true

@@ -10,6 +10,7 @@
   GetResponses:
     200: "{{ .foo }} - not affected by requestArgs"
   GetFileName: testdata/parser/read_cases_request.yaml
+  GetLineNumber: 1
   OneOfCase: true
   FirstTestInFile: true
 
@@ -25,5 +26,6 @@
   GetResponses:
     200: "{{ .foo }} - not affected by requestArgs"
   GetFileName: testdata/parser/read_cases_request.yaml
+  GetLineNumber: 1
   OneOfCase: true
   LastTestInFile: true

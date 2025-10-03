@@ -95,6 +95,7 @@ type TestInterface interface {
 	GetVariablesToSet(code int) (map[string]string, bool) // Variables to extract from the response
 
 	GetFileName() string   // Source file name for the test
+	GetLineNumber() int    // The line number in the file where the test declaration begins
 	FirstTestInFile() bool // Whether this is the first test in the file
 	LastTestInFile() bool  // Whether this is the last test in the file
 	OneOfCase() bool       // Whether this test is part of a case-based test

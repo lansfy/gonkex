@@ -190,6 +190,7 @@ type TestInterfaceResult struct {
 	GetVariablesToSet    map[int]map[string]string `yaml:"GetVariablesToSet"`
 
 	GetFileName     string `yaml:"GetFileName"`
+	GetLineNumber   int    `yaml:"GetLineNumber"`
 	FirstTestInFile bool   `yaml:"FirstTestInFile"`
 	LastTestInFile  bool   `yaml:"LastTestInFile"`
 	OneOfCase       bool   `yaml:"OneOfCase"`
@@ -297,6 +298,7 @@ func compareTestInterface(t *testing.T, expected *TestInterfaceResult, actual mo
 
 	normalizedPath := strings.ReplaceAll(actual.GetFileName(), "\\", "/")
 	assert.Equal(t, expected.GetFileName, normalizedPath, "GetFileName returns wrong value")
+	assert.Equal(t, expected.GetLineNumber, actual.GetLineNumber(), "GetLineNumber returns wrong value")
 	assert.Equal(t, expected.FirstTestInFile, actual.FirstTestInFile(), "FirstTestInFile returns wrong value")
 	assert.Equal(t, expected.LastTestInFile, actual.LastTestInFile(), "LastTestInFile returns wrong value")
 	assert.Equal(t, expected.OneOfCase, actual.OneOfCase(), "OneOfCase returns wrong value")

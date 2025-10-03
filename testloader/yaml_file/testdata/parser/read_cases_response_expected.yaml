@@ -13,6 +13,7 @@
     500:
       X-Header: '{{ .foo }}' # not part of cases
   GetFileName: testdata/parser/read_cases_response.yaml
+  GetLineNumber: 1
   OneOfCase: true
   FirstTestInFile: true
 
@@ -31,5 +32,6 @@
     500:
       X-Header: '{{ .foo }}' # not part of cases
   GetFileName: testdata/parser/read_cases_response.yaml
+  GetLineNumber: 1
   OneOfCase: true
   LastTestInFile: true
