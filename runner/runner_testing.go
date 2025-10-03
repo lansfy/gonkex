@@ -61,6 +61,7 @@ type RunWithTestingOpts struct {
 // serverURL: The URL of the server being tested.
 // opts: The configuration options for the test run.
 func RunWithTesting(t *testing.T, serverURL string, opts *RunWithTestingOpts) {
+	t.Helper()
 	if opts.Mocks != nil {
 		if err := opts.Mocks.RegisterEnvironmentVariables(MockEnvironmentPrefix); err != nil {
 			t.Fatal(err)
