@@ -1,6 +1,7 @@
 package yaml_file
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -117,7 +118,28 @@ func DefaultFileParse(filePath string, content []byte) ([]*TestDefinition, error
 		return nil, fmt.Errorf("unmarshal file %s: %w", filePath, err)
 	}
 
+	appendLineNumber(content, testDefinitions)
 	return testDefinitions, nil
+}
+
+func appendLineNumber(content []byte, defs []*TestDefinition) {
+	var counter int
+	var linesN []int
+	scanner := bufio.NewScanner(bytes.NewReader(content))
+	for scanner.Scan() {
+		counter++
+		if strings.HasPrefix(scanner.Text(), "- name:") {
+			linesN = append(linesN, counter)
+		}
+	}
+
+	if len(defs) != len(linesN) {
+		return
+	}
+
+	for i := range linesN {
+		defs[i].LineNumber = linesN[i]
+	}
 }
 
 func parseTestDefinitionFile(opts *LoaderOpts, absPath string) ([]models.TestInterface, error) {

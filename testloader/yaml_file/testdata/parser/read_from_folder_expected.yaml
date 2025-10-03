@@ -5,6 +5,7 @@
   GetResponses:
     200: "11aaabbb11"
   GetFileName: testdata/parser/read_from_folder.yaml/somefile1.yml
+  GetLineNumber: 1
   FirstTestInFile: true
 
 - GetName: "simple request test 12"
@@ -14,6 +15,7 @@
   GetResponses:
     200: "12aaabbb12"
   GetFileName: testdata/parser/read_from_folder.yaml/somefile1.yml
+  GetLineNumber: 8
   LastTestInFile: true
 
 - GetName: "simple request test 2"
@@ -23,5 +25,6 @@
   GetResponses:
     200: "2aaabbb2"
   GetFileName: testdata/parser/read_from_folder.yaml/somefile2.yaml
+  GetLineNumber: 1
   FirstTestInFile: true
   LastTestInFile: true

@@ -33,6 +33,7 @@ type TestDefinition struct {
 	DbChecks           []DatabaseCheck           `json:"dbChecks" yaml:"dbChecks"`
 	RetryPolicy        RetryPolicy               `json:"retryPolicy" yaml:"retryPolicy"`
 	Meta               map[string]interface{}    `json:"meta" yaml:"meta"`
+	LineNumber         int                       `json:"-" yaml:"-"`
 }
 
 type CaseData struct {

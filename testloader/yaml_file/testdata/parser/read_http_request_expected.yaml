@@ -12,5 +12,6 @@
   GetResponses:
     200: "aaabbb"
   GetFileName: testdata/parser/read_http_request.yaml
+  GetLineNumber: 1
   FirstTestInFile: true
   LastTestInFile: true

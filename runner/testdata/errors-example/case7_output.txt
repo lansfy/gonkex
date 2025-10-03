@@ -1,7 +1,7 @@
 
        Name: Test case 7 #1
 Description: Test body mismatch error
-       File: testdata/errors-example/case7.yaml
+       File: testdata/errors-example/case7.yaml:1
 
 Request:
      Method: GET
@@ -28,7 +28,7 @@ Errors:
 
        Name: Test case 7 #2 (subname 2)
 Description: other description 2
-       File: testdata/errors-example/case7.yaml
+       File: testdata/errors-example/case7.yaml:1
 
 Request:
      Method: GET

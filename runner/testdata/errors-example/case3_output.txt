@@ -1,7 +1,7 @@
 
        Name: Test case 3
 Description: Test wrong http code and db output error
-       File: testdata/errors-example/case3.yaml
+       File: testdata/errors-example/case3.yaml:1
 
 Request:
      Method: GET

@@ -6,6 +6,7 @@
   GetResponses:
     200: "someresponsebody"
   GetFileName: testdata/parser/read_cases_base.yaml
+  GetLineNumber: 1
   OneOfCase: true
   FirstTestInFile: true
 
@@ -17,6 +18,7 @@
   GetResponses:
     200: "someresponsebody"
   GetFileName: testdata/parser/read_cases_base.yaml
+  GetLineNumber: 1
   OneOfCase: true
 
 - GetName: "loader MUST generate separate test for every case #3 (subcase3)"
@@ -27,5 +29,6 @@
   GetResponses:
     200: "someresponsebody"
   GetFileName: testdata/parser/read_cases_base.yaml
+  GetLineNumber: 1
   OneOfCase: true
   LastTestInFile: true

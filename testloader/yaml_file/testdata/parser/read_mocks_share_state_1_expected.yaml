@@ -3,6 +3,7 @@
   Path: /some/path
   GetRequest: requestbody
   GetFileName: testdata/parser/read_mocks_share_state_1.yaml
+  GetLineNumber: 1
   FirstTestInFile: true
   LastTestInFile: true
   ServiceMocks:

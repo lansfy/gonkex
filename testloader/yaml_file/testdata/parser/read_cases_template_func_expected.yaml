@@ -5,6 +5,7 @@
   GetResponses:
     200: "result"
   GetFileName: testdata/parser/read_cases_template_func.yaml
+  GetLineNumber: 1
   OneOfCase: true
   FirstTestInFile: true
 
@@ -15,5 +16,6 @@
   GetResponses:
     200: "result"
   GetFileName: testdata/parser/read_cases_template_func.yaml
+  GetLineNumber: 1
   OneOfCase: true
   LastTestInFile: true

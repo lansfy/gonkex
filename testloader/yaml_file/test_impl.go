@@ -253,6 +253,10 @@ func (t *testImpl) GetFileName() string {
 	return t.Filename
 }
 
+func (t *testImpl) GetLineNumber() int {
+	return t.LineNumber
+}
+
 func (t *testImpl) Clone() models.TestInterface {
 	res := *t
 	if t.Mocks != nil {

@@ -10,5 +10,6 @@
     CmdLine: script2.sh
     Timeout: 500ms
   GetFileName: testdata/parser/read_script.yaml
+  GetLineNumber: 1
   FirstTestInFile: true
   LastTestInFile: true

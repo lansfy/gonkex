@@ -1,7 +1,7 @@
 
        Name: Test case 6
 Description: Test variables_to_set errors
-       File: testdata/errors-example/case6.yaml
+       File: testdata/errors-example/case6.yaml:1
 
 Request:
      Method: GET

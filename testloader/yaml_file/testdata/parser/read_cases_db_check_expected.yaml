@@ -17,6 +17,7 @@
       GetComparisonParams:
         DisallowExtraFields: true
   GetFileName: testdata/parser/read_cases_db_check.yaml
+  GetLineNumber: 1
   OneOfCase: true
   FirstTestInFile: true
 
@@ -39,5 +40,6 @@
       GetComparisonParams:
         DisallowExtraFields: true
   GetFileName: testdata/parser/read_cases_db_check.yaml
+  GetLineNumber: 1
   OneOfCase: true
   LastTestInFile: true

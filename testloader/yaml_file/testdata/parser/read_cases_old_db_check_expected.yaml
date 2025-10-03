@@ -9,6 +9,7 @@
         - value2 item1
         - value2 item2
   GetFileName: testdata/parser/read_cases_old_db_check.yaml
+  GetLineNumber: 1
   OneOfCase: true
   FirstTestInFile: true
 
@@ -24,5 +25,6 @@
         - otheritem2
         - otheritem3
   GetFileName: testdata/parser/read_cases_old_db_check.yaml
+  GetLineNumber: 1
   OneOfCase: true
   LastTestInFile: true

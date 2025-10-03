@@ -3,5 +3,6 @@
   Path: /some/path
   GetRequest: requestbody
   GetFileName: testdata/parser/read_http_empty_response.yaml
+  GetLineNumber: 1
   FirstTestInFile: true
   LastTestInFile: true

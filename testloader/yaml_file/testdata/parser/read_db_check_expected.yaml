@@ -19,5 +19,6 @@
     - DbQueryString: "DELETE ALL"
       DbResponseJson: []
   GetFileName: testdata/parser/read_db_check.yaml
+  GetLineNumber: 1
   FirstTestInFile: true
   LastTestInFile: true

@@ -3,6 +3,7 @@
   Path: /some/path1
   GetRequest: requestbody
   GetFileName: testdata/parser/read_mocks_share_state_6.yaml
+  GetLineNumber: 1
   FirstTestInFile: true
   ServiceMocksParams:
     SkipMocksResetAfterTest: true
@@ -15,6 +16,7 @@
   Path: /some/path2
   GetRequest: requestbody
   GetFileName: testdata/parser/read_mocks_share_state_6.yaml
+  GetLineNumber: 11
   ServiceMocksParams:
     SkipMocksResetBeforeTest: true
 
@@ -23,6 +25,7 @@
   Path: /some/path3
   GetRequest: requestbody
   GetFileName: testdata/parser/read_mocks_share_state_6.yaml
+  GetLineNumber: 18
   ServiceMocksParams:
     SkipMocksResetAfterTest: true
   ServiceMocks:
@@ -34,6 +37,7 @@
   Path: /some/path4
   GetRequest: requestbody
   GetFileName: testdata/parser/read_mocks_share_state_6.yaml
+  GetLineNumber: 28
   LastTestInFile: true
   ServiceMocksParams:
     SkipMocksResetBeforeTest: true
