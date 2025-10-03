@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"text/template"
 
 	"github.com/lansfy/gonkex/colorize"
@@ -101,6 +103,7 @@ func (o *Output) getTemplateFuncMap() template.FuncMap {
 			"yellow":     simplifyFormatter(color.YellowString),
 			"danger":     simplifyFormatter(color.New(color.FgHiWhite, color.BgRed).Sprintf),
 			"success":    simplifyFormatter(color.New(color.FgHiWhite, color.BgGreen).Sprintf),
+			"printPath":  sprint,
 			"printError": colorize.GetColoredValue,
 		}
 	} else {
@@ -110,6 +113,7 @@ func (o *Output) getTemplateFuncMap() template.FuncMap {
 			"yellow":     sprint,
 			"danger":     sprint,
 			"success":    sprint,
+			"printPath":  expandPath,
 			"printError": suppressColor,
 		}
 	}
@@ -130,6 +134,16 @@ func (o *Output) getTemplateFuncMap() template.FuncMap {
 
 func sprint(v interface{}) string {
 	return fmt.Sprintf("%v", v)
+}
+
+func expandPath(path string) string {
+	forceFullPath := (os.Getenv("VSCODE_PID") != "")
+	if forceFullPath {
+		if fullPath, _ := filepath.Abs(path); fullPath != "" {
+			path = fullPath
+		}
+	}
+	return path
 }
 
 func simplifyFormatter(f func(format string, a ...interface{}) string) func(interface{}) string {
