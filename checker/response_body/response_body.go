@@ -20,12 +20,16 @@ func NewChecker() checker.CheckerInterface {
 type responseBodyChecker struct{}
 
 func (c *responseBodyChecker) Check(t models.TestInterface, result *models.Result) ([]error, error) {
+	if len(t.GetResponses()) == 0 {
+		// possible response codes not specified, ignore any checks
+		return nil, nil
+	}
 	expectedBody, ok := t.GetResponse(result.ResponseStatusCode)
 	if !ok {
 		return []error{createWrongStatusError(result.ResponseStatusCode, t.GetResponses())}, nil
 	}
 
-	// expected body has only regexp, so compare bodies as strings
+	// expected body has only matcher, so compare bodies as strings
 	if compare.StringAsMatcher(expectedBody) != nil {
 		return addMainError(compare.Compare(expectedBody, result.ResponseBody, compare.Params{})), nil
 	}

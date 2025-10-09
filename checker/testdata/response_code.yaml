@@ -1,3 +1,12 @@
+- name: WHEN response section absent check MUST be successful
+  method: GET
+  path: /test/case
+  mocks:
+    someservice:
+      strategy: constant
+      body: "empty"
+      statusCode: 400
+
 - name: WHEN request return not expected code check MUST fail
   method: GET
   path: /test/case
