@@ -10,8 +10,13 @@ type Matcher interface {
 
 var matcherExprRx = regexp.MustCompile(`^\$match(Regexp|Time|Base64)\((.+)\)$`)
 
-func StringAsMatcher(expr string) Matcher {
-	matches := matcherExprRx.FindStringSubmatch(expr)
+func CreateMatcher(expr interface{}) Matcher {
+	sval, ok := expr.(string)
+	if !ok {
+		return nil
+	}
+
+	matches := matcherExprRx.FindStringSubmatch(sval)
 	if matches != nil {
 		switch matches[1] {
 		case "Regexp":

@@ -2,7 +2,6 @@ package compare
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -17,14 +16,14 @@ type timeMatcher struct {
 }
 
 func (m *timeMatcher) MatchValues(actual interface{}) error {
-	actualStr, ok := actual.(string)
-	if !ok {
-		return colorize.NewNotEqualError("type mismatch:", "string", reflect.TypeOf(actual))
-	}
-
 	args, err := extractTimeArgs(m.data)
 	if err != nil {
 		return err
+	}
+
+	actualStr, ok := actual.(string)
+	if !ok {
+		return makeTypeMismatchError(string(leafString), string(getLeafType(actual)))
 	}
 
 	parsed, err := time.ParseInLocation(args.layout, actualStr, args.tzLocation)

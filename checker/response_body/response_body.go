@@ -30,7 +30,7 @@ func (c *responseBodyChecker) Check(t models.TestInterface, result *models.Resul
 	}
 
 	// expected body has only matcher, so compare bodies as strings
-	if compare.StringAsMatcher(expectedBody) != nil {
+	if compare.CreateMatcher(expectedBody) != nil {
 		return addMainError(compare.Compare(expectedBody, result.ResponseBody, compare.Params{})), nil
 	}
 

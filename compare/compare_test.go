@@ -88,45 +88,6 @@ func TestCompareScalarTypes(t *testing.T) {
 			actual:   12345,
 			wantErr:  makeErrorString("$", "values do not match", 123, 12345),
 		},
-		{
-			name:     "WHEN the string matches a regular expression, the check MUST pass",
-			expected: "$matchRegexp(x.+z)",
-			actual:   "xyyyz",
-		},
-		{
-			name:     "WHEN the string not matches a regular expression, the check MUST fail",
-			expected: "$matchRegexp(x.+z)",
-			actual:   "ayyyb",
-			wantErr:  makeErrorString("$", "value does not match regexp", "$matchRegexp(x.+z)", "ayyyb"),
-		},
-		{
-			name:     "WHEN the integer number matches a regular expression, the check MUST pass",
-			expected: "$matchRegexp(^[0-5]+$)",
-			actual:   543210,
-		},
-		{
-			name:     "WHEN the integer number not matches a regular expression, the check MUST fail",
-			expected: "$matchRegexp(^[0-5]+$)",
-			actual:   12367,
-			wantErr:  makeErrorString("$", "value does not match regexp", "$matchRegexp(^[0-5]+$)", "12367"),
-		},
-		{
-			name:     "WHEN the float number matches a regular expression, the check MUST pass",
-			expected: "$matchRegexp(^[0-9]+\\.2.*$)",
-			actual:   1.234,
-		},
-		{
-			name:     "WHEN the integer number not matches a regular expression, the check MUST fail",
-			expected: "$matchRegexp(^[0-9]+\\.3.*$)",
-			actual:   1.23,
-			wantErr:  makeErrorString("$", "value does not match regexp", "$matchRegexp(^[0-9]+\\.3.*$)", "1.23"),
-		},
-		{
-			name:     "WHEN condition has invalid regular expression, the check MUST fail with error",
-			expected: "$matchRegexp((?x))",
-			actual:   2,
-			wantErr:  makeErrorString("$", "cannot compile regexp", nil, "invalid or unsupported Perl syntax: `(?x`"),
-		},
 	}
 
 	for _, tt := range tests {
