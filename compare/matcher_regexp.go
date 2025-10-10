@@ -12,6 +12,11 @@ func MatchRegexpWrap(s string) string {
 	return fmt.Sprintf("$matchRegexp(%s)", s)
 }
 
+var regexpMatcherSupported = leafTypeSet{
+	leafString: true,
+	leafNumber: true,
+}
+
 type regexpMatcher struct {
 	data string
 }
@@ -22,6 +27,11 @@ func (r *regexpMatcher) MatchValues(actual interface{}) error {
 		// simplify error text
 		errorText := strings.TrimPrefix(err.Error(), "error parsing regexp: ")
 		return colorize.NewNotEqualError("cannot compile regexp:", nil, errorText)
+	}
+
+	err = checkTypeCompatibility(regexpMatcherSupported, actual)
+	if err != nil {
+		return err
 	}
 
 	value := fmt.Sprintf("%v", actual)

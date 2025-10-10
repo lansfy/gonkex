@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/lansfy/gonkex/colorize"
@@ -16,172 +17,157 @@ type Params struct {
 	failFast             bool // End compare operation after first error
 }
 
-type leafsMatchType int
-
-const (
-	pure leafsMatchType = iota
-	regex
-)
-
-const (
-	arrayType = "array"
-	mapType   = "map"
-)
-
-// Compare compares values as plain text
-// It can be compared several ways:
-//   - Pure values: should be equal
-//   - Regex: try to compile 'expected' as regex and match 'actual' with it
-//     It activates on following syntax: $matchRegexp(%EXPECTED_VALUE%)
+// Compare compares expected and actual values
 func Compare(expected, actual interface{}, params Params) []error {
 	return compareBranch("$", expected, actual, &params)
 }
 
-func compareBranch(path string, expected, actual interface{}, params *Params) []error {
-	expectedType := getType(expected)
-	actualType := getType(actual)
+type leafType string
+type leafTypeSet map[leafType]bool
 
-	// compare types
-	if leafMatchType(expected) != regex && expectedType != actualType {
+const (
+	leafArray  leafType = "array"
+	leafMap    leafType = "map"
+	leafNil    leafType = "nil"
+	leafBool   leafType = "bool"
+	leafString leafType = "string"
+	leafNumber leafType = "number"
+)
+
+func compareBranch(path string, expected, actual interface{}, params *Params) []error {
+	expectedType := getLeafType(expected)
+	actualType := getLeafType(actual)
+
+	if matcher := CreateMatcher(expected); matcher != nil {
+		err := matcher.MatchValues(actual)
+		if err != nil {
+			return []error{colorize.NewPathError(path, err)}
+		}
+		return nil
+	}
+
+	if expectedType != actualType {
 		return []error{makeError(path, "types do not match", expectedType, actualType)}
 	}
 
-	// compare scalars
-	if isScalarType(actualType) && !params.IgnoreValues {
-		return compareLeafs(path, expected, actual)
+	switch actualType {
+	case leafArray:
+		return compareArrays(path, expected, actual, params)
+	case leafMap:
+		return compareMaps(path, expected, actual, params)
+	default:
+		if params.IgnoreValues || expected == actual {
+			return nil
+		}
+		return []error{makeValueCompareError(path, "values do not match", expected, actual)}
+	}
+}
+
+func compareArrays(path string, expected, actual interface{}, params *Params) []error {
+	expectedArray := convertToArray(expected)
+	actualArray := convertToArray(actual)
+
+	expectedArray, err := processMatchArrayByPattern(path, expectedArray, len(actualArray))
+	if err != nil {
+		return []error{err}
 	}
 
-	// compare arrays
+	if len(expectedArray) != len(actualArray) {
+		return []error{makeError(path, "array lengths do not match", len(expectedArray), len(actualArray))}
+	}
+
+	if params.IgnoreArraysOrdering {
+		expectedArray, actualArray = getUnmatchedArrays(expectedArray, actualArray, params)
+	}
+
+	// iterate over children
 	var errs []error
-	if actualType == arrayType {
-		expectedArray := convertToArray(expected)
-		actualArray := convertToArray(actual)
-
-		expectedArray, err := processMatchArrayByPattern(path, expectedArray, len(actualArray))
-		if err != nil {
-			return append(errs, err)
-		}
-
-		if len(expectedArray) != len(actualArray) {
-			errs = append(errs, makeError(path, "array lengths do not match", len(expectedArray), len(actualArray)))
+	for i, item := range expectedArray {
+		subPath := fmt.Sprintf("%s[%d]", path, i)
+		errs = append(errs, compareBranch(subPath, item, actualArray[i], params)...)
+		if params.failFast && len(errs) != 0 {
 			return errs
 		}
-
-		if params.IgnoreArraysOrdering {
-			expectedArray, actualArray = getUnmatchedArrays(expectedArray, actualArray, params)
-		}
-
-		// iterate over children
-		for i, item := range expectedArray {
-			subPath := fmt.Sprintf("%s[%d]", path, i)
-			errs = append(errs, compareBranch(subPath, item, actualArray[i], params)...)
-			if params.failFast && len(errs) != 0 {
-				return errs
-			}
-		}
 	}
-
-	// compare maps
-	if actualType == mapType {
-		expectedRef := reflect.ValueOf(expected)
-		actualRef := reflect.ValueOf(actual)
-
-		if params.DisallowExtraFields && expectedRef.Len() != actualRef.Len() {
-			errs = append(errs, makeError(path, "map lengths do not match", expectedRef.Len(), actualRef.Len()))
-			return errs
-		}
-
-		for _, key := range expectedRef.MapKeys() {
-			// check keys presence
-			if ok := actualRef.MapIndex(key); !ok.IsValid() {
-				errs = append(errs, makeError(path, "key is missing", key.String(), "<missing>"))
-				if params.failFast {
-					return errs
-				}
-				continue
-			}
-
-			// check values
-			subPath := fmt.Sprintf("%s.%s", path, key.String())
-			res := compareBranch(
-				subPath,
-				expectedRef.MapIndex(key).Interface(),
-				actualRef.MapIndex(key).Interface(),
-				params,
-			)
-			errs = append(errs, res...)
-			if params.failFast && len(errs) != 0 {
-				return errs
-			}
-		}
-	}
-
 	return errs
 }
 
-func getType(value interface{}) string {
+func compareMaps(path string, expected, actual interface{}, params *Params) []error {
+	expectedRef := reflect.ValueOf(expected)
+	actualRef := reflect.ValueOf(actual)
+
+	if params.DisallowExtraFields && expectedRef.Len() != actualRef.Len() {
+		return []error{makeError(path, "map lengths do not match", expectedRef.Len(), actualRef.Len())}
+	}
+
+	var errs []error
+	for _, key := range expectedRef.MapKeys() {
+		// check keys presence
+		if ok := actualRef.MapIndex(key); !ok.IsValid() {
+			errs = append(errs, makeError(path, "key is missing", key.String(), "<missing>"))
+			if params.failFast {
+				return errs
+			}
+			continue
+		}
+
+		// check values
+		subPath := fmt.Sprintf("%s.%s", path, key.String())
+		res := compareBranch(
+			subPath,
+			expectedRef.MapIndex(key).Interface(),
+			actualRef.MapIndex(key).Interface(),
+			params,
+		)
+		errs = append(errs, res...)
+		if params.failFast && len(errs) != 0 {
+			return errs
+		}
+	}
+	return errs
+}
+
+func getLeafType(value interface{}) leafType {
 	if value == nil {
-		return "nil"
+		return leafNil
 	}
 
 	rt := reflect.TypeOf(value)
-	switch {
-	case rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array:
-		return "array"
-	case rt.Kind() == reflect.Map:
-		return "map"
+	switch rt.Kind() {
+	case reflect.Bool:
+		return leafBool
+	case reflect.String:
+		return leafString
+	case reflect.Slice, reflect.Array:
+		return leafArray
+	case reflect.Map:
+		return leafMap
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64:
+		return leafNumber
 	default:
-		return rt.String()
+		return leafType(rt.String())
 	}
 }
 
-func isScalarType(t string) bool {
-	return t != "map" && t != "array"
+func checkTypeCompatibility(supported leafTypeSet, value interface{}) error {
+	valueType := getLeafType(value)
+	if _, ok := supported[valueType]; ok {
+		return nil
+	}
+
+	available := []string{}
+	for name := range supported {
+		available = append(available, string(name))
+	}
+	sort.Strings(available)
+
+	return makeTypeMismatchError(strings.Join(available, " / "), string(valueType))
 }
 
-func compareLeafs(path string, expected, actual interface{}) []error {
-	switch leafMatchType(expected) {
-	case pure:
-		return comparePure(path, expected, actual)
-	case regex:
-		return compareRegex(path, expected, actual)
-	default:
-		return []error{fmt.Errorf("unknown compare type %q", expected)}
-	}
-}
-
-func comparePure(path string, expected, actual interface{}) []error {
-	if expected != actual {
-		return []error{makeValueCompareError(path, "values do not match", expected, actual)}
-	}
-	return nil
-}
-
-func compareRegex(path string, expected, actual interface{}) []error {
-	if !isScalarType(getType(actual)) {
-		return []error{makeError(path, "type mismatch", "string", reflect.TypeOf(expected))}
-	}
-
-	matcher := StringAsMatcher(expected.(string))
-	err := matcher.MatchValues(actual)
-	if err != nil {
-		return []error{colorize.NewPathError(path, err)}
-	}
-
-	return nil
-}
-
-func leafMatchType(expected interface{}) leafsMatchType {
-	val, ok := expected.(string)
-	if !ok {
-		return pure
-	}
-
-	if StringAsMatcher(val) != nil {
-		return regex
-	}
-
-	return pure
+func makeTypeMismatchError(expectedType, actualType string) error {
+	return colorize.NewNotEqualError("type mismatch:", expectedType, actualType)
 }
 
 func makeValueCompareError(path, msg string, expected, actual interface{}) error {

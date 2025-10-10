@@ -2,7 +2,6 @@ package compare
 
 import (
 	"encoding/base64"
-	"fmt"
 
 	"github.com/lansfy/gonkex/colorize"
 )
@@ -12,7 +11,12 @@ type base64Matcher struct {
 }
 
 func (r *base64Matcher) MatchValues(actual interface{}) error {
-	decoded, err := base64.StdEncoding.DecodeString(fmt.Sprintf("%v", actual))
+	actualStr, ok := actual.(string)
+	if !ok {
+		return makeTypeMismatchError(string(leafString), string(getLeafType(actual)))
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(actualStr)
 	if err != nil {
 		return colorize.NewNotEqualError("cannot make base64 decode:", nil, err.Error())
 	}
