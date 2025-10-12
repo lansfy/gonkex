@@ -10,23 +10,23 @@ import (
 
 type matcherTest struct {
 	description string
-	matcher     string
+	matcher     interface{}
 	actual      interface{}
 	wantErr     string
 }
 
-func processTests(t *testing.T, tests []matcherTest) {
+func processTests(t *testing.T, tests []matcherTest, params Params) {
 	t.Helper()
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
 			require.NotNil(t, CreateMatcher(tt.matcher))
-			expected := map[string]string{
+			expected := map[string]interface{}{
 				"data": tt.matcher,
 			}
 			actual := map[string]interface{}{
 				"data": tt.actual,
 			}
-			errs := Compare(expected, actual, Params{})
+			errs := Compare(expected, actual, params)
 			if tt.wantErr == "" {
 				require.Empty(t, errs)
 			} else {

@@ -1,7 +1,6 @@
 package compare
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -23,7 +22,10 @@ func Compare(expected, actual interface{}, params Params) []error {
 }
 
 type leafType string
-type leafTypeSet map[leafType]bool
+
+func (t leafType) IsScalar() bool {
+	return t != leafArray && t != leafMap
+}
 
 const (
 	leafArray  leafType = "array"
@@ -39,10 +41,17 @@ func compareBranch(path string, expected, actual interface{}, params *Params) []
 	actualType := getLeafType(actual)
 
 	if matcher := CreateMatcher(expected); matcher != nil {
+		if params.IgnoreValues && actualType.IsScalar() {
+			return nil
+		}
 		err := matcher.MatchValues(actual)
 		if err != nil {
 			return []error{colorize.NewPathError(path, err)}
 		}
+		return nil
+	}
+
+	if params.IgnoreValues && actualType.IsScalar() && expectedType.IsScalar() {
 		return nil
 	}
 
@@ -56,10 +65,10 @@ func compareBranch(path string, expected, actual interface{}, params *Params) []
 	case leafMap:
 		return compareMaps(path, expected, actual, params)
 	default:
-		if params.IgnoreValues || expected == actual {
-			return nil
+		if expected != actual {
+			return []error{makeValueCompareError(path, "values do not match", expected, actual)}
 		}
-		return []error{makeValueCompareError(path, "values do not match", expected, actual)}
+		return nil
 	}
 }
 
@@ -67,9 +76,9 @@ func compareArrays(path string, expected, actual interface{}, params *Params) []
 	expectedArray := convertToArray(expected)
 	actualArray := convertToArray(actual)
 
-	expectedArray, err := processMatchArrayByPattern(path, expectedArray, len(actualArray))
+	expectedArray, err := processMatchArrayByPattern(expectedArray, len(actualArray))
 	if err != nil {
-		return []error{err}
+		return []error{colorize.NewPathError(path, err)}
 	}
 
 	if len(expectedArray) != len(actualArray) {
@@ -151,23 +160,22 @@ func getLeafType(value interface{}) leafType {
 	}
 }
 
-func checkTypeCompatibility(supported leafTypeSet, value interface{}) error {
-	valueType := getLeafType(value)
-	if _, ok := supported[valueType]; ok {
-		return nil
-	}
-
-	available := []string{}
-	for name := range supported {
-		available = append(available, string(name))
-	}
-	sort.Strings(available)
-
-	return makeTypeMismatchError(strings.Join(available, " / "), string(valueType))
+func makeMatcherParseError(name string, err error) error {
+	return colorize.NewEntityError("parse %s", name).WithSubError(err)
 }
 
-func makeTypeMismatchError(expectedType, actualType string) error {
-	return colorize.NewNotEqualError("type mismatch:", expectedType, actualType)
+func makeValueNotInArrayError(text string, expectedValues []string, actualValue string) error {
+	sort.Strings(expectedValues)
+	return colorize.NewNotEqualError(
+		text, strings.Join(expectedValues, " / "), actualValue)
+}
+
+func makeTypeMismatchError(expectedTypes []leafType, actualType leafType) error {
+	arr := []string{}
+	for _, i := range expectedTypes {
+		arr = append(arr, string(i))
+	}
+	return makeValueNotInArrayError("type mismatch:", arr, string(actualType))
 }
 
 func makeValueCompareError(path, msg string, expected, actual interface{}) error {
@@ -235,50 +243,4 @@ func getUnmatchedArrays(expected, actual []interface{}, params *Params) (expecte
 	}
 
 	return expectedError, actual
-}
-
-func fillArrayWithPattern(pattern interface{}, arr []interface{}) {
-	for idx := range arr {
-		arr[idx] = pattern
-	}
-}
-
-func processMatchArrayByPattern(path string, expectedArray []interface{}, actualLen int) ([]interface{}, error) {
-	expectedLen := len(expectedArray)
-	if expectedLen == 0 {
-		return expectedArray, nil
-	}
-
-	val, ok := expectedArray[0].(string)
-	if !ok || !strings.HasPrefix(val, "$matchArray(") || !strings.HasSuffix(val, ")") {
-		return expectedArray, nil
-	}
-
-	params := val[12 : len(val)-1]
-
-	res := make([]interface{}, actualLen)
-
-	switch params {
-	case "pattern":
-		if expectedLen != 2 {
-			return nil, colorize.NewPathError(path, errors.New("array with $matchArray(pattern) must have one pattern element"))
-		}
-		fillArrayWithPattern(expectedArray[1], res)
-	case "subset+pattern":
-		if expectedLen < 3 {
-			return nil, colorize.NewPathError(path, errors.New("array with $matchArray(subset+pattern) must have pattern and additional elements"))
-		}
-		fillArrayWithPattern(expectedArray[len(expectedArray)-1], res)
-		copy(res, expectedArray[1:len(expectedArray)-1])
-	case "pattern+subset":
-		if expectedLen < 3 {
-			return nil, colorize.NewPathError(path, errors.New("array with $matchArray(pattern+subset) must have pattern and additional elements"))
-		}
-		fillArrayWithPattern(expectedArray[1], res)
-		subset := expectedArray[2:]
-		copy(res[len(res)-len(subset):], subset)
-	default:
-		return nil, makeError(path, "unknown $matchArray mode", "pattern / pattern+subset / subset+pattern", params)
-	}
-	return res, nil
 }

@@ -368,6 +368,11 @@ Example:
     }
 ----
 
+[INFO]
+====
+`+$matchBase64+` allows to use other matcher inside. For example, `+$matchBase64($matchRegexp(^123.*0$))+`
+====
+
 === $matchTime
 
 The `+$matchTime+` function is allows you to validate timestamp strings in response, mock request, database query results according to specific time format patterns.

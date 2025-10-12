@@ -88,6 +88,6 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'bodyMatchesText': request 'body': cannot compile regexp:
+       1) mock 'someservice': request constraint 'bodyMatchesText': request 'body': parse '$matchRegexp': cannot compile regexp:
             expected: <nil>
               actual: missing closing ]: `[`
