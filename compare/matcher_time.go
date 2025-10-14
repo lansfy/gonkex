@@ -11,6 +11,10 @@ import (
 	"github.com/xhit/go-str2duration/v2"
 )
 
+func createTimeMatcher(args string) Matcher {
+	return &timeMatcher{args}
+}
+
 type timeMatcher struct {
 	data string
 }
@@ -18,12 +22,12 @@ type timeMatcher struct {
 func (m *timeMatcher) MatchValues(actual interface{}) error {
 	args, err := extractTimeArgs(m.data)
 	if err != nil {
-		return err
+		return makeMatcherParseError("$matchTime", err)
 	}
 
 	actualStr, ok := actual.(string)
 	if !ok {
-		return makeTypeMismatchError(string(leafString), string(getLeafType(actual)))
+		return makeTypeMismatchError([]leafType{leafString}, getLeafType(actual))
 	}
 
 	parsed, err := time.ParseInLocation(args.layout, actualStr, args.tzLocation)

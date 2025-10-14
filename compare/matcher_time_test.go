@@ -108,7 +108,7 @@ func Test_timeMatcher_MatchValues(t *testing.T) {
 		},
 	}
 
-	processTests(t, tests)
+	processTests(t, tests, Params{})
 }
 
 func Test_timeMatcher_MatchValues_Errors(t *testing.T) {
@@ -136,7 +136,7 @@ func Test_timeMatcher_MatchValues_Errors(t *testing.T) {
 			description: "invalid strftime format specified",
 			matcher:     "$matchTime(%Y-%m-%!)",
 			actual:      "12-25-2023",
-			wantErr:     "pattern '%Y-%m-%!': strftime: unsupported directive: %! ",
+			wantErr:     "parse '$matchTime': pattern '%Y-%m-%!': strftime: unsupported directive: %! ",
 		},
 		{
 			description: "time doesn't match to specified strftime format",
@@ -154,25 +154,25 @@ func Test_timeMatcher_MatchValues_Errors(t *testing.T) {
 			description: "invalid duration format in accuracy parameter",
 			matcher:     "$matchTime(%Y-%m-%d, accuracy=some-wrong-value)",
 			actual:      "12-25-2023",
-			wantErr:     "parameter 'accuracy': wrong duration value 'some-wrong-value'",
+			wantErr:     "parse '$matchTime': parameter 'accuracy': wrong duration value 'some-wrong-value'",
 		},
 		{
 			description: "invalid duration format in value parameter",
 			matcher:     "$matchTime(%Y-%m-%d, value=now-1dddd)",
 			actual:      "12-25-2023",
-			wantErr:     "parameter 'value': wrong duration value '-1dddd'",
+			wantErr:     "parse '$matchTime': parameter 'value': wrong duration value '-1dddd'",
 		},
 		{
 			description: "invalid timezone value parameter",
 			matcher:     "$matchTime(%Y-%m-%d, value=now, timezone=wrong)",
 			actual:      "2023-12-25",
-			wantErr:     makeMatchError("wrong 'timezone' value", "local / utc", "wrong"),
+			wantErr:     makeMatchError("parse '$matchTime': wrong 'timezone' value", "local / utc", "wrong"),
 		},
 		{
 			description: "invalid parameter name",
 			matcher:     "$matchTime(%Y-%m-%d,fakeparam=aaaa)",
 			actual:      "12-25-2023",
-			wantErr:     "parameter 'fakeparam=aaaa': unknown parameter name",
+			wantErr:     "parse '$matchTime': parameter 'fakeparam=aaaa': unknown parameter name",
 		},
 		{
 			description: "WHEN actual time before (expected-accuracy) MUST fail with error",
@@ -202,11 +202,11 @@ func Test_timeMatcher_MatchValues_Errors(t *testing.T) {
 			description: "WHEN value parameter doesn't match pattern check MUST fail",
 			matcher:     "$matchTime(%d-%m-%Y %H:%M:%S, value=2023-12-25 20:30:00)",
 			actual:      "25-12-2023 20:30:40",
-			wantErr:     "parameter 'value': time value '2023-12-25 20:30:00' doesn't match pattern '%d-%m-%Y %H:%M:%S'",
+			wantErr:     "parse '$matchTime': parameter 'value': time value '2023-12-25 20:30:00' doesn't match pattern '%d-%m-%Y %H:%M:%S'",
 		},
 	}
 
-	processTests(t, tests)
+	processTests(t, tests, Params{})
 }
 
 func Test_timeMatcher_UnsupportedTypes(t *testing.T) {
@@ -243,5 +243,25 @@ func Test_timeMatcher_UnsupportedTypes(t *testing.T) {
 		},
 	}
 
-	processTests(t, tests)
+	processTests(t, tests, Params{})
+}
+
+func Test_timeMatcher_IgnoreValues(t *testing.T) {
+	tests := []matcherTest{
+		{
+			description: "WHEN IgnoreValues specified $matchRegexp MUST be ignored with scalar type",
+			matcher:     "$matchTime(%d-%m-%Y %H:%M:%S)",
+			actual:      "other",
+		},
+		{
+			description: "WHEN IgnoreValues specified and $matchRegexp compares with non-scalar type test MUST fail",
+			matcher:     "$matchTime(%d-%m-%Y %H:%M:%S)",
+			actual:      []string{"other"},
+			wantErr:     "type mismatch:\n     expected: string\n       actual: array",
+		},
+	}
+
+	processTests(t, tests, Params{
+		IgnoreValues: true,
+	})
 }

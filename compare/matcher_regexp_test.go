@@ -44,11 +44,11 @@ func Test_regexpMatcher_MatchValues(t *testing.T) {
 			description: "WHEN condition has invalid regular expression, the check MUST fail with error",
 			matcher:     "$matchRegexp((unclosed)",
 			actual:      "test",
-			wantErr:     "cannot compile regexp:\n     expected: <nil>\n       actual: missing closing ): `(unclosed`",
+			wantErr:     "parse '$matchRegexp': cannot compile regexp:\n     expected: <nil>\n       actual: missing closing ): `(unclosed`",
 		},
 	}
 
-	processTests(t, tests)
+	processTests(t, tests, Params{})
 }
 
 func Test_regexpMatcher_UnsupportedTypes(t *testing.T) {
@@ -85,5 +85,25 @@ func Test_regexpMatcher_UnsupportedTypes(t *testing.T) {
 		},
 	}
 
-	processTests(t, tests)
+	processTests(t, tests, Params{})
+}
+
+func Test_regexpMatcher_IgnoreValues(t *testing.T) {
+	tests := []matcherTest{
+		{
+			description: "WHEN IgnoreValues specified $matchRegexp MUST be ignored with scalar type",
+			matcher:     "$matchRegexp(^one$)",
+			actual:      "two",
+		},
+		{
+			description: "WHEN IgnoreValues specified and $matchRegexp compares with non-scalar type test MUST fail",
+			matcher:     "$matchRegexp(^one$)",
+			actual:      []string{"two"},
+			wantErr:     "type mismatch:\n     expected: number / string\n       actual: array",
+		},
+	}
+
+	processTests(t, tests, Params{
+		IgnoreValues: true,
+	})
 }

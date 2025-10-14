@@ -23,8 +23,24 @@ func Test_base64Matcher_MatchValues(t *testing.T) {
 			actual:      "inva$$id",
 			wantErr:     "cannot make base64 decode:\n     expected: <nil>\n       actual: illegal base64 data at input byte 4",
 		},
+		{
+			description: "matcher inside $matchBase64 MUST work",
+			matcher:     "$matchBase64($matchRegexp(^so.*ue$))",
+			actual:      "c29tZXZhbHVl", // encoded "somevalue"
+		},
+		{
+			description: "matcher inside $matchBase64 MUST work",
+			matcher:     "$matchBase64($matchRegexp(^so.*ue$))",
+			actual:      "c29tZXZhbHVl", // encoded "somevalue"
+		},
+		{
+			description: "matcher inside $matchBase64 MUST generate comparison error",
+			matcher:     "$matchBase64($matchRegexp(^123.*0$))",
+			actual:      "c29tZXZhbHVl", // encoded "somevalue"
+			wantErr:     "value does not match regexp:\n     expected: $matchRegexp(^123.*0$)\n       actual: somevalue",
+		},
 	}
-	processTests(t, tests)
+	processTests(t, tests, Params{})
 }
 
 func Test_base64Matcher_UnsupportedTypes(t *testing.T) {
@@ -66,5 +82,25 @@ func Test_base64Matcher_UnsupportedTypes(t *testing.T) {
 			wantErr:     "type mismatch:\n     expected: string\n       actual: *testing.T",
 		},
 	}
-	processTests(t, tests)
+	processTests(t, tests, Params{})
+}
+
+func Test_base64Matcher_IgnoreValues(t *testing.T) {
+	tests := []matcherTest{
+		{
+			description: "WHEN IgnoreValues specified $matchRegexp MUST be ignored with scalar type",
+			matcher:     "$matchBase64(somevalue)",
+			actual:      "wrong",
+		},
+		{
+			description: "WHEN IgnoreValues specified and $matchRegexp compares with non-scalar type test MUST fail",
+			matcher:     "$matchBase64(somevalue)",
+			actual:      []string{"wrong"},
+			wantErr:     "type mismatch:\n     expected: string\n       actual: array",
+		},
+	}
+
+	processTests(t, tests, Params{
+		IgnoreValues: true,
+	})
 }

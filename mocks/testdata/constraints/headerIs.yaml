@@ -168,7 +168,7 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'headerIs': header 'X-Test': cannot compile regexp:
+       1) mock 'someservice': request constraint 'headerIs': header 'X-Test': parse '$matchRegexp': cannot compile regexp:
             expected: <nil>
               actual: missing closing ]: `[`
 
@@ -190,6 +190,6 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'headerIs': header 'X-Test': cannot compile regexp:
+       1) mock 'someservice': request constraint 'headerIs': header 'X-Test': parse '$matchRegexp': cannot compile regexp:
             expected: <nil>
               actual: missing closing ]: `[`

@@ -112,7 +112,7 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'pathMatches': url 'path': cannot compile regexp:
+       1) mock 'someservice': request constraint 'pathMatches': url 'path': parse '$matchRegexp': cannot compile regexp:
             expected: <nil>
               actual: missing closing ]: `[`
 
@@ -131,6 +131,6 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'pathMatches': url 'path': cannot compile regexp:
+       1) mock 'someservice': request constraint 'pathMatches': url 'path': parse '$matchRegexp': cannot compile regexp:
             expected: <nil>
               actual: missing closing ]: `[`
