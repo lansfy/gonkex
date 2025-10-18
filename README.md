@@ -1,47 +1,107 @@
-ifdef::env-github[]
-:tip-caption: :bulb:
-:note-caption: :information_source:
-:warning-caption: :warning:
-endif::[]
+# Gonkex: testing automation tool
 
-:toc: macro
-:toclevels: 4
+[![Go Reference](https://pkg.go.dev/badge/github.com/lansfy/gonkex.svg)](https://pkg.go.dev/github.com/lansfy/gonkex)
+[![coverage](https://raw.githubusercontent.com/lansfy/gonkex/refs/heads/badges/.badges/master/coverage.svg)](https://github.com/lansfy/gonkex/blob/master/.testcoverage.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/lansfy/gonkex)](https://goreportcard.com/report/github.com/lansfy/gonkex)
 
-= Gonkex: testing automation tool
-
-link:https://pkg.go.dev/github.com/lansfy/gonkex[image:https://pkg.go.dev/badge/github.com/lansfy/gonkex.svg[Go Reference]]
-link:https://github.com/lansfy/gonkex/blob/master/.testcoverage.yml[image:https://raw.githubusercontent.com/lansfy/gonkex/refs/heads/badges/.badges/master/coverage.svg[coverage]]
-link:https://goreportcard.com/report/github.com/lansfy/gonkex[image:https://goreportcard.com/badge/github.com/lansfy/gonkex[Go Report Card]]
-
-[NOTE]
-====
-You can find a utility that allows you to run gonkex scripts link:https://github.com/lansfy/gonkex-cli[here] (in the "Releases" section).
-====
+*NOTE:* You can find a utility that allows you to run gonkex scripts [here](https://github.com/lansfy/gonkex-cli) (in the "Releases" section).
 
 Gonkex will test your services using their API. It can send prepared requests to the service and check the responses. Test scenarios are described in YAML-files.
 
 Capabilities:
 
-* works with REST/JSON, REST/XML, REST/YAML API support
-* provides link:#mocks[declarative mocks] for external services
-* seeds the database with link:#fixtures[fixtures data] (supports PostgreSQL, MySQL, Sqlite, TimescaleDB, MariaDB, SQLServer, ClickHouse, Aerospike, MongoDB, Redis)
-* link:#a-db-query[execute and verify database queries] to check test outcomes
-* run as a link:https://github.com/lansfy/gonkex-cli/[standalone tool] or as a link:#using-gonkex-as-a-library[library] alongside your unit tests
-* stores the results as an link:https://allurereport.org/[Allure] report
-* there is a link:#json-schema[JSON-schema] to add autocomplete and validation for Gonkex YAML files
+- works with REST/JSON, REST/XML, REST/YAML API support
+- provides [declarative mocks](#mocks) for external services
+- seeds the database with [fixtures data](#fixtures) (supports PostgreSQL, MySQL, Sqlite, TimescaleDB, MariaDB, SQLServer, ClickHouse, Aerospike, MongoDB, Redis)
+- [execute and verify database queries](#a-database-query) to check test outcomes
+- run as a [standalone tool](https://github.com/lansfy/gonkex-cli/) or as a [library](#using-gonkex-as-a-library) alongside your unit tests
+- stores the results as an [Allure](https://allurereport.org/) report
+- there is a [JSON-schema](#json-schema) to add autocomplete and validation for Gonkex YAML files
 
-toc::[]
+## Table of contents
 
-== Using Gonkex as a library
+- [Using Gonkex as a library](#using-gonkex-as-a-library)
+- [Test scenario example](#test-scenario-example)
+- [HTTP-request](#http-request)
+  - [HTTP-response](#http-response)
+  - [Test status](#test-status)
+  - [Retry policy](#retry-policy)
+  - [Customizing a comparison](#customizing-a-comparison)
+- [Pattern matching](#pattern-matching)
+  - [$matchRegexp](#matchregexp)
+  - [$matchBase64](#matchbase64)
+  - [$matchTime](#matchtime)
+    - [Basic Format Matching](#basic-format-matching)
+    - [parameter "accuracy"](#parameter-accuracy)
+    - [parameter "value"](#parameter-value)
+    - [parameter "timezone"](#parameter-timezone)
+  - [$matchArray](#matcharray)
+    - [$matchArray(pattern)](#matcharraypattern)
+    - [$matchArray(subset+pattern)](#matcharraysubsetpattern)
+    - [$matchArray(pattern+subset)](#matcharraypatternsubset)
+- [Delays](#delays)
+- [Variables](#variables)
+  - [Assignment](#assignment)
+    - [In the description of the test](#in-the-description-of-the-test)
+    - [From the response of the previous test](#from-the-response-of-the-previous-test)
+    - [From the response body of currently running test](#from-the-response-body-of-currently-running-test)
+    - [From environment variables or from env-file](#from-environment-variables-or-from-env-file)
+    - [From cases](#from-cases)
+- [multipart/form-data requests](#multipartform-data-requests)
+  - [Form](#form)
+  - [File upload](#file-upload)
+- [Fixtures](#fixtures)
+  - [Record templates](#record-templates)
+  - [Record inheritance](#record-inheritance)
+  - [Expressions](#expressions)
+  - [Deleting data from tables](#deleting-data-from-tables)
+- [Mocks](#mocks)
+  - [Running mocks while using Gonkex as a library](#running-mocks-while-using-gonkex-as-a-library)
+  - [Mocks definition in the test file](#mocks-definition-in-the-test-file)
+  - [Request constraints (requestConstraints)](#request-constraints-requestconstraints)
+    - [nop](#nop)
+    - [methodIs](#methodis)
+    - [headerIs](#headeris)
+    - [pathMatches](#pathmatches)
+    - [queryMatches](#querymatches)
+    - [queryMatchesRegexp](#querymatchesregexp)
+    - [bodyMatchesText](#bodymatchestext)
+    - [bodyMatchesJSON](#bodymatchesjson)
+    - [bodyMatchesXML](#bodymatchesxml)
+    - [bodyMatchesYAML](#bodymatchesyaml)
+    - [bodyJSONFieldMatchesJSON](#bodyjsonfieldmatchesjson)
+  - [Response strategies (strategy)](#response-strategies-strategy)
+    - [nop](#nop-1)
+    - [constant](#constant)
+    - [file](#file)
+    - [template](#template)
+    - [uriVary](#urivary)
+    - [methodVary](#methodvary)
+    - [sequence](#sequence)
+    - [basedOnRequest](#basedonrequest)
+    - [dropRequest](#droprequest)
+  - [Calls count](#calls-count)
+  - [Calls order](#calls-order)
+  - [Mock state sharing](#mock-state-sharing)
+- [Shell scripts usage](#shell-scripts-usage)
+  - [Script definition](#script-definition)
+  - [Running a script with parameterization](#running-a-script-with-parameterization)
+- [A database query](#a-database-query)
+  - [Query definition](#query-definition)
+  - [Definition of database response](#definition-of-database-response)
+  - [Database request parameterization](#database-request-parameterization)
+  - [Ignoring ordering in database response](#ignoring-ordering-in-database-response)
+- [JSON-schema](#json-schema)
+
+## Using Gonkex as a library
 
 To integrate functional and native Go tests and run them together, use Gonkex as a library.
 
-Create a test file, for example `+func_test.go+`.
+Create a test file, for example `func_test.go`.
 
 Import Gonkex as a dependency to this file and create a test function:
 
-[source,go]
-----
+```go
 package test
 
 import (
@@ -85,22 +145,21 @@ func TestFuncCases(t *testing.T) {
         DB:          storage,
     })
 }
-----
+```
 
 Externally written storage may be used for loading test data, if Gonkex used as a library.
-To start using the custom storage, you need to import the custom module, that contains implementation of link:https://pkg.go.dev/github.com/lansfy/gonkex/storage#StorageInterface[storage.StorageInterface] interface.
+To start using the custom storage, you need to import the custom module, that contains implementation of [storage.StorageInterface](https://pkg.go.dev/github.com/lansfy/gonkex/storage#StorageInterface) interface.
 For example, the following NoSQL databases are currently supported as custom modules:
 
-* Aerospike (link:https://github.com/lansfy/gonkex/tree/master/storage/addons/aerospike[storage/addons/aerospike])
-* MongoDB (link:https://github.com/lansfy/gonkex/tree/master/storage/addons/mongo[storage/addons/mongo])
-* Redis (link:https://github.com/lansfy/gonkex/tree/master/storage/addons/redis[storage/addons/redis])
+- Aerospike ([storage/addons/aerospike](https://github.com/lansfy/gonkex/tree/master/storage/addons/aerospike))
+- MongoDB ([storage/addons/mongo](https://github.com/lansfy/gonkex/tree/master/storage/addons/mongo))
+- Redis ([storage/addons/redis](https://github.com/lansfy/gonkex/tree/master/storage/addons/redis))
 
-The tests can be now ran with `+go test+`, for example: `+go test ./...+`.
+The tests can be now ran with `go test`, for example: `go test ./...`.
 
-== Test scenario example
+## Test scenario example
 
-[source,yaml]
-----
+```yaml
 - name: WHEN the list of orders is requested service MUST return selected order
   method: GET
   status: ""
@@ -191,23 +250,21 @@ The tests can be now ran with `+go test+`, for example: `+go test ./...+`.
         200:
           userId: '0001'
           amount: 72000
-----
+```
 
 Prefix "`?`" in query field is optional.
 
 As you can see in this example, you can use Regexp for checking response body. It can be used for whole body (if it's plain text):
 
-[source,yaml]
-----
+```yaml
   ...
   response:
       200: "$matchRegexp(^xy+z$)"
-----
+```
 
 or for elements of map/array (if it's JSON):
 
-[source,yaml]
-----
+```yaml
   ...
   response:
     200: >
@@ -221,45 +278,41 @@ or for elements of map/array (if it's JSON):
           ]
         ]
       }
-----
+```
 
-== HTTP-request
+## HTTP-request
 
-`+method+` - a parameter for HTTP request type (e.g. `+GET+`, `+POST+`, `+DELETE+` and so on).
+`method` - a parameter for HTTP request type (e.g. `GET`, `POST`, `DELETE` and so on).
 
-`+path+` - a parameter for URL path, the format is in the example above.
+`path` - a parameter for URL path, the format is in the example above.
 
-`+headers+` - a parameter for HTTP headers, the format is in the example above.
+`headers` - a parameter for HTTP headers, the format is in the example above.
 
-`+cookies+` - a parameter for cookies, the format is in the example above.
+`cookies` - a parameter for cookies, the format is in the example above.
 
-=== HTTP-response
+### HTTP-response
 
-`+response+` - the HTTP response body for the specified HTTP status codes.
+`response` - the HTTP response body for the specified HTTP status codes.
 
-`+responseHeaders+` - all HTTP response headers for the specified HTTP status codes.
+`responseHeaders` - all HTTP response headers for the specified HTTP status codes.
 
-=== Test status
+### Test status
 
-`+status+` - a parameter, for specially mark tests, can have following values:
+`status` - a parameter, for specially mark tests, can have following values:
 
-* `+broken+` - do not run test, only mark it as broken.
-* `+skipped+` - do not run test, only mark it as skipped.
-* `+focus+` - run only this specific test, and mark all other tests with unset status as `+skipped+`.
+- `broken` - do not run test, only mark it as broken.
+- `skipped` - do not run test, only mark it as skipped.
+- `focus` - run only this specific test, and mark all other tests with unset status as `skipped`.
 
-=== Retry policy
+### Retry policy
 
-If you expect a test to succeed after only a few attempts (for example, one testcase has run some asynchronous operation and the second testcase is trying to wait for the results after that), then you need to do several test retry. You can define the number of retries required using the `+retryPolicy+` field.
+If you expect a test to succeed after only a few attempts (for example, one testcase has run some asynchronous operation and the second testcase is trying to wait for the results after that), then you need to do several test retry. You can define the number of retries required using the `retryPolicy` field.
 
-[NOTE]
-====
-An attempt is considered successful if the actual response matches the expected response.
-====
+*NOTE:* An attempt is considered successful if the actual response matches the expected response.
 
 Example:
 
-[source,yaml]
-----
+```yaml
 - name: wait for operation result
   method: GET
   ...
@@ -267,60 +320,57 @@ Example:
     attempts: 6         # retry failed test 6 times
     delay: 5s           # with 5 second delay between retries
     successInRow: 2     # it takes 2 successful test runs to recognize the test as successful
-----
+```
 
 The following fields are supported:
 
-`+attempts+` - an integer indicating the number of times that Gonkex will retry the test request in the event assertions fail.
+`attempts` - an integer indicating the number of times that Gonkex will retry the test request in the event assertions fail.
 
-`+delay+` - string containing the waiting time after unsuccessful completion of the test.
+`delay` - string containing the waiting time after unsuccessful completion of the test.
 
-`+successInRow+` - parameter defines the required number of successful test passes for the test to be recognized as successful. And all these successful runs must be consecutive. Default value is 1.
+`successInRow` - parameter defines the required number of successful test passes for the test to be recognized as successful. And all these successful runs must be consecutive. Default value is 1.
 
-=== Customizing a comparison
+### Customizing a comparison
 
 After receiving a response from the service, the test compares the body of the received response with the body specified in the test.
-By default, only the values of the fields listed in the test body are compared, but you can control the comparison procedure by using boolean flags in the `+comparisonParams+` section.
+By default, only the values of the fields listed in the test body are compared, but you can control the comparison procedure by using boolean flags in the `comparisonParams` section.
 The following flags are supported:
 
-* `+ignoreValues+` - if `+true+`, ignores differences in values and only checks the structure.
-* `+ignoreArraysOrdering+` - if `+true+`, considers arrays equal regardless of the order of elements.
-* `+disallowExtraFields+` - if `+true+`, fails the comparison if extra fields exist in the compared structure.
+- `ignoreValues` - if `true`, ignores differences in values and only checks the structure.
+- `ignoreArraysOrdering` - if `true`, considers arrays equal regardless of the order of elements.
+- `disallowExtraFields` - if `true`, fails the comparison if extra fields exist in the compared structure.
 
-All flags are set to `+false+` by default.
+All flags are set to `false` by default.
 
 Example:
 
-[source,yaml]
-----
+```yaml
 - name: compare flag example
   ...
   comparisonParams:
     ignoreValues: true
     ignoreArraysOrdering: true
     disallowExtraFields: true
-----
+```
 
-== Pattern matching
+## Pattern matching
 
 The pattern matching is a feature in Gonkex that allows you to validate response, mock request, database query results using some pattern (like regular expressions) instead of exact matching.
 This is especially useful when you testing dynamic or unpredictable parts of data (like timestamps, UUIDs, or random tokens).
 
-=== $matchRegexp
+### $matchRegexp
 
-The basic syntax for using `+$matchRegexp+` is:
+The basic syntax for using `$matchRegexp` is:
 
-[source,yaml]
-----
+```yaml
 $matchRegexp(regular_expression)
-----
+```
 
-where `+regular_expression+` is a valid link:https://pkg.go.dev/regexp/syntax[Go regular expression] pattern.
+where `regular_expression` is a valid [Go regular expression](https://pkg.go.dev/regexp/syntax) pattern.
 
 Example:
 
-[source,yaml]
-----
+```yaml
 - name: WHEN order information is requested, service MUST return valid order data
   method: GET
   path: /api/orders/12345
@@ -334,29 +384,24 @@ Example:
         "transaction_id": "$matchRegexp(^txn_[a-zA-Z0-9]{24}$)",
         "tracking_number": "$matchRegexp(^(TR\\d{10})?$)"
       }
-----
+```
 
-[TIP]
-====
-If you want to match the entire string, use `+^+` at the beginning and `+$+` at the end of your pattern.
-====
+*TIP:* If you want to match the entire string, use `^` at the beginning and `$` at the end of your pattern.
 
-=== $matchBase64
+### $matchBase64
 
 The basic syntax for using +$matchBase64+ is:
 
-[source,yaml]
-----
+```yaml
 $matchBase64(string)
-----
+```
 
-Gonkex will automatically encode the provided `+string+` into base64 and compare the actual value against this encoded form.
+Gonkex will automatically encode the provided `string` into base64 and compare the actual value against this encoded form.
 This is useful when services return base64-encoded fields (such as tokens or IDs), but you want to validate them against the original string in a human-readable way.
 
 Example:
 
-[source,yaml]
-----
+```yaml
 - name: WHEN token is requested, service MUST return base64 encoded data
   method: GET
   path: /api/users/42/token
@@ -366,36 +411,31 @@ Example:
       "user_id": 42,
       "token": "$matchBase64(some-encoded-token)"
     }
-----
+```
 
-[INFO]
-====
-`+$matchBase64+` allows to use other matcher inside. For example, `+$matchBase64($matchRegexp(^123.*0$))+`
-====
+*INFO:* `$matchBase64` allows to use other matcher inside. For example, `$matchBase64($matchRegexp(^123.*0$))`.
 
-=== $matchTime
+### $matchTime
 
-The `+$matchTime+` function is allows you to validate timestamp strings in response, mock request, database query results according to specific time format patterns.
-Unlike the more general `+$matchRegexp+`, `+$matchTime+` is designed specifically for time validation.
+The `$matchTime` function is allows you to validate timestamp strings in response, mock request, database query results according to specific time format patterns.
+Unlike the more general `$matchRegexp`, `$matchTime` is designed specifically for time validation.
 This feature is used when you cannot specify the exact time (for example, the time in the response depends on the current time).
 
-The basic syntax for using `+$matchTime+` is:
+The basic syntax for using `$matchTime` is:
 
-[source,yaml]
-----
+```yaml
 $matchTime(format_string[, parameter=value][, ...])
-----
+```
 
 where:
 
-* `+format_string+` is a valid link:https://pkg.go.dev/time#pkg-constants[Go time format] or link:https://pkg.go.dev/github.com/ncruces/go-strftime#pkg-overview[strftime time format] pattern - optional parameters can be added to customize the time matching behavior
+- `format_string` is a valid [Go time format](https://pkg.go.dev/time#pkg-constants) or [strftime time format](https://pkg.go.dev/github.com/ncruces/go-strftime#pkg-overview) pattern - optional parameters can be added to customize the time matching behavior
 
-==== Basic Format Matching
+#### Basic Format Matching
 
-The simplest usage of `+$matchTime+` validates that a timestamp string matches the specified format:
+The simplest usage of `$matchTime` validates that a timestamp string matches the specified format:
 
-[source,yaml]
-----
+```yaml
   ...
   response:
     200: >
@@ -407,25 +447,21 @@ The simplest usage of `+$matchTime+` validates that a timestamp string matches t
         "scheduled_time": "$matchTime(%H:%M:%S)"
       }
   ...
-----
+```
 
-[TIP]
-====
-For consistency, try to stick to one format style (Go or Strftime format) in all tests.
-====
+*TIP:* For consistency, try to stick to one format style (Go or Strftime format) in all tests.
 
-==== parameter "accuracy"
+#### parameter "accuracy"
 
-Defines the acceptable time difference when using the `+value+` parameter:
+Defines the acceptable time difference when using the `value` parameter:
 
-* `+accuracy=duration+` - sets a bidirectional time window (e.g., `+accuracy=5m+` for ±5 minutes)
-* `+accuracy=+duration+` - sets a forward-only time window (e.g., `+accuracy=+10m+` for 0 to +10 minutes)
-* `+accuracy=-duration+` - sets a backward-only time window (e.g., `+accuracy=-10m+` for -10 to 0 minutes)
+- `accuracy=duration` - sets a bidirectional time window (e.g., `accuracy=5m` for ±5 minutes)
+- `accuracy=+duration` - sets a forward-only time window (e.g., `accuracy=+10m` for 0 to +10 minutes)
+- `accuracy=-duration` - sets a backward-only time window (e.g., `accuracy=-10m` for -10 to 0 minutes)
 
-By default, `+accuracy+` is set to ±5 minutes when using any `+value+`.
+By default, `accuracy` is set to ±5 minutes when using any `value`.
 
-[source,yaml]
-----
+```yaml
   ...
   response:
     200: >
@@ -434,23 +470,19 @@ By default, `+accuracy+` is set to ±5 minutes when using any `+value+`.
         "timestamp_future": "$matchTime(%Y-%m-%d %H:%M:%S, value=now, accuracy=+30m)",
         "timestamp_past": "$matchTime(%Y-%m-%d %H:%M:%S, value=now, accuracy=-30m)"
       }
-----
+```
 
-[NOTE]
-====
-`+duration+` should be defined using link:https://pkg.go.dev/time#ParseDuration[Go time duration string]. For convenience, days (`+d+`) and weeks (`+w+`) are also supported.
-====
+*NOTE:* `duration` should be defined using [Go time duration string](https://pkg.go.dev/time#ParseDuration). For convenience, days (`d`) and weeks (`w`) are also supported.
 
-==== parameter "value"
+#### parameter "value"
 
 Allows you to specify an expected time value to match against:
 
-* `+value=now+` or `+value=now()+` - matches times around the current system time
-* `+value=now±offset+` - matches times offset from the current time (e.g., `+value=now-1h+`, `+value=now+30m+`)
-* `+value=specific_time+`- matches a specific time in the same format as the pattern (e.g., `+value=25-12-2023 10:20:30+` for format `+%d-%m-%Y %H:%M:%S+`)
+- `value=now` or `value=now()` - matches times around the current system time
+- `value=now±offset` - matches times offset from the current time (e.g., `value=now-1h`, `value=now+30m`)
+- `value=specific_time`- matches a specific time in the same format as the pattern (e.g., `value=25-12-2023 10:20:30` for format `%d-%m-%Y %H:%M:%S`)
 
-[source,yaml]
-----
+```yaml
 response:
   200: >
     {
@@ -458,39 +490,35 @@ response:
       "next_scheduled": "$matchTime(%Y-%m-%d %H:%M:%S, value=now+24h)",
       "specific_date": "$matchTime(%d-%m-%Y %H:%M:%S, value=25-12-2023 10:20:30)"
     }
-----
+```
 
-[NOTE]
-====
-`+offset+` should be defined using link:https://pkg.go.dev/time#ParseDuration[Go time duration string]. For convenience, days (`+d+`) and weeks (`+w+`) are also supported.
-====
+*NOTE:* `offset` should be defined using [Go time duration string](https://pkg.go.dev/time#ParseDuration). For convenience, days (`d`) and weeks (`w`) are also supported.
 
-==== parameter "timezone"
+#### parameter "timezone"
 
 Allows you to specify timezone for values without specified timezone:
 
-* `+timezone=local+` - use local timezone (default)
-* `+timezone=utc+` - use UTC timezone
+- `timezone=local` - use local timezone (default)
+- `timezone=utc` - use UTC timezone
 
-=== $matchArray
+### $matchArray
 
-The `+$matchArray+` feature allows you to validate that all elements in an array match a specific pattern. This is especially useful when:
+The `$matchArray` feature allows you to validate that all elements in an array match a specific pattern. This is especially useful when:
 
-* you don't know exactly how many elements will be in the array;
-* all elements in the array should follow the same pattern or structure;
-* you want to avoid repetitive pattern definitions for large arrays.
+- you don't know exactly how many elements will be in the array;
+- all elements in the array should follow the same pattern or structure;
+- you want to avoid repetitive pattern definitions for large arrays.
 
-==== $matchArray(pattern)
+#### $matchArray(pattern)
 
-To use `+$matchArray+`, you need to define an array with exactly two elements:
+To use `$matchArray`, you need to define an array with exactly two elements:
 
-* the literal string `+$matchArray(pattern)+`;
-* a pattern object that defines what each array element should match.
+- the literal string `$matchArray(pattern)`;
+- a pattern object that defines what each array element should match.
 
 Example:
 
-[source,yaml]
-----
+```yaml
 - name: WHEN orders information is requested, service MUST return valid orders data
   method: GET
   path: /api/orders
@@ -508,35 +536,31 @@ Example:
           }
         ]
       }
-----
+```
 
 This pattern will match arrays of any length, as long as all elements follow the specified structure.
 
-==== $matchArray(subset+pattern)
+#### $matchArray(subset+pattern)
 
 In this mode:
 
-* the first element in your test array must be the literal string `+$matchArray(subset+pattern)+`;
-* the last element defines the pattern that any additional elements in the response array must match;
-* all elements between these two (the subset) are treated as required initial elements that must appear at the beginning of the response array in the exact order specified;
-* after matching these initial elements, any remaining elements in the response array must match the pattern defined in the last element.
+- the first element in your test array must be the literal string `$matchArray(subset+pattern)`;
+- the last element defines the pattern that any additional elements in the response array must match;
+- all elements between these two (the subset) are treated as required initial elements that must appear at the beginning of the response array in the exact order specified;
+- after matching these initial elements, any remaining elements in the response array must match the pattern defined in the last element.
 
-[TIP]
-====
-You still can use the `+ignoreArraysOrdering+` parameter with `+$matchArray(subset+pattern)+`. When set to `+true+`, this parameter allows the subset elements to appear anywhere in the array, not just at the beginning, while still maintaining the pattern matching for additional elements.
-====
+*TIP:* You still can use the `ignoreArraysOrdering` parameter with `$matchArray(subset+pattern)`. When set to `true`, this parameter allows the subset elements to appear anywhere in the array, not just at the beginning, while still maintaining the pattern matching for additional elements.
 
-==== $matchArray(pattern+subset)
+#### $matchArray(pattern+subset)
 
 In this mode:
 
-* the first element in your test array must be the literal string `+$matchArray(pattern+subset)+`;
-* the second element defines the pattern that any leading elements in the response array must match;
-* all elements after these two (the subset) are treated as required final elements that must appear at the end of the response array in the exact order specified;
-* the beginning of the response array must contain zero or more elements that match the pattern defined in the second element.
+- the first element in your test array must be the literal string `$matchArray(pattern+subset)`;
+- the second element defines the pattern that any leading elements in the response array must match;
+- all elements after these two (the subset) are treated as required final elements that must appear at the end of the response array in the exact order specified;
+- the beginning of the response array must contain zero or more elements that match the pattern defined in the second element.
 
-[source,yaml]
-----
+```yaml
 - name: WHEN products are requested, service MUST return regular products followed by featured products
   method: GET
   path: /api/products
@@ -562,44 +586,40 @@ In this mode:
           }
         ]
       }
-----
+```
 
-[TIP]
-====
-You still can use the `+ignoreArraysOrdering+` parameter with `+$matchArray(pattern+subset)+`. When set to `+true+`, this parameter allows the subset elements to appear anywhere in the array, not just at the end, while still maintaining the pattern matching for additional elements.
-====
+*TIP:* You still can use the `ignoreArraysOrdering` parameter with `$matchArray(pattern+subset)`. When set to `true`, this parameter allows the subset elements to appear anywhere in the array, not just at the end, while still maintaining the pattern matching for additional elements.
 
-== Delays
+## Delays
 
-`+pause+` - amount of time that the test should wait before executing.
+`pause` - amount of time that the test should wait before executing.
 
-`+afterRequestPause+` - amount of time that the test should wait after executing. It is important to note that this wait is part of the request test, i.e. all checks and mocks constraints will be checked after the wait is complete.
+`afterRequestPause` - amount of time that the test should wait after executing. It is important to note that this wait is part of the request test, i.e. all checks and mocks constraints will be checked after the wait is complete.
 
-This delays should be defined using link:https://pkg.go.dev/time#ParseDuration[Go time duration string].
+This delays should be defined using [Go time duration string](https://pkg.go.dev/time#ParseDuration).
 
-== Variables
+## Variables
 
 You can use variables in the description of the test, the following fields are supported:
 
-* method
-* description
-* path
-* query
-* headers
-* request
-* response
-* response headers
-* dbQuery
-* dbResponse
-* mocks body
-* mocks headers
-* mocks requestConstraints
-* form for multipart/form-data
+- method
+- description
+- path
+- query
+- headers
+- request
+- response
+- response headers
+- dbQuery
+- dbResponse
+- mocks body
+- mocks headers
+- mocks requestConstraints
+- form for multipart/form-data
 
 Example:
 
-[source,yaml]
-----
+```yaml
 - method: "{{ $method }}"
   description: "{{ $description }}"
   path: "/some/path/{{ $pathPart }}"
@@ -624,23 +644,22 @@ Example:
     - dbQuery: "SELECT id, name FROM testing_tools WHERE id={{ $sqlQueryParam }}"
       dbResponse:
         - '{"id": {{ $sqlResultParam }}, "name": "test"}'
-----
+```
 
 You can assign values to variables in the following ways (priorities are from top to bottom):
 
-* in the description of the test
-* from the response of the previous test
-* from the response of currently running test
-* from environment variables or from env-file
+- in the description of the test
+- from the response of the previous test
+- from the response of currently running test
+- from environment variables or from env-file
 
-=== Assignment
+### Assignment
 
-==== In the description of the test
+#### In the description of the test
 
 Example:
 
-[source,yaml]
-----
+```yaml
 - method: "{{ $someVar }}"
   path: "/some/path/{{ $someVar }}"
   query: "{{ $someVar }}"
@@ -651,14 +670,13 @@ Example:
     200: "{{ $someVar }}"
   variables:
     someVar: "someValue"
-----
+```
 
-==== From the response of the previous test
+#### From the response of the previous test
 
 Example:
 
-[source,yaml]
-----
+```yaml
 # if the response is plain text
 - name: "get_last_post_id"
   ...
@@ -675,14 +693,13 @@ Example:
       title: "title"
       authorId: "author_info.id"  # get nested json field (any nesting levels are supported)
       wholeBody: ""               # empty path tells to put whole response body to variable
-----
+```
 
-All paths must be specified in link:https://github.com/tidwall/gjson/blob/master/SYNTAX.md[gjson format]. You can use the link:https://gjson.dev[GJSON Playground] to experiment with the syntax online.
+All paths must be specified in [gjson format](https://github.com/tidwall/gjson/blob/master/SYNTAX.md). You can use the [GJSON Playground](https://gjson.dev) to experiment with the syntax online.
 
-It is also possible to retrieve values from the headers and cookies of response. To do this, specify the prefix `+header:+` or `+cookie:+` in the path, respectively. For example,
+It is also possible to retrieve values from the headers and cookies of response. To do this, specify the prefix `header:` or `cookie:` in the path, respectively. For example,
 
-[source,yaml]
-----
+```yaml
 - name: "get_data_from_last_response"
   ...
   variables_to_set:
@@ -690,14 +707,13 @@ It is also possible to retrieve values from the headers and cookies of response.
       newLocation: "header:Location"    # get value from "Location" header and put to newLocation variable
       sessionId: "cookie:session_id"    # get value from "session_id" cookie and put to sessionId variable
       authorId: "body:author_info.id"   # optional "body:" prefix allows to get value from body
-----
+```
 
-==== From the response body of currently running test
+#### From the response body of currently running test
 
 Example:
 
-[source,yaml]
-----
+```yaml
 - name: Get info with database
   method: GET
   path: /info/1
@@ -710,9 +726,9 @@ Example:
     - dbQuery: "SELECT id, name FROM testing_tools WHERE id={{ $golang_id }}"
       dbResponse:
         - '{"id": {{ $golang_id}}, "name": "golang"}'
-----
+```
 
-==== From environment variables or from env-file
+#### From environment variables or from env-file
 
 Gonkex automatically checks if variable exists in the environment variables (case-sensitive) and loads a value from there, if it exists.
 
@@ -720,23 +736,21 @@ If an env-file is specified, variables described in it will be added or will rep
 
 Example of an env file (standard syntax):
 
-[source,.env]
-----
+```.env
 jwt=some_jwt_value
 secret=my_secret
 password=private_password
-----
+```
 
 env-file can be convenient to hide sensitive information from a test (passwords, keys, etc.) or specify common used values here.
 
-==== From cases
+#### From cases
 
-You can describe variables in `+cases+` section of a test.
+You can describe variables in `cases` section of a test.
 
 Example:
 
-[source,yaml]
-----
+```yaml
 - name: Get user info
   method: GET
   path: /user/1
@@ -746,26 +760,25 @@ Example:
     - variables:
         name: John
         surname: Doe
-----
+```
 
 Variables like these will be available through another cases if not redefined.
 
-== multipart/form-data requests
+## multipart/form-data requests
 
-You must specify the POST type for such kind of requests and fill `+form+` section. Optionally you can set
+You must specify the POST type for such kind of requests and fill `form` section. Optionally you can set
 
-* `+Header+`: "Content-Type: multipart/form-data"
+- `Header`: "Content-Type: multipart/form-data"
 
-or 
+or
 
-* `+Header+` with boundary: "Content-Type: multipart/form-data; boundary=some-boundary"
+- `Header` with boundary: "Content-Type: multipart/form-data; boundary=some-boundary"
 
-=== Form
+### Form
 
 Example:
 
-[source,yaml]
-----
+```yaml
 - name: "upload-form"
   method: POST
   form:
@@ -782,14 +795,13 @@ Example:
       {
         "status": "OK"
       }
-----
+```
 
-=== File upload
+### File upload
 
 You can upload files in test request. Example:
 
-[source,yaml]
-----
+```yaml
 - name: "upload-files"
   method: POST
   form:
@@ -803,12 +815,11 @@ You can upload files in test request. Example:
       {
         "status": "OK"
       }
-----
+```
 
 with form:
 
-[source,yaml]
-----
+```yaml
 - name: "upload-multipart-form-data"
   method: POST
   form:
@@ -824,16 +835,15 @@ with form:
       {
         "status": "OK"
       }
-----
+```
 
-== Fixtures
+## Fixtures
 
 To seed the database before the test, Gonkex uses fixture files.
 
 File example:
 
-[source,yaml]
-----
+```yaml
 # fixtures/comments.yml
 inherits:
   - another_fixture
@@ -873,11 +883,11 @@ tables:
   another_table:
     ...
   ...
-----
+```
 
 Records in fixtures can use templates and inherit.
 
-=== Record templates
+### Record templates
 
 Usually, to insert a record to a database, it's necessary to list all the fields without default values.
 Oftentimes, many of those fields are not important for the test, and their values repeat from one fixture to another, creating unnecessary visual garbage and making the maintenance harder.
@@ -886,8 +896,7 @@ With templates you can inherit the fields from template record redefining only t
 
 Template definition example:
 
-[source,yaml]
-----
+```yaml
 templates:
   dummy_client:
     name: Dummy Client Name
@@ -901,12 +910,11 @@ templates:
 
 tables:
   ...
-----
+```
 
 Example of using a template in a fixture:
 
-[source,yaml]
-----
+```yaml
 templates:
   ...
 tables:
@@ -916,32 +924,30 @@ tables:
       name: Josh
     - $extend: dummy_deleted_client
       name: Jane
-----
+```
 
-As you might have noticed, templates can be inherited as well with `+$extend+` keyword, but only if by the time of the dependent template definition the parent template is already defined (in this file or any other referenced with `+inherits+`).
+As you might have noticed, templates can be inherited as well with `$extend` keyword, but only if by the time of the dependent template definition the parent template is already defined (in this file or any other referenced with `inherits`).
 
-=== Record inheritance
+### Record inheritance
 
-Records can be inherited as well using `+$extend+`.
+Records can be inherited as well using `$extend`.
 
-To inherit a record, first you need to assign this record a name using `+$name+`:
+To inherit a record, first you need to assign this record a name using `$name`:
 
-[source,yaml]
-----
+```yaml
 # fixtures/post.yaml
 tables:
   posts:
     - $name: regular_post
       title: Post title
       text: Some text
-----
+```
 
 Names assigned to records must be unique among all loaded fixture files, as well as they must not interfere with template names.
 
-In another fixture file you need to declare that a certain record inherits an earlier defined record with `+$extend+`, just like with the templates:
+In another fixture file you need to declare that a certain record inherits an earlier defined record with `$extend`, just like with the templates:
 
-[source,yaml]
-----
+```yaml
 # fixtures/deleted_post.yaml
 inherits:
   - post
@@ -949,56 +955,50 @@ tables:
   posts:
     - $extend: regular_post
       is_deleted: true
-----
+```
 
-Don't forget to declare the dependency between files in `+inherits+`, to make sure that one file is always loaded together with the other one.
+Don't forget to declare the dependency between files in `inherits`, to make sure that one file is always loaded together with the other one.
 
-[WARNING]
-====
-Record inheritance only works with different fixture files. It's not possible to declare inheritance within one file.
-====
+*WARNING:* Record inheritance only works with different fixture files. It's not possible to declare inheritance within one file.
 
-=== Expressions
+### Expressions
 
-When you need to write an expression execution result to the database and not a static value, you can use `+$eval(...)+` construct.
-Everything inside the brackets will be inserted into the database as raw, non-escaped data. This way, within `+$eval()+` you can write everything you would in a regular query.
+When you need to write an expression execution result to the database and not a static value, you can use `$eval(...)` construct.
+Everything inside the brackets will be inserted into the database as raw, non-escaped data. This way, within `$eval()` you can write everything you would in a regular query.
 
 For instance, this construct allows the insertion of current date and time as a field value:
 
-[source,yaml]
-----
+```yaml
 tables:
   comments:
     - created_at: $eval(NOW())
-----
+```
 
-=== Deleting data from tables
+### Deleting data from tables
 
 To clear the table before the test put square brackets next to the table name.
 
 Example:
 
-[source,yaml]
-----
+```yaml
 # fixtures/empty_posts_table.yml
 tables:
   # cleanup posts table
   posts: []
-----
+```
 
-== Mocks
+## Mocks
 
 In order to imitate responses from external services, use mocks.
 
 A mock is a web server that is running on-the-fly, and is populated with certain logic before the execution of each test.
 The logic defines what the server responses to a certain request. It's defined in the test file.
 
-=== Running mocks while using Gonkex as a library
+### Running mocks while using Gonkex as a library
 
 Before running tests, all planned mocks are started. It means that Gonkex spins up the given number of servers and each one of them gets a random port assigned.
 
-[source,go]
-----
+```go
 // create empty server mocks
 m := mocks.NewNop(
     "cart",
@@ -1013,12 +1013,11 @@ if err != nil {
     t.Fatal(err)
 }
 defer m.Shutdown()
-----
+```
 
 After spinning up the mock web-servers, we can get their addresses (host and port). Using those addresses, you can configure your service to send their requests to mocked servers instead of real ones.
 
-[source,go]
-----
+```go
 // configuring and running the service
 srv := server.NewServer(&server.Config{
     CartAddr:      m.Service("cart").ServerAddr(),
@@ -1027,30 +1026,28 @@ srv := server.NewServer(&server.Config{
     DiscountsAddr: m.Service("discounts").ServerAddr(),
 })
 defer srv.Close()
-----
+```
 
-Additionally, library registers special environment variables `+GONKEX_MOCK_<MOCK_NAME>+` the for every mock, which contain the address and port of the corresponding mock server.
+Additionally, library registers special environment variables `GONKEX_MOCK_<MOCK_NAME>` the for every mock, which contain the address and port of the corresponding mock server.
 You can use these environment variables when writing tests.
 
 As soon as you spinned up your mocks and configured your service, you can run the tests.
 
-[source,go]
-----
+```go
 runner.RunWithTesting(t, srv.URL, &runner.RunWithTestingParams{
     TestsDir: "tests/cases",
     Mocks:    m, // pass the mocks to the test runner
 })
-----
+```
 
-=== Mocks definition in the test file
+### Mocks definition in the test file
 
 Each test communicates a configuration to the mock-server before running. This configuration defines the responses for specific requests in the mock-server.
-The configuration is defined in a YAML-file with test in the `+mocks+` section.
+The configuration is defined in a YAML-file with test in the `mocks` section.
 
 The test file can contain any number of mock service definitions:
 
-[source,yaml]
-----
+```yaml
 - name: Test with mocks
   request:
     ...
@@ -1062,20 +1059,19 @@ The test file can contain any number of mock service definitions:
       ...
     service3:
       ...
-----
+```
 
 Each mock-service definition consists of:
 
-`+requestConstraints+` - an array of constraints that are applied on a received request. If at least one constraint is not satisfied, the test is considered failed. The list of all possible checks is provided below.
+`requestConstraints` - an array of constraints that are applied on a received request. If at least one constraint is not satisfied, the test is considered failed. The list of all possible checks is provided below.
 
-`+strategy+` - the strategy of mock responses. The list of all possible strategies is provided below.
+`strategy` - the strategy of mock responses. The list of all possible strategies is provided below.
 
 The rest of the keys on the first nesting level are parameters to the strategy. Their variety is different for each strategy.
 
 A configuration example for one mock-service:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1086,17 +1082,17 @@ A configuration example for one mock-service:
       strategyParam1: ...
       strategyParam2: ...
     ...
-----
+```
 
-=== Request constraints (requestConstraints)
+### Request constraints (requestConstraints)
 
 The request to the mock-service can be validated using one or more constraints defined below.
 
-The definition of each constraint contains of the `+kind+` parameter that indicates which constraint will be applied.
+The definition of each constraint contains of the `kind` parameter that indicates which constraint will be applied.
 
 All other keys on this level are constraint parameters. Each constraint has its own parameter set.
 
-==== nop
+#### nop
 
 Empty constraint. Always successful.
 
@@ -1104,35 +1100,33 @@ No parameters.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
       requestConstraints:
         - kind: nop
     ...
-----
+```
 
-==== methodIs
+#### methodIs
 
 Checks that the request method corresponds to the expected one.
 
 Parameters:
 
-* `+method+` (mandatory) - string to compare the request method to.
+- `method` (mandatory) - string to compare the request method to.
 
-For the most commonly used methods, there are also short variants that do not require the `+method+` parameter:
+For the most commonly used methods, there are also short variants that do not require the `method` parameter:
 
-* `+methodIsGET+`
-* `+methodIsPOST+`
-* `+methodIsPUT+`
-* `+methodIsDELETE+`
+- `methodIsGET`
+- `methodIsPOST`
+- `methodIsPUT`
+- `methodIsDELETE`
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1144,24 +1138,23 @@ Example:
       requestConstraints:
         - kind: methodIsPOST
     ...
-----
+```
 
-==== headerIs
+#### headerIs
 
 Checks that the request has the defined header and (optional) that its value either equals the pre-defined one or falls under the definition of a regular expression.
 
 Parameters:
 
-* `+header+` (mandatory) - name of the header that is expected with the request;
-* `+value+` - a string with the expected request header value;
-* `+regexp+` - a regular expression to check the header value against.
+- `header` (mandatory) - name of the header that is expected with the request;
+- `value` - a string with the expected request header value;
+- `regexp` - a regular expression to check the header value against.
 
-It is also possible to specify a regular expression using `+$matchRegexp+` in the `+value+` field.
+It is also possible to specify a regular expression using `$matchRegexp` in the `value` field.
 
 Examples:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1182,21 +1175,20 @@ Examples:
           header: Content-Type
           value: "$matchRegexp(^(application/json|text/plain)$)"
     ...
-----
+```
 
-==== pathMatches
+#### pathMatches
 
 Checks that the request path corresponds to the expected one.
 
 Parameters:
 
-* `+path+` - a string with the expected request path value;
-* `+regexp+` - a regular expression to check the path value against.
+- `path` - a string with the expected request path value;
+- `regexp` - a regular expression to check the path value against.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1209,20 +1201,19 @@ Example:
         - kind: pathMatches
           regexp: ^/api/v1/test/.*$
     ...
-----
+```
 
-==== queryMatches
+#### queryMatches
 
-Checks that the GET request parameters correspond to the ones defined in the `+query+` parameter.
+Checks that the GET request parameters correspond to the ones defined in the `query` parameter.
 
 Parameters:
 
-* `+query+` (mandatory) - a list of parameters to compare the parameter string to. The order of parameters is not important.
+- `query` (mandatory) - a list of parameters to compare the parameter string to. The order of parameters is not important.
 
 Examples:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1233,25 +1224,21 @@ Examples:
         - kind: queryMatches
           query: key1=value1&key2=value2&key1=value11
     ...
-----
+```
 
-[NOTE]
-====
-For backward compatibility, the use of the `+expectedQuery+` parameter instead of `+query+` is also supported.
-====
+*NOTE:* For backward compatibility, the use of the `expectedQuery` parameter instead of `query` is also supported.
 
-==== queryMatchesRegexp
+#### queryMatchesRegexp
 
-Expands `+queryMatches+` so it can be used with regexp pattern matching.
+Expands `queryMatches` so it can be used with regexp pattern matching.
 
 Parameters:
 
-* `+query+` (mandatory) - a list of parameters to compare the parameter string to. The order of parameters is not important.
+- `query` (mandatory) - a list of parameters to compare the parameter string to. The order of parameters is not important.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1260,26 +1247,22 @@ Example:
         - kind: queryMatchesRegexp
           query: key1=value1&key2=$matchRegexp(\\d+)&key1=value11
     ...
-----
+```
 
-[NOTE]
-====
-For backward compatibility, the use of the `+expectedQuery+` parameter instead of `+query+` is also supported.
-====
+*NOTE:* For backward compatibility, the use of the `expectedQuery` parameter instead of `query` is also supported.
 
-==== bodyMatchesText
+#### bodyMatchesText
 
 Checks that the request has the defined body text, or it falls under the definition of a regular expression.
 
 Parameters:
 
-* `+body+` - a string with the expected request body value;
-* `+regexp+` - a regular expression to check the body value against.
+- `body` - a string with the expected request body value;
+- `regexp` - a regular expression to check the body value against.
 
 Examples:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1300,21 +1283,20 @@ Examples:
         - kind: bodyMatchesText
           regexp: (HeroNameAndFriends)
     ...
-----
+```
 
-==== bodyMatchesJSON
+#### bodyMatchesJSON
 
-Checks that the request body is JSON, and it corresponds to the JSON defined in the `+body+` parameter.
+Checks that the request body is JSON, and it corresponds to the JSON defined in the `body` parameter.
 
 Parameters:
 
-* `+body+` (mandatory) - expected JSON (all keys on all levels defined in this parameter must be present in the request body);
-* `+comparisonParams+` - section allows you to customize the comparison process.
+- `body` (mandatory) - expected JSON (all keys on all levels defined in this parameter must be present in the request body);
+- `comparisonParams` - section allows you to customize the comparison process.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1331,21 +1313,20 @@ Example:
               }
             }
     ...
-----
+```
 
-==== bodyMatchesXML
+#### bodyMatchesXML
 
-Checks that the request body is XML, and it matches to the XML defined in the `+body+` parameter.
+Checks that the request body is XML, and it matches to the XML defined in the `body` parameter.
 
 Parameters:
 
-* `+body+` (mandatory) - expected XML;
-* `+comparisonParams+` - section allows you to customize the comparison process.
+- `body` (mandatory) - expected XML;
+- `comparisonParams` - section allows you to customize the comparison process.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1363,21 +1344,20 @@ Example:
               </Group>
             </Person>
     ...
-----
+```
 
-==== bodyMatchesYAML
+#### bodyMatchesYAML
 
-Checks that the request body is YAML, and it matches to the YAML defined in the `+body+` parameter.
+Checks that the request body is YAML, and it matches to the YAML defined in the `body` parameter.
 
 Parameters:
 
-* `+body+` (mandatory) - expected YAML;
-* `+comparisonParams+` - section allows you to customize the comparison process.
+- `body` (mandatory) - expected YAML;
+- `comparisonParams` - section allows you to customize the comparison process.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1393,33 +1373,31 @@ Example:
                 - Hexes
                 - Jinxes
     ...
-----
+```
 
-==== bodyJSONFieldMatchesJSON
+#### bodyJSONFieldMatchesJSON
 
-When request body is JSON, checks that value of particular JSON-field is string-packed JSON that matches to JSON defined in `+value+` parameter.
+When request body is JSON, checks that value of particular JSON-field is string-packed JSON that matches to JSON defined in `value` parameter.
 
 Parameters:
 
-* `+path+` (mandatory) - path to string field, containing JSON to check;
-* `+value+` (mandatory) - expected JSON;
-* `+comparisonParams+` - section allows you to customize the comparison process.
+- `path` (mandatory) - path to string field, containing JSON to check;
+- `value` (mandatory) - expected JSON;
+- `comparisonParams` - section allows you to customize the comparison process.
 
 Example:
 
 Origin request that contains string-packed JSON
 
-[source,yaml]
-----
+```yaml
   {
       "field1": {
         "field2": "{\"stringpacked\": \"json\"}"
       }
   }
-----
+```
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1431,44 +1409,42 @@ Origin request that contains string-packed JSON
               "stringpacked": "json"
             }
     ...
-----
+```
 
-=== Response strategies (strategy)
+### Response strategies (strategy)
 
 Response strategies define what mock will response to incoming requests.
 
-==== nop
+#### nop
 
-Empty strategy. All requests are served with `+204 No Content+` and empty body.
+Empty strategy. All requests are served with `204 No Content` and empty body.
 
 No parameters.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
       strategy: nop
     ...
-----
+```
 
-==== constant
+#### constant
 
 Returns a defined response.
 
 Parameters:
 
-* `+body+` (mandatory) - sets the response body;
-* `+statusCode+` - HTTP-code of the response, the default value is `+200+`;
-* `+headers+` - response headers;
-* `+pause+` - mock waits specified duration before returns response, the default value is `+0s+` (no pause).
+- `body` (mandatory) - sets the response body;
+- `statusCode` - HTTP-code of the response, the default value is `200`;
+- `headers` - response headers;
+- `pause` - mock waits specified duration before returns response, the default value is `0s` (no pause).
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1481,23 +1457,22 @@ Example:
         }
       statusCode: 500
     ...
-----
+```
 
-==== file
+#### file
 
 Returns a response read from a file.
 
 Parameters:
 
-* `+filename+` (mandatory) - name of the file that contains the response body;
-* `+statusCode+` - HTTP-code of the response, the default value is `+200+`;
-* `+headers+` - response headers;
-* `+pause+` - mock waits specified duration before returns response, the default value is `+0s+` (no pause).
+- `filename` (mandatory) - name of the file that contains the response body;
+- `statusCode` - HTTP-code of the response, the default value is `200`;
+- `headers` - response headers;
+- `pause` - mock waits specified duration before returns response, the default value is `0s` (no pause).
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1507,24 +1482,23 @@ Example:
       headers:
         Content-Type: application/json
     ...
-----
+```
 
-==== template
+#### template
 
-This strategy gives ability to use incoming request data into mock response. Implemented with package link:https://pkg.go.dev/text/template[text/template].
-Automatically preload incoming request into variable named `+request+`.
+This strategy gives ability to use incoming request data into mock response. Implemented with package [text/template](https://pkg.go.dev/text/template).
+Automatically preload incoming request into variable named `request`.
 
 Parameters:
 
-* `+body+` (mandatory) - sets the response body, must be valid `+text/template+` string;
-* `+statusCode+` - HTTP-code of the response, the default value is `+200+`;
-* `+headers+` - response headers;
-* `+pause+` - mock waits specified duration before returns response, the default value is `+0s+` (no pause).
+- `body` (mandatory) - sets the response body, must be valid `text/template` string;
+- `statusCode` - HTTP-code of the response, the default value is `200`;
+- `headers` - response headers;
+- `pause` - mock waits specified duration before returns response, the default value is `0s` (no pause).
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1536,9 +1510,9 @@ Example:
         }
       statusCode: 200
     ...
-----
+```
 
-==== uriVary
+#### uriVary
 
 Uses different response strategies, depending on a path of a requested resource.
 
@@ -1546,13 +1520,12 @@ When receiving a request for a resource that is not defined in the parameters, t
 
 Parameters:
 
-* `+uris+` (mandatory) - a list of resources, each resource can be configured as a separate mock-service using any available request constraints and response strategies (see example);
-* `+basePath+` - common base route for all resources, empty by default.
+- `uris` (mandatory) - a list of resources, each resource can be configured as a separate mock-service using any available request constraints and response strategies (see example);
+- `basePath` - common base route for all resources, empty by default.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1571,22 +1544,21 @@ Example:
             }
           statusCode: 404
     ...
-----
+```
 
-==== methodVary
+#### methodVary
 
 Uses various response strategies, depending on the request method.
 
-When receiving a request with a method not defined in `+methodVary+`, the test will be considered failed.
+When receiving a request with a method not defined in `methodVary`, the test will be considered failed.
 
 Parameters:
 
-* `+methods+` (mandatory) - a list of methods, each method can be configured as a separate mock-service using any available request constraints and response strategies (see example).
+- `methods` (mandatory) - a list of methods, each method can be configured as a separate mock-service using any available request constraints and response strategies (see example).
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1605,9 +1577,9 @@ Example:
         POST:
           strategy: nop
     ...
-----
+```
 
-==== sequence
+#### sequence
 
 With this strategy for each consequent request you will get a reply defined by a consequent nested strategy.
 
@@ -1615,12 +1587,11 @@ If no nested strategy specified for a request, i.e. arrived more requests than n
 
 Parameters:
 
-* `+sequence+` (mandatory) - list of nested strategies.
+- `sequence` (mandatory) - list of nested strategies.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1638,20 +1609,19 @@ Example:
         - strategy: constant
           body: '4'
     ...
-----
+```
 
-==== basedOnRequest
+#### basedOnRequest
 
-Allows multiple requests with same request path. When receiving a request to mock, all elements in the `+uris+` list are sequentially passed through and the first element is returned, all checks (`+requestConstraints+`) of which will pass successfully. If no such element is found, the test will be considered failed. This stratagy is concurrent safe.
+Allows multiple requests with same request path. When receiving a request to mock, all elements in the `uris` list are sequentially passed through and the first element is returned, all checks (`requestConstraints`) of which will pass successfully. If no such element is found, the test will be considered failed. This stratagy is concurrent safe.
 
 Parameters:
 
-* `+uris+` (mandatory) - a list of resources, each resource can be configured as a separate mock-service using any available request constraints and response strategies (see example).
+- `uris` (mandatory) - a list of resources, each resource can be configured as a separate mock-service using any available request constraints and response strategies (see example).
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1678,9 +1648,9 @@ Example:
             - kind: pathMatches
               path: /request
     ...
-----
+```
 
-==== dropRequest
+#### dropRequest
 
 When any request is received, this strategy drops the connection to the client. Used to emulate the network problems.
 
@@ -1688,23 +1658,21 @@ No parameters.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
       strategy: dropRequest
     ...
-----
+```
 
-=== Calls count
+### Calls count
 
 You can define, how many times each mock or mock resource must be called. If the actual number of calls is different from expected, the test will be considered failed.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1713,10 +1681,9 @@ Example:
       strategy: file
       filename: responses/books_list.json
     ...
-----
+```
 
-[source,yaml]
-----
+```yaml
   ...
   mocks:
     service1:
@@ -1728,19 +1695,18 @@ Example:
           strategy: file
           filename: responses/books_list.json
     ...
-----
+```
 
-=== Calls order
+### Calls order
 
 In some cases you need to check if mock services receive requests in a specific order.
 
-You can specify an `+order+` parameter for any mock endpoint to indicate its expected position in the request sequence.
+You can specify an `order` parameter for any mock endpoint to indicate its expected position in the request sequence.
 Gonkex will validate that requests arrive at the mocks in the correct order based on these values.
 
 Example:
 
-[source,yaml]
-----
+```yaml
 mocks:
   someservice1:
     strategy: uriVary
@@ -1760,24 +1726,23 @@ mocks:
     strategy: constant
     body: "other service result"
     statusCode: 200
-----
+```
 
 Validation rules:
 
-* Requests must arrive in ascending order based on their `+order+` values
-* Multiple endpoints can have the same `+order+` value - they can be called in any sequence relative to each other
-* Order values don't need to be consecutive (e.g., 1, 5, 10 is valid)
-* If a request arrives out of order, the test will fail
+- Requests must arrive in ascending order based on their `order` values
+- Multiple endpoints can have the same `order` value - they can be called in any sequence relative to each other
+- Order values don't need to be consecutive (e.g., 1, 5, 10 is valid)
+- If a request arrives out of order, the test will fail
 
-=== Mock state sharing
+### Mock state sharing
 
-The `+mocksParams+` section allows you to configure mock behavior across multiple test cases.
+The `mocksParams` section allows you to configure mock behavior across multiple test cases.
 By default, mocks are reset between each test to ensure isolation, but shared state can be useful for testing asynchronous operations.
 
-Use `+shareState: true+` to maintain mock state continuity between test cases. Example:
+Use `shareState: true` to maintain mock state continuity between test cases. Example:
 
-[source,yaml]
-----
+```yaml
 - name: initialize sequence mock
   method: GET
   path: /api/step1
@@ -1810,12 +1775,12 @@ Use `+shareState: true+` to maintain mock state continuity between test cases. E
     shareState: true
   response:
     200: "step3 response"  # Gets third item from sequence
-----
+```
 
-The first test with `+shareState: true+` that defines mocks starts a new shared state chain. Subsequent tests with `+shareState+` and no mock definitions continue the chain.
-A new mock definition in a `+shareState+` test terminates the previous chain and starts a new one. Tests without `+shareState+` are isolated and terminates the previous chain.
+The first test with `shareState: true` that defines mocks starts a new shared state chain. Subsequent tests with `shareState` and no mock definitions continue the chain.
+A new mock definition in a `shareState` test terminates the previous chain and starts a new one. Tests without `shareState` are isolated and terminates the previous chain.
 
-== Shell scripts usage
+## Shell scripts usage
 
 When the test is ran, operations are performed in the following order:
 
@@ -1829,33 +1794,31 @@ When the test is ran, operations are performed in the following order:
 . afterRequestScript execute
 . The checks are ran
 
-=== Script definition
+### Script definition
 
 To define the script you need to provide 2 parameters:
 
-* `+path+` (mandatory) - string with a path to the script file.
-* `+timeout+` - time is responsible for stopping the script on timeout. Should be specified in link:https://pkg.go.dev/time#ParseDuration[Go time duration string] or in seconds. The default value is `+3s+`.
+- `path` (mandatory) - string with a path to the script file.
+- `timeout` - time is responsible for stopping the script on timeout. Should be specified in [Go time duration string](https://pkg.go.dev/time#ParseDuration) or in seconds. The default value is `3s`.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   afterRequestScript:
     path: './cli_scripts/cmd_recalculate.sh'
     # the timeout will be equal 500 milliseconds (defined as duration string)
     timeout: 500ms
   ...
-----
+```
 
-=== Running a script with parameterization
+### Running a script with parameterization
 
 When tests use parameterized requests, it's possible to use different scripts for each test run.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   beforeScript:
     path: |
@@ -1871,16 +1834,15 @@ Example:
           in_transit: 1
       beforeScriptArgs:
         file_name: "cmd_recalculate_customer_1.sh"
-----
+```
 
-== A database query
+## A database query
 
 After HTTP request execution you can run an SQL query to database to check the data changes. The response can contain several records. Those records are compared to the expected list of records.
 
 Use the following syntax to query the database:
 
-[source,yaml]
-----
+```yaml
 - name: my test
   ...
   dbChecks:
@@ -1896,79 +1858,71 @@ Use the following syntax to query the database:
         ignoreArraysOrdering: true
         disallowExtraFields: true
     - ....
-----
+```
 
 This syntax allows any number of queries to be executed after the test case is complete.
 
 You can also use legacy style for run sql queries (but this method only allows you to execute one query), like this:
 
-[source,yaml]
-----
+```yaml
 - name: my test
   ...
   dbQuery: "SELECT ..."
   dbResponse:
     - ...
     - ...
-----
+```
 
-[NOTE]
-====
-All mentioned below techniques are still work with both variants of query format.
-====
+*NOTE:* All mentioned below techniques are still work with both variants of query format.
 
-=== Query definition
+### Query definition
 
 Query is a SELECT that returns any number of records.
 
-* `+dbQuery+` - a string that contains an SQL query.
+- `dbQuery` - a string that contains an SQL query.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   dbQuery: "SELECT code, purchase_date, partner_id FROM mark_paid_schedule AS m WHERE m.code = 'GIFT100000-000002'"
   ...
-----
+```
 
-=== Definition of database response
+### Definition of database response
 
 The response is a list of records in JSON format that the database query should return.
 
-* `+dbResponse+` - list of strings containing JSON objects.
+- `dbResponse` - list of strings containing JSON objects.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   dbResponse:
     - '{"code":"GIFT100000-000002","purchase_date":"2330-02-02T13:15:11.912874","partner_id":1}'
     - '{"code":"GIFT100000-000003","purchase_date":"2330-02-02T13:15:11.912874","partner_id":1}'
     - '{"code":"$matchRegexp(^GIFT([0-9]{6})-([0-9]{6})$)","purchase_date":"2330-02-02T13:15:11.912874","partner_id":1}'
-----
+```
 
 As you can see in this example, you can use Regexp for checking database response body.
 
-To show that the query returns no records, you can specify an empty list in `+dbResponse+`. For example,
+To show that the query returns no records, you can specify an empty list in `dbResponse`. For example,
 
-[source,yaml]
-----
+```yaml
   ...
   dbResponse: []   # empty list
-----
+```
 
-Gonkex allows you to add a `+comparisonParams+` section to the database query parameters to customize the result comparison process.
+Gonkex allows you to add a `comparisonParams` section to the database query parameters to customize the result comparison process.
 
-=== Database request parameterization
+### Database request parameterization
 
 As well as with the HTTP request body, we can use parameterized requests.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   dbChecks:
     - dbQuery: >
@@ -1985,14 +1939,13 @@ Example:
       dbResponseArgs:
         cert1: "GIFT100000-000002"
         cert2: "GIFT100000-000003"
-----
+```
 
 When different tests contain different number of records, you can redefine the response for a specific test as a whole, while continuing to use a template with parameters in others.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   dbQuery: "SELECT code, partner_id FROM mark_paid_schedule AS m WHERE DATE(m.purchase_date) BETWEEN '{{ .fromDate }}' AND '{{ .toDate }}'"
   dbResponse:
@@ -2011,22 +1964,18 @@ Example:
       dbResponse:
         - '{"code":"GIFT100000-000002","partner_id":1}'
         - '{"code":"GIFT100000-000003","partner_id":1}'
-----
+```
 
-[WARNING]
-====
-For some reason this functionality works for legacy style only.
-====
+*WARNING:* For some reason this functionality works for legacy style only.
 
-=== Ignoring ordering in database response
+### Ignoring ordering in database response
 
-Gonkex allows you to add a `+comparisonParams+` section to the database query parameters to customize the result comparison process.
-For example, you can specify the `+ignoreArraysOrdering+` flag to ignore the order of records when comparing. This can be used to bypass the use of `+ORDER BY+` operators in a query.
+Gonkex allows you to add a `comparisonParams` section to the database query parameters to customize the result comparison process.
+For example, you can specify the `ignoreArraysOrdering` flag to ignore the order of records when comparing. This can be used to bypass the use of `ORDER BY` operators in a query.
 
 Example:
 
-[source,yaml]
-----
+```yaml
   ...
   dbChecks:
     - dbQuery: "SELECT id, name, surname FROM users LIMIT 2"
@@ -2036,9 +1985,9 @@ Example:
 
       comparisonParams:
         ignoreArraysOrdering: true
-----
+```
 
-== JSON-schema
+## JSON-schema
 
-Use link:https://raw.githubusercontent.com/lansfy/gonkex/master/schema/gonkex.json[file with schema] to add syntax highlight to your favourite IDE and write Gonkex tests more easily.
-It adds in-line documentation and auto-completion to any IDE that supports it. The link:https://github.com/lansfy/gonkex/tree/master/schema[following article] describes how to add schema to your IDE.
+Use [file with schema](https://raw.githubusercontent.com/lansfy/gonkex/master/schema/gonkex.json) to add syntax highlight to your favourite IDE and write Gonkex tests more easily.
+It adds in-line documentation and auto-completion to any IDE that supports it. The [following article](https://github.com/lansfy/gonkex/tree/master/schema) describes how to add schema to your IDE.
