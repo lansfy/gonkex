@@ -775,6 +775,9 @@ func (l *Loader) processFileTemplate(f *fixtureFile) error {
 }
 
 func (l *Loader) processTemplate(content []byte) ([]byte, error) {
+	if !l.template {
+		return content, nil
+	}
 	t := template.New("").
 		Funcs(l.templateFuncs).
 		Delims(l.templateLeftDelim, l.templateRightDelim).
