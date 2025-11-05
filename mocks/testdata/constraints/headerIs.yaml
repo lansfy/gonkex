@@ -193,3 +193,57 @@
        1) mock 'someservice': request constraint 'headerIs': header 'X-Test': parse '$matchRegexp': cannot compile regexp:
             expected: <nil>
               actual: missing closing ]: `[`
+
+- name: WHEN request has all required headers with required values headerIs MUST be successful
+  method: GET
+  path: /test/case
+  headers:
+    X-Test-1: test-value-1
+    X-Test-2: test-value-2
+    X-Test-3: test-value-3
+    X-Test-4: test-value-4
+    Host: test.example.com
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          headers:
+            X-Test-1: test-value-1
+            x-test-2: test-value-2
+            X-Test-3: "$matchRegexp(^test.*3$)"
+            x-test-4: "$matchRegexp(^test.*4$)"
+            host: test.example.com
+      strategy: constant
+      body: "result"
+      statusCode: 200
+
+- name: WHEN request does not have required header or header have not equal value constraint check MUST fail
+  method: GET
+  path: /test/case
+  headers:
+    X-Test-1: other-value-1
+    X-Test-2: other-value-2
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          headers:
+            Absent-Header: somevalue
+            X-Test-1: test-value-1
+            X-Test-2: "$matchRegexp(^test.*2$)"
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': request constraint 'headerIs': request does not have header 'Absent-Header'
+       2) mock 'someservice': request constraint 'headerIs': header 'X-Test-1': values do not match:
+            expected: test-value-1
+              actual: other-value-1
+       3) mock 'someservice': request constraint 'headerIs': header 'X-Test-2': value does not match regexp:
+            expected: $matchRegexp(^test.*2$)
+              actual: other-value-2

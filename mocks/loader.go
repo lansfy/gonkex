@@ -221,7 +221,7 @@ func loadConstraintOfKind(kind string, def map[string]interface{}, ak *[]string)
 	case "methodIsDELETE":
 		return &methodConstraint{name: kind, method: "DELETE"}, nil
 	case "headerIs":
-		*ak = append(*ak, "header", "value", "regexp")
+		*ak = append(*ak, "header", "headers", "value", "regexp")
 		return loadHeaderConstraint(def)
 	case "pathMatches":
 		*ak = append(*ak, "path", "regexp")

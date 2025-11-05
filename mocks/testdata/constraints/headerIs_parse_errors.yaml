@@ -77,6 +77,27 @@
     expected: |
        load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'headerIs': key 'regexp' has non-string value
 
+- name: WHEN headers map has non-string value parser MUST fail with error
+  method: GET
+  path: /test/case
+  headers:
+    X-Test: test-value
+  response:
+    200: "result"
+  mocks:
+    someservice:
+      requestConstraints:
+        - kind: headerIs
+          headers:
+            Good-Header: "5"
+            Bad-Header: 5
+      strategy: constant
+      body: "result"
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'headerIs': 'headers' requires string values
+
 - name: WHEN 'headerIs' constraint has unknown key load definition MUST fail with error
   method: GET
   path: /test/case
@@ -96,4 +117,4 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'headerIs': unexpected key 'invalid' (allowed only [kind header value regexp])
+       load definition for 'someservice': path '$.requestConstraints[0]': load constraint 'headerIs': unexpected key 'invalid' (allowed only [kind header headers value regexp])

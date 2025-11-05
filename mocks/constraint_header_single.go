@@ -9,6 +9,15 @@ import (
 )
 
 func loadHeaderConstraint(def map[string]interface{}) (verifier, error) {
+	headers, err := loadHeaders(def)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(headers) > 0 {
+		return loadMultiHeadersConstraint(def, headers)
+	}
+
 	header, err := getRequiredStringKey(def, "header", false)
 	if err != nil {
 		return nil, err
