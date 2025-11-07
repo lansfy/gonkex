@@ -1503,8 +1503,12 @@ Example:
   mocks:
     service1:
       strategy: template
+      headers:
+        SomePlainHeader: Value
+        SomeTemplatedHeader: "{{ .request.Header "Host" }}"
       body: |
         {
+          "value-from-header": "{{ .request.Header "HeaderName" }}",
           "value-from-query": "{{ .request.Query "some_value" }}",
           "data-from-body": "{{ .request.Json.data }}"
         }
