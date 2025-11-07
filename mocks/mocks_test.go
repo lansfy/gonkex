@@ -52,7 +52,7 @@ func simplifyError(err error) string {
 
 	// Cut everything from ", request was"
 	if idx := strings.Index(input, ", request was"); idx != -1 {
-		input = input[:idx]
+		input = input[:idx] + ", request was..."
 	}
 
 	return normalizeString(input)
@@ -92,6 +92,7 @@ func (c *errorChecker) CheckRequest(mockName string, req *http.Request, resp *ht
 	require.NoError(c.t, err, c.errorInfo)
 
 	if !strings.Contains(c.getExpected(), "unhandled request to mock") &&
+		!strings.Contains(c.getExpected(), " template:") &&
 		!strings.Contains(c.lastTest.GetFileName(), "nop") {
 		assert.Contains(c.t, string(bodyBytes), "result", c.errorInfo)
 	}

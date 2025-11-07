@@ -31,7 +31,7 @@
     expected: |
        1) mock 'someservice': request constraint 'bodyMatchesText': request 'body': values do not match:
             expected: hello me
-              actual: hello world
+              actual: hello world, request was...
 
 - name: WHEN request body matches specified regexp bodyMatchesText MUST be successful
   method: POST
@@ -66,7 +66,7 @@
     expected: |
        1) mock 'someservice': request constraint 'bodyMatchesText': request 'body': value does not match regexp:
             expected: $matchRegexp(^(test.*)$)
-              actual: hello world
+              actual: hello world, request was...
 
 - name: WHEN field 'regexp' has wrong regular expression in bodyMatchesText parser MUST fail with error
   method: POST

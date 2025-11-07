@@ -82,7 +82,7 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'headerIs': request does not have header 'X-Test'
+       1) mock 'someservice': request constraint 'headerIs': request does not have header 'X-Test', request was...
 
 - name: WHEN request has required header but with different value constraint check MUST fail
   method: GET
@@ -104,7 +104,7 @@
     expected: |
        1) mock 'someservice': request constraint 'headerIs': header 'X-Test': values do not match:
             expected: test-value
-              actual: other-value
+              actual: other-value, request was...
 
 - name: WHEN request has required header but with value not matched 'regexp' headerIs MUST fail
   method: GET
@@ -126,7 +126,7 @@
     expected: |
        1) mock 'someservice': request constraint 'headerIs': header 'X-Test': value does not match regexp:
             expected: $matchRegexp(^other.*$)
-              actual: test-value
+              actual: test-value, request was...
 
 - name: WHEN request has required header but with value not matched regexp for value headerIs MUST fail
   method: GET
@@ -148,7 +148,7 @@
     expected: |
        1) mock 'someservice': request constraint 'headerIs': header 'X-Test': value does not match regexp:
             expected: $matchRegexp(^other.*$)
-              actual: test-value
+              actual: test-value, request was...
 
 - name: WHEN field 'regexp' has invalid regexp in headerIs parser MUST fail with error
   method: GET

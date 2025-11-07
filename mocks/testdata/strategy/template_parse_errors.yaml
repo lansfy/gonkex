@@ -56,7 +56,7 @@
     expected: |
        load definition for 'someservice': strategy 'template': map under 'headers' key is required
 
-- name: WHEN 'template' strategy has invalid template strategy MUST fail with error
+- name: WHEN 'template' strategy has invalid body template strategy MUST fail with error
   method: POST
   path: /test/case
   response:
@@ -71,7 +71,23 @@
       statusCode: 200
   meta:
     expected: |
-       load definition for 'someservice': strategy 'template': template syntax error: template: :2: bad character U+0022 '"'
+       load definition for 'someservice': strategy 'template': template syntax error: template: $.body:2: bad character U+0022 '"'
+
+- name: WHEN 'template' strategy has invalid header template strategy MUST fail with error
+  method: POST
+  path: /test/case
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: template
+      headers:
+        SomeHeader: "{{ .request.Query"
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       load definition for 'someservice': strategy 'template': template syntax error: template: $.headers[SomeHeader]:1: unclosed action
 
 - name: WHEN 'template' strategy has unknown key load definition MUST fail with error
   method: POST

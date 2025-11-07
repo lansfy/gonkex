@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httputil"
+
+	"github.com/lansfy/gonkex/colorize"
 )
 
 func dumpRequest(r *http.Request) string {
@@ -20,4 +22,11 @@ func unhandledRequestError(r *http.Request) []error {
 
 func unknownMockError(serviceName string) error {
 	return fmt.Errorf("unknown mock name '%s'", serviceName)
+}
+
+func makeRequestWasParts(r *http.Request) []*colorize.Part {
+	return []*colorize.Part{
+		colorize.None(", request was:\n\n"),
+		colorize.None(dumpRequest(r)),
+	}
 }

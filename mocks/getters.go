@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/lansfy/gonkex/colorize"
@@ -206,4 +207,12 @@ func getRequestBodyCopy(r *http.Request) ([]byte, error) {
 
 func setRequestBody(r *http.Request, body []byte) {
 	r.Body = io.NopCloser(bytes.NewReader(body))
+}
+
+func getHeader(r *http.Request, name string) string {
+	if strings.EqualFold(name, "host") {
+		// golang move value from Host header to separate field
+		return r.Host
+	}
+	return r.Header.Get(name)
 }

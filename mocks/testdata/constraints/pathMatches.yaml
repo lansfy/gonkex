@@ -57,7 +57,7 @@
     expected: |
        1) mock 'someservice': request constraint 'pathMatches': url 'path': values do not match:
             expected: /other
-              actual: /test/case
+              actual: /test/case, request was...
 
 - name: WHEN request has path with value not matched 'regexp' pathMatches MUST fail
   method: GET
@@ -76,7 +76,7 @@
     expected: |
        1) mock 'someservice': request constraint 'pathMatches': url 'path': value does not match regexp:
             expected: $matchRegexp(^/other.*$)
-              actual: /test/case
+              actual: /test/case, request was...
 
 - name: WHEN request has path with value not matched regexp for value pathMatches MUST fail
   method: GET
@@ -95,7 +95,7 @@
     expected: |
        1) mock 'someservice': request constraint 'pathMatches': url 'path': value does not match regexp:
             expected: $matchRegexp(^/other.*$)
-              actual: /test/case
+              actual: /test/case, request was...
 
 - name: WHEN field 'regexp' has invalid regexp in pathMatches parser MUST fail with error
   method: GET

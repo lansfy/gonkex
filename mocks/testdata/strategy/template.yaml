@@ -2,6 +2,9 @@
   method: POST
   path: /test/case
   query: ?some_value=from_query
+  headers:
+    SomeHeader: from_header
+    OtherHeader: other_value
   request: >
     {
       "data": "from_body"
@@ -9,6 +12,8 @@
   response:
     200: >
       {
+        "value-from-host": "$matchRegexp(^127.0.0.1:\\d+$)",
+        "value-from-header": "from_header",
         "value-from-query": "from_query",
         "data-from-body": "from_body",
         "result": 1
@@ -16,22 +21,24 @@
   responseHeaders:
     200:
       Header1: Value1
-      Header2: Value2
+      Header2: other_value
   mocks:
     someservice:
       strategy: template
       headers:
         Header1: Value1
-        Header2: Value2
+        Header2: '{{ .request.Header "otherheader" }}'
       body: |
         {
+          "value-from-host": "{{ .request.Header "Host" }}",
+          "value-from-header": "{{ .request.Header "SomeHeader" }}",
           "value-from-query": "{{ .request.Query "some_value" }}",
           "data-from-body": "{{ .request.Json.data }}",
           "result": 1
         }
       statusCode: 200
 
-- name: WHEN strategy requires Json body, but body is plain strategy MUST fail with error
+- name: WHEN body template cannot be substituted strategy MUST fail with error
   method: POST
   path: /test/case
   request: "plain content"
@@ -47,13 +54,21 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': template mock error: template: :2:32: executing "" at <.request.Json.data>: error calling Json: failed to parse request as Json: invalid character 'p' looking for beginning of value
-       2) mock 'someservice': unhandled request to mock:
-       POST /test/case HTTP/1.1
-       Host: 127.0.0.1:80
-       Accept-Encoding: gzip
-       Content-Length: 13
-       Content-Type: application/json
-       User-Agent: Go-http-client/1.1
-       
-       plain content
+       1) mock 'someservice': strategy 'template': template: $.body:2:32: executing "$.body" at <.request.Json.data>: error calling Json: parse request as json: invalid character 'p' looking for beginning of value, request was...
+
+- name: WHEN header template cannot be substituted strategy MUST fail with error
+  method: POST
+  path: /test/case
+  request: "plain content"
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: template
+      headers:
+        SomeHeader: '{{ .request.Json.data }}'
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': strategy 'template': template: $.headers[SomeHeader]:1:11: executing "$.headers[SomeHeader]" at <.request.Json.data>: error calling Json: parse request as json: invalid character 'p' looking for beginning of value, request was...
