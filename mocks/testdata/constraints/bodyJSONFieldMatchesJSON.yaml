@@ -49,7 +49,7 @@
     expected: |
        1) mock 'someservice': request constraint 'bodyJSONFieldMatchesJSON': path '$': key is missing:
             expected: othername
-              actual: <missing>
+              actual: <missing>, request was...
 
 - name: WHEN path not exists in request bodyJSONFieldMatchesJSON MUST fail
   method: POST
@@ -73,7 +73,7 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'bodyJSONFieldMatchesJSON': json field 'field1.field2' does not exist
+       1) mock 'someservice': request constraint 'bodyJSONFieldMatchesJSON': json field 'field1.field2' does not exist, request was...
 
 - name: WHEN path consists empty string in request bodyJSONFieldMatchesJSON MUST fail
   method: POST
@@ -98,7 +98,7 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'bodyJSONFieldMatchesJSON': json field 'field1.field2' is empty
+       1) mock 'someservice': request constraint 'bodyJSONFieldMatchesJSON': json field 'field1.field2' is empty, request was...
 
 - name: WHEN path consists invalid json in request bodyJSONFieldMatchesJSON MUST fail
   method: POST
@@ -123,4 +123,4 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'bodyJSONFieldMatchesJSON': invalid character 'i' looking for beginning of value
+       1) mock 'someservice': request constraint 'bodyJSONFieldMatchesJSON': invalid character 'i' looking for beginning of value, request was...

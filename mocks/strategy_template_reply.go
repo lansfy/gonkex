@@ -8,6 +8,8 @@ import (
 	"sync"
 	"text/template"
 	"time"
+
+	"github.com/lansfy/gonkex/colorize"
 )
 
 func (l *loaderImpl) loadTemplateReplyStrategy(def map[string]interface{}) (ReplyStrategy, error) {
@@ -49,6 +51,10 @@ type templateRequest struct {
 	jsonData map[string]interface{}
 }
 
+func (tr *templateRequest) Header(key string) string {
+	return getHeader(tr.r, key)
+}
+
 func (tr *templateRequest) Query(key string) string {
 	return tr.r.URL.Query().Get(key)
 }
@@ -60,13 +66,13 @@ func (tr *templateRequest) Json() (map[string]interface{}, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse request as Json: %w", err)
+		return nil, fmt.Errorf("parse request as json: %w", err)
 	}
 
 	return tr.jsonData, nil
 }
 
-func (s *templateReply) executeResponseTemplate(r *http.Request) (string, error) {
+func (s *templateReply) executeResponseTemplate(r *http.Request, requestBody []byte) (string, *colorize.Error) {
 	ctx := map[string]*templateRequest{
 		"request": {
 			r: r,
@@ -75,7 +81,9 @@ func (s *templateReply) executeResponseTemplate(r *http.Request) (string, error)
 
 	reply := bytes.NewBuffer(nil)
 	if err := s.replyBodyTemplate.Execute(reply, ctx); err != nil {
-		return "", fmt.Errorf("template mock error: %w", err)
+		setRequestBody(r, requestBody)
+		dump := []*colorize.Part{colorize.None(", request was:\n\n"), colorize.None(dumpRequest(r))}
+		return "", colorize.NewEntityError("strategy %s", "template").WithSubError(err).WithPostfix(dump)
 	}
 
 	return reply.String(), nil
@@ -91,10 +99,9 @@ func (s *templateReply) HandleRequest(w http.ResponseWriter, r *http.Request) []
 		time.Sleep(s.pause)
 	}
 
-	responseBody, err := s.executeResponseTemplate(r)
-	if err != nil {
-		setRequestBody(r, requestBody)
-		return append([]error{err}, unhandledRequestError(r)...)
+	responseBody, cErr := s.executeResponseTemplate(r, requestBody)
+	if cErr != nil {
+		return []error{cErr}
 	}
 
 	for k, v := range s.headers {

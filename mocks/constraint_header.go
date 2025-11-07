@@ -2,7 +2,6 @@ package mocks
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/lansfy/gonkex/colorize"
 	"github.com/lansfy/gonkex/compare"
@@ -48,11 +47,7 @@ func (c *headerConstraint) GetName() string {
 }
 
 func (c *headerConstraint) Verify(r *http.Request) []error {
-	value := r.Header.Get(c.header)
-	if strings.EqualFold(c.header, "host") {
-		// golang moved value from Host header to separate field
-		value = r.Host
-	}
+	value := getHeader(r, c.header)
 	if value == "" {
 		return []error{colorize.NewEntityError("request does not have header %s", c.header)}
 	}

@@ -81,3 +81,14 @@ func Test_Mocks_Error(t *testing.T) {
 	require.Equal(t, "request constraint 'some-name': different value 'var-name'\n     expected: 34\n       actual: 56, request was:\n\n%dump%", cErr.Error())
 	require.Equal(t, "request constraint <cyan>some-name</cyan>: different value <cyan>var-name</cyan>\n     expected: <green>34</green>\n       actual: <red>56</red>, request was:\n\n%dump%", GetColoredValue(cErr))
 }
+
+func Test_WithPostfix_Error(t *testing.T) {
+	err := errors.New("some error")
+	postfix := []*Part{None(" postfix1"), None(" postfix2")}
+	cErr := NewEntityError("entity %s", "fortest").WithSubError(err).WithPostfix(postfix)
+	require.Equal(t, "entity 'fortest': some error postfix1 postfix2", cErr.Error())
+	require.Equal(t, "entity <cyan>fortest</cyan>: some error postfix1 postfix2", GetColoredValue(cErr))
+	cErr2 := NewEntityError("entity %s", "wrap").WithSubError(cErr)
+	require.Equal(t, "entity 'wrap': entity 'fortest': some error postfix1 postfix2", cErr2.Error())
+	require.Equal(t, "entity <cyan>wrap</cyan>: entity <cyan>fortest</cyan>: some error postfix1 postfix2", GetColoredValue(cErr2))
+}

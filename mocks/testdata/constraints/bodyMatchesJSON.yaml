@@ -60,7 +60,7 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'bodyMatchesJSON': request is empty
+       1) mock 'someservice': request constraint 'bodyMatchesJSON': request is empty, request was...
 
 - name: WHEN request body is not json bodyMatchesJSON MUST fail with error
   method: POST
@@ -81,4 +81,4 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'bodyMatchesJSON': json: invalid character 'i' looking for beginning of value
+       1) mock 'someservice': request constraint 'bodyMatchesJSON': json: invalid character 'i' looking for beginning of value, request was...

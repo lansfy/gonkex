@@ -33,7 +33,7 @@
     expected: |
        1) mock 'someservice': request constraint 'pathMatches': url 'path': values do not match:
             expected: /test/path2
-              actual: /test/wrong
+              actual: /test/wrong, request was...
 
 - name: test MUST receive third response from sequence strategy
   method: GET

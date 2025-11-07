@@ -38,4 +38,4 @@
     expected: |
        1) mock 'someservice': request constraint 'methodIs': 'method' does not match:
             expected: POST
-              actual: GET
+              actual: GET, request was...

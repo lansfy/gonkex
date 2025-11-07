@@ -76,7 +76,7 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': request constraint 'queryMatchesRegexp': 'people' parameter is missing in request query
+       1) mock 'someservice': request constraint 'queryMatchesRegexp': 'people' parameter is missing in request query, request was...
 
 - name: WHEN one of expected values absent in query queryMatchesRegexp MUST fail with error
   method: GET
@@ -96,7 +96,7 @@
     expected: |
        1) mock 'someservice': request constraint 'queryMatchesRegexp': number of values for parameter 'food' is not equal to expected:
             expected: [beer cake]
-              actual: [beer]
+              actual: [beer], request was...
 
 - name: WHEN one of expected key has other value in query queryMatchesRegexp MUST fail with error
   method: GET
@@ -116,10 +116,10 @@
     expected: |
        1) mock 'someservice': request constraint 'queryMatchesRegexp': parameter 'food': values do not match:
             expected: tea
-              actual: beer
+              actual: beer, request was...
        2) mock 'someservice': request constraint 'queryMatchesRegexp': parameter 'people': values do not match:
             expected: 2
-              actual: 3
+              actual: 3, request was...
 
 - name: queryMatchesRegexp constraint MUST support expectedQuery for backward compatibility (1)
   method: GET
@@ -154,4 +154,4 @@
     expected: |
        1) mock 'someservice': request constraint 'queryMatchesRegexp': number of values for parameter 'food' is not equal to expected:
             expected: [beer cake]
-              actual: [beer]
+              actual: [beer], request was...
