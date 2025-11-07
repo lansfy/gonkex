@@ -52,7 +52,7 @@ func simplifyError(err error) string {
 
 	// Cut everything from ", request was"
 	if idx := strings.Index(input, ", request was"); idx != -1 {
-		input = input[:idx]+", request was..."
+		input = input[:idx] + ", request was..."
 	}
 
 	return normalizeString(input)

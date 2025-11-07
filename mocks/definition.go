@@ -3,6 +3,7 @@ package mocks
 import (
 	"errors"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/lansfy/gonkex/colorize"
@@ -92,16 +93,33 @@ func (d *Definition) EndRunningContext(intermediate bool) []error {
 	return errs
 }
 
+var skipDumpErrors = []string{
+	": cannot compile regexp:",
+}
+
+func canAttachDump(err error) bool {
+	text := err.Error()
+	for _, s := range skipDumpErrors {
+		if strings.Contains(text, s) {
+			return false
+		}
+	}
+	return true
+}
+
 func verifyRequestConstraints(requestConstraints []verifier, r *http.Request) []error {
 	var dump []*colorize.Part
 	var errs []error
 	for _, c := range requestConstraints {
 		for _, e := range c.Verify(r) {
-			if dump == nil {
-				dump = append(dump, colorize.None(", request was:\n\n"), colorize.None(dumpRequest(r)))
+			cErr := colorize.NewEntityError("request constraint %s", c.GetName()).WithSubError(e)
+			if canAttachDump(e) {
+				if dump == nil {
+					dump = makeRequestWasParts(r)
+				}
+				cErr = cErr.WithPostfix(dump)
 			}
-			errs = append(errs, colorize.NewEntityError("request constraint %s", c.GetName()).
-				WithSubError(e).WithPostfix(dump))
+			errs = append(errs, cErr)
 		}
 	}
 

@@ -209,7 +209,6 @@ func setRequestBody(r *http.Request, body []byte) {
 	r.Body = io.NopCloser(bytes.NewReader(body))
 }
 
-
 func getHeader(r *http.Request, name string) string {
 	if strings.EqualFold(name, "host") {
 		// golang move value from Host header to separate field

@@ -21,13 +21,13 @@
   responseHeaders:
     200:
       Header1: Value1
-      Header2: Value2
+      Header2: other_value
   mocks:
     someservice:
       strategy: template
       headers:
         Header1: Value1
-        Header2: Value2
+        Header2: '{{ .request.Header "otherheader" }}'
       body: |
         {
           "value-from-host": "{{ .request.Header "Host" }}",
@@ -38,7 +38,7 @@
         }
       statusCode: 200
 
-- name: WHEN strategy requires Json body, but body is plain strategy MUST fail with error
+- name: WHEN body template cannot be substituted strategy MUST fail with error
   method: POST
   path: /test/case
   request: "plain content"
@@ -54,4 +54,21 @@
       statusCode: 200
   meta:
     expected: |
-       1) mock 'someservice': strategy 'template': template: :2:32: executing "" at <.request.Json.data>: error calling Json: parse request as json: invalid character 'p' looking for beginning of value, request was...
+       1) mock 'someservice': strategy 'template': template: $.body:2:32: executing "$.body" at <.request.Json.data>: error calling Json: parse request as json: invalid character 'p' looking for beginning of value, request was...
+
+- name: WHEN header template cannot be substituted strategy MUST fail with error
+  method: POST
+  path: /test/case
+  request: "plain content"
+  response:
+    200: ""
+  mocks:
+    someservice:
+      strategy: template
+      headers:
+        SomeHeader: '{{ .request.Json.data }}'
+      body: ""
+      statusCode: 200
+  meta:
+    expected: |
+       1) mock 'someservice': strategy 'template': template: $.headers[SomeHeader]:1:11: executing "$.headers[SomeHeader]" at <.request.Json.data>: error calling Json: parse request as json: invalid character 'p' looking for beginning of value, request was...

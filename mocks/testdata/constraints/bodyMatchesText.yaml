@@ -90,4 +90,4 @@
     expected: |
        1) mock 'someservice': request constraint 'bodyMatchesText': request 'body': parse '$matchRegexp': cannot compile regexp:
             expected: <nil>
-              actual: missing closing ]: `[`, request was...
+              actual: missing closing ]: `[`

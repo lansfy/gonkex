@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"text/template"
 	"time"
@@ -22,26 +23,42 @@ func (l *loaderImpl) loadTemplateReplyStrategy(def map[string]interface{}) (Repl
 
 func NewTemplateReply(content string, statusCode int, pause time.Duration,
 	headers map[string]string, funcs template.FuncMap) (ReplyStrategy, error) {
-	tmpl, err := template.New("").Funcs(funcs).Parse(content)
+	tmpl, err := template.New("$.body").Funcs(funcs).Parse(content)
 	if err != nil {
 		return nil, fmt.Errorf("template syntax error: %w", err)
 	}
 
+	headersRes := map[string]string{}
+	headersTmpl := map[string]*template.Template{}
+	for name, value := range headers {
+		if strings.Contains(value, "{{") { // if value has template
+			tmpl, err := template.New(fmt.Sprintf("$.headers[%s]", name)).Funcs(funcs).Parse(value)
+			if err != nil {
+				return nil, fmt.Errorf("template syntax error: %w", err)
+			}
+			headersTmpl[name] = tmpl
+		} else {
+			headersRes[name] = value
+		}
+	}
+
 	strategy := &templateReply{
-		replyBodyTemplate: tmpl,
-		statusCode:        statusCode,
-		pause:             pause,
-		headers:           headers,
+		bodyTmpl:    tmpl,
+		statusCode:  statusCode,
+		pause:       pause,
+		headers:     headersRes,
+		headersTmpl: headersTmpl,
 	}
 
 	return strategy, nil
 }
 
 type templateReply struct {
-	replyBodyTemplate *template.Template
-	statusCode        int
-	pause             time.Duration
-	headers           map[string]string
+	bodyTmpl    *template.Template
+	statusCode  int
+	pause       time.Duration
+	headers     map[string]string
+	headersTmpl map[string]*template.Template
 }
 
 type templateRequest struct {
@@ -72,7 +89,7 @@ func (tr *templateRequest) Json() (map[string]interface{}, error) {
 	return tr.jsonData, nil
 }
 
-func (s *templateReply) executeResponseTemplate(r *http.Request, requestBody []byte) (string, *colorize.Error) {
+func executeTemplate(tmpl *template.Template, r *http.Request, requestBody []byte) (string, *colorize.Error) {
 	ctx := map[string]*templateRequest{
 		"request": {
 			r: r,
@@ -80,9 +97,9 @@ func (s *templateReply) executeResponseTemplate(r *http.Request, requestBody []b
 	}
 
 	reply := bytes.NewBuffer(nil)
-	if err := s.replyBodyTemplate.Execute(reply, ctx); err != nil {
+	if err := tmpl.Execute(reply, ctx); err != nil {
 		setRequestBody(r, requestBody)
-		dump := []*colorize.Part{colorize.None(", request was:\n\n"), colorize.None(dumpRequest(r))}
+		dump := makeRequestWasParts(r)
 		return "", colorize.NewEntityError("strategy %s", "template").WithSubError(err).WithPostfix(dump)
 	}
 
@@ -99,7 +116,7 @@ func (s *templateReply) HandleRequest(w http.ResponseWriter, r *http.Request) []
 		time.Sleep(s.pause)
 	}
 
-	responseBody, cErr := s.executeResponseTemplate(r, requestBody)
+	responseBody, cErr := executeTemplate(s.bodyTmpl, r, requestBody)
 	if cErr != nil {
 		return []error{cErr}
 	}
@@ -107,6 +124,15 @@ func (s *templateReply) HandleRequest(w http.ResponseWriter, r *http.Request) []
 	for k, v := range s.headers {
 		w.Header().Add(k, v)
 	}
+
+	for k, tmpl := range s.headersTmpl {
+		v, cErr := executeTemplate(tmpl, r, requestBody)
+		if cErr != nil {
+			return []error{cErr}
+		}
+		w.Header().Add(k, v)
+	}
+
 	w.WriteHeader(s.statusCode)
 	_, _ = w.Write([]byte(responseBody))
 	return nil
