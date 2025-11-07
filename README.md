@@ -1,4 +1,4 @@
-# Gonkex: testing automation tool
+# Gonkex: The Go Declarative Testing framework
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/lansfy/gonkex.svg)](https://pkg.go.dev/github.com/lansfy/gonkex)
 [![coverage](https://raw.githubusercontent.com/lansfy/gonkex/refs/heads/badges/.badges/master/coverage.svg)](https://github.com/lansfy/gonkex/blob/master/.testcoverage.yml)
