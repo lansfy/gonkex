@@ -39,6 +39,7 @@ Capabilities:
     - [$matchArray(pattern)](#matcharraypattern)
     - [$matchArray(subset+pattern)](#matcharraysubsetpattern)
     - [$matchArray(pattern+subset)](#matcharraypatternsubset)
+    - [size parameters](#size-parameters)
 - [Delays](#delays)
 - [Variables](#variables)
   - [Assignment](#assignment)
@@ -589,6 +590,33 @@ In this mode:
 ```
 
 *TIP:* You still can use the `ignoreArraysOrdering` parameter with `$matchArray(pattern+subset)`. When set to `true`, this parameter allows the subset elements to appear anywhere in the array, not just at the end, while still maintaining the pattern matching for additional elements.
+
+#### size parameters
+
+The `$matchArray` matcher supports optional parameters to validate array length constraints. These parameters can be combined with any of the three modes (`pattern`, `subset+pattern`, `pattern+subset`).
+
+- `minsize` - minimum array length
+- `maxsize` - maximum array length
+- `size` - exact array length (cannot be used together with `minsize` or `maxsize`)
+
+Example:
+
+```yaml
+# Exact size - array must have exactly 5 elements
+"$matchArray(pattern, size=5)"
+
+# Minimum size - array must have at least 3 elements
+"$matchArray(pattern, minsize=3)"
+
+# Maximum size - array must have at most 10 elements
+"$matchArray(pattern, maxsize=10)"
+
+# Size range - array must have between 2 and 8 elements
+"$matchArray(pattern, minsize=2, maxsize=8)"
+
+# Combined with subset+pattern mode
+"$matchArray(subset+pattern, minsize=5, maxsize=20)"
+```
 
 ## Delays
 

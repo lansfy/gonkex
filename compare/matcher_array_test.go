@@ -104,6 +104,106 @@ func Test_matchArray(t *testing.T) {
 			actual:   `[]`,
 			wantErr:  "path '$': array with $matchArray(subset+pattern) must have pattern and additional elements",
 		},
+		{
+			name:     "$matchArray with specified size works",
+			expected: `["$matchArray(subset+pattern, size=5)", "a", "b", "c", "$matchRegexp(^[0-9]+$)"]`,
+			actual:   `["a", "b", "c", "4", "5"]`,
+		},
+		{
+			name:     "$matchArray with specified minsize works",
+			expected: `["$matchArray(pattern+subset, minsize=3)", "$matchRegexp(^[0-9]+$)", "a", "b", "c"]`,
+			actual:   `["4", "5", "a", "b", "c"]`,
+		},
+		{
+			name:     "$matchArray with specified maxsize works",
+			expected: `["$matchArray(pattern+subset, maxsize=10)", "$matchRegexp(^[0-9]+$)", "a", "b", "c"]`,
+			actual:   `["4", "5", "a", "b", "c"]`,
+		},
+		{
+			name:     "$matchArray with size=3 fails when array has 5 elements",
+			expected: `["$matchArray(pattern, size=3)", "$matchRegexp(^[0-9]+$)"]`,
+			actual:   `["1", "2", "3", "4", "5"]`,
+			wantErr:  "path '$': array length does not match size constraint\n     expected: 3\n       actual: 5",
+		},
+		{
+			name:     "$matchArray with minsize=3 works when array has 5 elements",
+			expected: `["$matchArray(pattern, minsize=3)", "$matchRegexp(^[0-9]+$)"]`,
+			actual:   `["1", "2", "3", "4", "5"]`,
+		},
+		{
+			name:     "$matchArray with minsize=6 fails when array has 5 elements",
+			expected: `["$matchArray(pattern, minsize=6)", "$matchRegexp(^[0-9]+$)"]`,
+			actual:   `["1", "2", "3", "4", "5"]`,
+			wantErr:  "path '$': array length is less than minsize constraint\n     expected: >= 6\n       actual: 5",
+		},
+		{
+			name:     "$matchArray with maxsize=10 works when array has 5 elements",
+			expected: `["$matchArray(pattern, maxsize=10)", "$matchRegexp(^[0-9]+$)"]`,
+			actual:   `["1", "2", "3", "4", "5"]`,
+		},
+		{
+			name:     "$matchArray with maxsize=3 fails when array has 5 elements",
+			expected: `["$matchArray(pattern, maxsize=3)", "$matchRegexp(^[0-9]+$)"]`,
+			actual:   `["1", "2", "3", "4", "5"]`,
+			wantErr:  "path '$': array length is greater than maxsize constraint\n     expected: <= 3\n       actual: 5",
+		},
+		{
+			name:     "$matchArray with minsize=3, maxsize=10 works when array has 5 elements",
+			expected: `["$matchArray(pattern, minsize=3, maxsize=10)", "$matchRegexp(^[0-9]+$)"]`,
+			actual:   `["1", "2", "3", "4", "5"]`,
+		},
+		{
+			name:     "$matchArray with minsize=6, maxsize=10 fails when array has 5 elements",
+			expected: `["$matchArray(pattern, minsize=6, maxsize=10)", "$matchRegexp(^[0-9]+$)"]`,
+			actual:   `["1", "2", "3", "4", "5"]`,
+			wantErr:  "path '$': array length is less than minsize constraint\n     expected: >= 6\n       actual: 5",
+		},
+		{
+			name:     "$matchArray with minsize=2, maxsize=4 fails when array has 5 elements",
+			expected: `["$matchArray(pattern, minsize=2, maxsize=4)", "$matchRegexp(^[0-9]+$)"]`,
+			actual:   `["1", "2", "3", "4", "5"]`,
+			wantErr:  "path '$': array length is greater than maxsize constraint\n     expected: <= 4\n       actual: 5",
+		},
+		{
+			name:     "$matchArray with specified minsize=3, maxsize=10 success on array with 5 elements",
+			expected: `["$matchArray(pattern+subset, minsize=3, maxsize=10)", "$matchRegexp(^[0-9]+$)", "a", "b", "c"]`,
+			actual:   `["4", "5", "a", "b", "c"]`,
+		},
+		{
+			name:     "$matchArray fails with invalid size parameter",
+			expected: `["$matchArray(pattern, size=abc)", "$matchRegexp(^[0-9]+$)"]`,
+			actual:   `["1", "2", "3"]`,
+			wantErr:  "path '$': parse '$matchArray': parameter 'size': parameter value (abc) must be integer",
+		},
+		{
+			name:     "$matchArray fails with negative size parameter",
+			expected: `["$matchArray(pattern, size=-5)", "$matchRegexp(^[0-9]+$)"]`,
+			actual:   `["1", "2", "3"]`,
+			wantErr:  "path '$': parse '$matchArray': parameter 'size': parameter value (-5) must be non-negative",
+		},
+		{
+			name:     "$matchArray with size=0 works on empty array",
+			expected: `["$matchArray(pattern, size=0)", "$matchRegexp(^[0-9]+$)"]`,
+			actual:   `[]`,
+		},
+		{
+			name:     "$matchArray with size=0 fails on non-empty array",
+			expected: `["$matchArray(pattern, size=0)", "$matchRegexp(^[0-9]+$)"]`,
+			actual:   `["1"]`,
+			wantErr:  "path '$': array length does not match size constraint\n     expected: 0\n       actual: 1",
+		},
+		{
+			name:     "$matchArray fails when size parameter used with minsize",
+			expected: `["$matchArray(pattern, size=1, minsize=1)", "$matchRegexp(^[0-9]+$)"]`,
+			actual:   `["1"]`,
+			wantErr:  "path '$': parse '$matchArray': parameter 'size': cannot be used with minsize/maxsize",
+		},
+		{
+			name:     "$matchArray fails when size parameter used with maxsize",
+			expected: `["$matchArray(pattern, size=1, maxsize=1)", "$matchRegexp(^[0-9]+$)"]`,
+			actual:   `["1"]`,
+			wantErr:  "path '$': parse '$matchArray': parameter 'size': cannot be used with minsize/maxsize",
+		},
 	}
 
 	for _, tt := range tests {
