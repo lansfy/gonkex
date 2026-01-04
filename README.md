@@ -6,17 +6,17 @@
 
 *NOTE:* You can find a utility that allows you to run gonkex scripts [here](https://github.com/lansfy/gonkex-cli) (in the "Releases" section).
 
-Gonkex will test your services using their API. It can send prepared requests to the service and check the responses. Test scenarios are described in YAML-files.
+Gonkex will test your services using their APIs. It can send prepared requests to the service and check the responses. Test scenarios are described in YAML files.
 
 Capabilities:
 
 - works with REST/JSON, REST/XML, REST/YAML API support
 - provides [declarative mocks](#mocks) for external services
 - seeds the database with [fixtures data](#fixtures) (supports PostgreSQL, MySQL, Sqlite, TimescaleDB, MariaDB, SQLServer, ClickHouse, Aerospike, MongoDB, Redis)
-- [execute and verify database queries](#a-database-query) to check test outcomes
-- run as a [standalone tool](https://github.com/lansfy/gonkex-cli/) or as a [library](#using-gonkex-as-a-library) alongside your unit tests
+- [executes and verifies database queries](#a-database-query) to check test outcomes
+- runs as a [standalone tool](https://github.com/lansfy/gonkex-cli/) or as a [library](#using-gonkex-as-a-library) alongside your unit tests
 - stores the results as an [Allure](https://allurereport.org/) report
-- there is a [JSON-schema](#json-schema) to add autocomplete and validation for Gonkex YAML files
+- includes a [JSON-schema](#json-schema) to add autocomplete and validation for Gonkex YAML files
 
 ## Table of contents
 
@@ -45,7 +45,7 @@ Capabilities:
   - [Assignment](#assignment)
     - [In the description of the test](#in-the-description-of-the-test)
     - [From the response of the previous test](#from-the-response-of-the-previous-test)
-    - [From the response body of currently running test](#from-the-response-body-of-currently-running-test)
+    - [From the response body of the currently running test](#from-the-response-body-of-the-currently-running-test)
     - [From environment variables or from env-file](#from-environment-variables-or-from-env-file)
     - [From cases](#from-cases)
 - [multipart/form-data requests](#multipartform-data-requests)
@@ -190,7 +190,7 @@ The tests can be now ran with `go test`, for example: `go test ./...`.
         }
       }
 
-- name: WHEN one order is requested service MUST response with user and order sum
+- name: WHEN one order is requested service MUST respond with user and order sum
   method: POST
   path: /jsonrpc/v2/order.getOrder
 
@@ -307,7 +307,7 @@ or for elements of map/array (if it's JSON):
 
 ### Retry policy
 
-If you expect a test to succeed after only a few attempts (for example, one testcase has run some asynchronous operation and the second testcase is trying to wait for the results after that), then you need to do several test retry. You can define the number of retries required using the `retryPolicy` field.
+If you expect a test to succeed only after a few attempts (for example, one test case has run some asynchronous operation and a second test case is trying to wait for the results after that), then you need to perform several test retries. You can define the number of retries required using the `retryPolicy` field.
 
 *NOTE:* An attempt is considered successful if the actual response matches the expected response.
 
@@ -329,7 +329,7 @@ The following fields are supported:
 
 `delay` - string containing the waiting time after unsuccessful completion of the test.
 
-`successInRow` - parameter defines the required number of successful test passes for the test to be recognized as successful. And all these successful runs must be consecutive. Default value is 1.
+`successInRow` - a parameter that defines the required number of successful test passes for the test to be recognized as successful. All these successful runs must be consecutive. The default value is 1.
 
 ### Customizing a comparison
 
@@ -418,7 +418,7 @@ Example:
 
 ### $matchTime
 
-The `$matchTime` function is allows you to validate timestamp strings in response, mock request, database query results according to specific time format patterns.
+The `$matchTime` function allows you to validate timestamp strings in responses, mock requests, and database query results according to specific time format patterns.
 Unlike the more general `$matchRegexp`, `$matchTime` is designed specifically for time validation.
 This feature is used when you cannot specify the exact time (for example, the time in the response depends on the current time).
 
@@ -430,7 +430,7 @@ $matchTime(format_string[, parameter=value][, ...])
 
 where:
 
-- `format_string` is a valid [Go time format](https://pkg.go.dev/time#pkg-constants) or [strftime time format](https://pkg.go.dev/github.com/ncruces/go-strftime#pkg-overview) pattern - optional parameters can be added to customize the time matching behavior
+- `format_string` is a valid [Go time format](https://pkg.go.dev/time#pkg-constants) or [strftime time format](https://pkg.go.dev/github.com/ncruces/go-strftime#pkg-overview) pattern; optional parameters can be added to customize the time matching behavior
 
 #### Basic Format Matching
 
@@ -497,7 +497,7 @@ response:
 
 #### parameter "timezone"
 
-Allows you to specify timezone for values without specified timezone:
+Allows you to specify the timezone for values without a specified timezone:
 
 - `timezone=local` - use local timezone (default)
 - `timezone=utc` - use UTC timezone
@@ -622,9 +622,9 @@ Example:
 
 `pause` - amount of time that the test should wait before executing.
 
-`afterRequestPause` - amount of time that the test should wait after executing. It is important to note that this wait is part of the request test, i.e. all checks and mocks constraints will be checked after the wait is complete.
+`afterRequestPause` - amount of time that the test should wait after executing. It is important to note that this wait is part of the request test, i.e., all checks and mock constraints will be checked after the wait is complete.
 
-This delays should be defined using [Go time duration string](https://pkg.go.dev/time#ParseDuration).
+These delays should be defined using a [Go time duration string](https://pkg.go.dev/time#ParseDuration).
 
 ## Variables
 
@@ -737,7 +737,7 @@ It is also possible to retrieve values from the headers and cookies of response.
       authorId: "body:author_info.id"   # optional "body:" prefix allows to get value from body
 ```
 
-#### From the response body of currently running test
+#### From the response body of the currently running test
 
 Example:
 
@@ -1024,7 +1024,7 @@ The logic defines what the server responses to a certain request. It's defined i
 
 ### Running mocks while using Gonkex as a library
 
-Before running tests, all planned mocks are started. It means that Gonkex spins up the given number of servers and each one of them gets a random port assigned.
+Before running tests, all planned mocks are started. This means that Gonkex spins up the given number of servers, and each one of them gets a random port assigned.
 
 ```go
 // create empty server mocks
@@ -1056,10 +1056,10 @@ srv := server.NewServer(&server.Config{
 defer srv.Close()
 ```
 
-Additionally, library registers special environment variables `GONKEX_MOCK_<MOCK_NAME>` the for every mock, which contain the address and port of the corresponding mock server.
+Additionally, the library registers special environment variables `GONKEX_MOCK_<MOCK_NAME>` for every mock, which contain the address and port of the corresponding mock server.
 You can use these environment variables when writing tests.
 
-As soon as you spinned up your mocks and configured your service, you can run the tests.
+As soon as you have spun up your mocks and configured your service, you can run the tests.
 
 ```go
 runner.RunWithTesting(t, srv.URL, &runner.RunWithTestingParams{
@@ -1091,7 +1091,7 @@ The test file can contain any number of mock service definitions:
 
 Each mock-service definition consists of:
 
-`requestConstraints` - an array of constraints that are applied on a received request. If at least one constraint is not satisfied, the test is considered failed. The list of all possible checks is provided below.
+`requestConstraints` - an array of constraints that are applied to a received request. If at least one constraint is not satisfied, the test is considered failed. The list of all possible checks is provided below.
 
 `strategy` - the strategy of mock responses. The list of all possible strategies is provided below.
 
@@ -1116,7 +1116,7 @@ A configuration example for one mock-service:
 
 The request to the mock-service can be validated using one or more constraints defined below.
 
-The definition of each constraint contains of the `kind` parameter that indicates which constraint will be applied.
+The definition of each constraint consists of the `kind` parameter, which indicates which constraint will be applied.
 
 All other keys on this level are constraint parameters. Each constraint has its own parameter set.
 
@@ -1254,7 +1254,7 @@ Examples:
     ...
 ```
 
-*NOTE:* For backward compatibility, the use of the `expectedQuery` parameter instead of `query` is also supported.
+*NOTE:* For backward compatibility, using the `expectedQuery` parameter instead of `query` is also supported.
 
 #### queryMatchesRegexp
 
@@ -1277,7 +1277,7 @@ Example:
     ...
 ```
 
-*NOTE:* For backward compatibility, the use of the `expectedQuery` parameter instead of `query` is also supported.
+*NOTE:* For backward compatibility, using the `expectedQuery` parameter instead of `query` is also supported.
 
 #### bodyMatchesText
 
@@ -1514,8 +1514,8 @@ Example:
 
 #### template
 
-This strategy gives ability to use incoming request data into mock response. Implemented with package [text/template](https://pkg.go.dev/text/template).
-Automatically preload incoming request into variable named `request`.
+This strategy gives the ability to use incoming request data in mock responses. It is implemented with the [text/template](https://pkg.go.dev/text/template) package.
+It automatically preloads the incoming request into a variable named `request`.
 
 Parameters:
 
@@ -1580,7 +1580,7 @@ Example:
 
 #### methodVary
 
-Uses various response strategies, depending on the request method.
+Uses different response strategies depending on the request method.
 
 When receiving a request with a method not defined in `methodVary`, the test will be considered failed.
 
@@ -1615,7 +1615,7 @@ Example:
 
 With this strategy for each consequent request you will get a reply defined by a consequent nested strategy.
 
-If no nested strategy specified for a request, i.e. arrived more requests than nested strategies specified, the test will be considered failed.
+If no nested strategy is specified for a request (i.e., more requests arrived than nested strategies specified), the test will be considered failed.
 
 Parameters:
 
@@ -1645,7 +1645,7 @@ Example:
 
 #### basedOnRequest
 
-Allows multiple requests with same request path. When receiving a request to mock, all elements in the `uris` list are sequentially passed through and the first element is returned, all checks (`requestConstraints`) of which will pass successfully. If no such element is found, the test will be considered failed. This stratagy is concurrent safe.
+Allows multiple requests with the same request path. When receiving a request to a mock, all elements in the `uris` list are sequentially passed through, and the first element for which all checks (`requestConstraints`) pass successfully is returned. If no such element is found, the test will be considered failed. This strategy is concurrent-safe.
 
 Parameters:
 
@@ -1700,7 +1700,7 @@ Example:
 
 ### Calls count
 
-You can define, how many times each mock or mock resource must be called. If the actual number of calls is different from expected, the test will be considered failed.
+You can define how many times each mock or mock resource must be called. If the actual number of calls is different from the expected number, the test will be considered failed.
 
 Example:
 
@@ -1831,7 +1831,7 @@ When the test is ran, operations are performed in the following order:
 To define the script you need to provide 2 parameters:
 
 - `path` (mandatory) - string with a path to the script file.
-- `timeout` - time is responsible for stopping the script on timeout. Should be specified in [Go time duration string](https://pkg.go.dev/time#ParseDuration) or in seconds. The default value is `3s`.
+- `timeout` - the time limit for stopping the script on timeout. Should be specified in a [Go time duration string](https://pkg.go.dev/time#ParseDuration) or in seconds. The default value is `3s`.
 
 Example:
 
@@ -1870,7 +1870,7 @@ Example:
 
 ## A database query
 
-After HTTP request execution you can run an SQL query to database to check the data changes. The response can contain several records. Those records are compared to the expected list of records.
+After HTTP request execution, you can run an SQL query to the database to check the data changes. The response can contain several records. Those records are compared to the expected list of records.
 
 Use the following syntax to query the database:
 
@@ -1894,7 +1894,7 @@ Use the following syntax to query the database:
 
 This syntax allows any number of queries to be executed after the test case is complete.
 
-You can also use legacy style for run sql queries (but this method only allows you to execute one query), like this:
+You can also use the legacy style to run SQL queries (but this method only allows you to execute one query), like this:
 
 ```yaml
 - name: my test
@@ -1905,7 +1905,7 @@ You can also use legacy style for run sql queries (but this method only allows y
     - ...
 ```
 
-*NOTE:* All mentioned below techniques are still work with both variants of query format.
+*NOTE:* All techniques mentioned below still work with both variants of query format.
 
 ### Query definition
 
@@ -2021,5 +2021,5 @@ Example:
 
 ## JSON-schema
 
-Use [file with schema](https://raw.githubusercontent.com/lansfy/gonkex/master/schema/gonkex.json) to add syntax highlight to your favourite IDE and write Gonkex tests more easily.
+Use the [schema file](https://raw.githubusercontent.com/lansfy/gonkex/master/schema/gonkex.json) to add syntax highlighting to your favorite IDE and write Gonkex tests more easily.
 It adds in-line documentation and auto-completion to any IDE that supports it. The [following article](https://github.com/lansfy/gonkex/tree/master/schema) describes how to add schema to your IDE.
